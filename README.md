@@ -28,7 +28,7 @@ func main() {
 			Email: os.Getenv("ZENDESK_DEMO_EMAIL"),
 			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
 		},
-		// Logger is optional, see implementing to see how to add your custom logger here
+		// Logger is optional, see implementation to see how to add your custom logger here
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 		// Optionally set http.RoundTripper - this is helpful when writing tests
 		zendesk.WithRoundTripper(customRoundTripper),
