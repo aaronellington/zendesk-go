@@ -61,7 +61,7 @@ func (c *client) Do(r *http.Request) (*http.Response, error) {
 }
 
 func (c *client) jsonRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
-	request, err := http.NewRequest(method, path, body)
+	request, err := http.NewRequestWithContext(ctx, method, path, body)
 	if err != nil {
 		return err
 	}

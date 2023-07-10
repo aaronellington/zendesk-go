@@ -23,6 +23,12 @@ func New(
 
 	return &Service{
 		supportService: &SupportService{
+			organizationService: &OrganizationService{
+				client: c,
+			},
+			userService: &UserService{
+				client: c,
+			},
 			ticketService: &TicketService{
 				client: c,
 			},

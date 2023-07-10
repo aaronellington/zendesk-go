@@ -20,27 +20,25 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	newTagsAfterAdd, err := z.Support().Tickets().AddTags(ctx, 6170, zendesk.Tags{
-		"foobar",
-	})
-	if err != nil {
+	if err := z.Support().Organizations().IncrementalExport(ctx, 0, func(response zendesk.OrganizationsIncrementalExportResponse) error {
+		log.Printf("Found %d Organizations: %d", len(response.Organizations), response.EndTime)
+		return nil
+	}); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v", newTagsAfterAdd)
 
-	newTagsAfterRemoval, err := z.Support().Tickets().RemoveTags(ctx, 6170, zendesk.Tags{
-		"foobar",
-	})
-	if err != nil {
+	if err := z.Support().Users().IncrementalExport(ctx, 0, func(response zendesk.UsersIncrementalExportResponse) error {
+		log.Printf("Found %d Users: %d", len(response.Users), response.EndTime)
+		return nil
+	}); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v", newTagsAfterRemoval)
 
-	newTagsAfterSet, err := z.Support().Tickets().SetTags(ctx, 6170, zendesk.Tags{
-		"foobar",
-	})
-	if err != nil {
+	if err := z.Support().Tickets().IncrementalExport(ctx, 0, 500, func(response zendesk.TicketsIncrementalExportResponse) error {
+		log.Printf("Found %d Tickets: %d", len(response.Tickets), response.EndTime)
+
+		return nil
+	}); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v", newTagsAfterSet)
 }

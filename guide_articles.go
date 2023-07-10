@@ -14,30 +14,30 @@ type ArticleResponse struct {
 }
 
 type Article struct {
-	ID                ArticleID `json:"id"`
-	URL               string    `json:"url"`
-	HtmlURL           string    `json:"html_url"`
-	AuthorID          uint64    `json:"author_id"`
-	CommentsDisabled  bool      `json:"comments_disabled"`
-	Draft             bool      `json:"draft"`
-	Promoted          bool      `json:"promoted"`
-	Position          uint64    `json:"position"`
-	VoteSum           uint64    `json:"vote_sum"`
-	VoteCount         uint64    `json:"vote_count"`
-	SectionID         uint64    `json:"section_id"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	Name              string    `json:"name"`
-	Title             string    `json:"title"`
-	SourceLocale      string    `json:"source_locale"`
-	Locale            string    `json:"locale"`
-	Outdated          bool      `json:"outdated"`
-	EditedAt          time.Time `json:"edited_at"`
-	UserSegmentID     uint64    `json:"user_segment_id"`
-	PermissionGroupID uint64    `json:"permission_group_id"`
-	ContentTagIds     []any     `json:"content_tag_ids"`
-	LabelNames        []any     `json:"label_names"`
+	AuthorID          UserID    `json:"author_id"`
 	Body              string    `json:"body"`
+	CommentsDisabled  bool      `json:"comments_disabled"`
+	ContentTagIds     []any     `json:"content_tag_ids"`
+	CreatedAt         time.Time `json:"created_at"`
+	Draft             bool      `json:"draft"`
+	EditedAt          time.Time `json:"edited_at"`
+	HtmlURL           string    `json:"html_url"`
+	ID                ArticleID `json:"id"`
+	LabelNames        []any     `json:"label_names"`
+	Locale            string    `json:"locale"`
+	Name              string    `json:"name"`
+	Outdated          bool      `json:"outdated"`
+	PermissionGroupID uint64    `json:"permission_group_id"`
+	Position          uint64    `json:"position"`
+	Promoted          bool      `json:"promoted"`
+	SectionID         uint64    `json:"section_id"`
+	SourceLocale      string    `json:"source_locale"`
+	Title             string    `json:"title"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	URL               string    `json:"url"`
+	UserSegmentID     uint64    `json:"user_segment_id"`
+	VoteCount         uint64    `json:"vote_count"`
+	VoteSum           uint64    `json:"vote_sum"`
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/
