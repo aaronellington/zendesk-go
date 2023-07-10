@@ -23,7 +23,7 @@ func New(
 
 	return &Service{
 		supportService: &SupportService{
-			ticketService: TicketService{
+			ticketService: &TicketService{
 				client: c,
 			},
 		},
@@ -34,6 +34,7 @@ type Service struct {
 	supportService *SupportService
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/introduction/
 func (s *Service) Support() *SupportService {
 	return s.supportService
 }
