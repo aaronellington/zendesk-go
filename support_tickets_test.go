@@ -3,6 +3,7 @@ package zendesk_test
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/aaronellington/zendesk-go"
@@ -127,6 +128,58 @@ func Test_SupportTicketsShow_404_Wrong_Subdomain(t *testing.T) {
 	expected := "No help desk at example.zendesk.com"
 
 	if err := study.Assert(expected, actual.Error()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_Support_Tickets_IncrementalExport(t *testing.T) {
+	ctx := context.Background()
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/incremental_export_page1.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"0"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/incremental_export_page2.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"250"},
+				},
+			},
+		),
+	})
+
+	tickets := []zendesk.Ticket{}
+
+	if err := z.Support().Tickets().IncrementalExport(ctx, 0, 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+		tickets = append(tickets, response.Tickets...)
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	expectedTicketCount := 3
+
+	if err := study.Assert(expectedTicketCount, len(tickets)); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -71,13 +71,6 @@ type TicketsIncrementalExportResponse struct {
 	IncrementalExportResponse
 }
 
-type IncrementalExportResponse struct {
-	Count       uint64 `json:"count"`
-	EndTime     uint64 `json:"end_time"`
-	NextPage    string `json:"next_page"`
-	EndOfStream bool   `json:"end_of_stream"`
-}
-
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
 type TicketService struct {
 	client *client

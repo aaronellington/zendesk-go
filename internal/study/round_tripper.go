@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 )
@@ -40,6 +41,7 @@ func RoundTripperQueue(t *testing.T, queue []RoundTripFunc) http.RoundTripper {
 type ExpectedTestRequest struct {
 	Method    string
 	Path      string
+	Query     url.Values
 	Validator func(r *http.Request) error
 }
 
@@ -72,6 +74,14 @@ func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest
 		}
 
 		if err := Assert(expected.Path, request.URL.Path); err != nil {
+			t.Fatal(err)
+		}
+
+		if expected.Query == nil {
+			expected.Query = url.Values{}
+		}
+
+		if err := Assert(expected.Query, request.URL.Query()); err != nil {
 			t.Fatal(err)
 		}
 
