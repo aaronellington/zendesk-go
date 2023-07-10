@@ -27,14 +27,25 @@ func New(
 				client: c,
 			},
 		},
+		guideService: &GuideService{
+			articlesService: &ArticlesService{
+				client: c,
+			},
+		},
 	}
 }
 
 type Service struct {
 	supportService *SupportService
+	guideService   *GuideService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 func (s *Service) Support() *SupportService {
 	return s.supportService
+}
+
+// https://developer.zendesk.com/api-reference/help_center/help-center-api/introduction/
+func (s *Service) Guide() *GuideService {
+	return s.guideService
 }
