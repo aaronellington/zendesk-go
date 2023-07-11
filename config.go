@@ -11,6 +11,12 @@ type RequestPreProcessor interface {
 	ProcessRequest(*http.Request) error
 }
 
+type RequestPreProcessorFunc func(*http.Request) error
+
+func (p RequestPreProcessorFunc) ProcessRequest(r *http.Request) error {
+	return p(r)
+}
+
 type internalConfig struct {
 	roundTripper         http.RoundTripper
 	requestPreProcessors []RequestPreProcessor

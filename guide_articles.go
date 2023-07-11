@@ -55,7 +55,7 @@ type ArticlesService struct {
 func (s ArticlesService) Show(ctx context.Context, id ArticleID) (Article, error) {
 	target := ArticleResponse{}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/help_center/articles/%d", id),
@@ -79,7 +79,7 @@ func (s ArticlesService) List(
 	for {
 		target := ArticlesResponse{}
 
-		if err := s.client.jsonRequest(
+		if err := s.client.ZendeskRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/help_center/articles?%s", query.Encode()),

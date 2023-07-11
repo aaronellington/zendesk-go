@@ -10,21 +10,16 @@ import (
 
 type client struct {
 	httpClient           *http.Client
-	auth                 authentication
+	zendeskAuth          authentication
 	subdomain            string
 	requestPreProcessors []RequestPreProcessor
 }
 
-func (c *client) Do(r *http.Request) (*http.Response, error) {
+func (c *client) do(r *http.Request) (*http.Response, error) {
 	r.URL.Scheme = "https"
-	r.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subdomain)
 	r.Header.Set("Accept", "application/json")
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("User-Agent", "aaronellington/zendesk-go")
-
-	if c.auth != nil {
-		c.auth.AddZendeskAuthentication(r)
-	}
 
 	for _, requestPreProcessor := range c.requestPreProcessors {
 		if err := requestPreProcessor.ProcessRequest(r); err != nil {
@@ -60,13 +55,17 @@ func (c *client) Do(r *http.Request) (*http.Response, error) {
 	return response, nil
 }
 
-func (c *client) jsonRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
+func (c *client) json(ctx context.Context, method string, path string, body io.Reader, target any, requestPreProcessor RequestPreProcessor) error {
 	request, err := http.NewRequestWithContext(ctx, method, path, body)
 	if err != nil {
 		return err
 	}
 
-	response, err := c.Do(request)
+	if err := requestPreProcessor.ProcessRequest(request); err != nil {
+		return err
+	}
+
+	response, err := c.do(request)
 	if err != nil {
 		return err
 	}
@@ -85,4 +84,13 @@ func (c *client) jsonRequest(ctx context.Context, method string, path string, bo
 	}
 
 	return nil
+}
+
+func (c *client) ZendeskRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
+	return c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
+		r.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subdomain)
+		c.zendeskAuth.AddZendeskAuthentication(r)
+
+		return nil
+	}))
 }

@@ -17,6 +17,7 @@ func main() {
 			Email: os.Getenv("ZENDESK_DEMO_EMAIL"),
 			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
 		},
+		nil,
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 

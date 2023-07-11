@@ -35,7 +35,7 @@ type UserService struct {
 func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 	target := UserResponse{}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/users/%d", id),
@@ -60,7 +60,7 @@ func (s UserService) IncrementalExport(
 	for {
 		target := UsersIncrementalExportResponse{}
 
-		if err := s.client.jsonRequest(
+		if err := s.client.ZendeskRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/users.json?%s", query.Encode()),

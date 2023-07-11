@@ -48,7 +48,7 @@ type OrganizationService struct {
 func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organization, error) {
 	target := OrganizationResponse{}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/organizations/%d", id),
@@ -73,7 +73,7 @@ func (s OrganizationService) IncrementalExport(
 	for {
 		target := OrganizationsIncrementalExportResponse{}
 
-		if err := s.client.jsonRequest(
+		if err := s.client.ZendeskRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/organizations.json?%s", query.Encode()),

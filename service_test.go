@@ -14,6 +14,7 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Servi
 			Email: "example@example.com",
 			Token: "abc123",
 		},
+		nil,
 		zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)),
 	)
 }

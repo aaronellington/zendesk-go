@@ -4,7 +4,7 @@ import "net/http"
 
 func NewService(
 	subDomain string,
-	auth authentication,
+	zendeskAuth authentication,
 	opts ...configOption,
 ) *Service {
 	config := &internalConfig{}
@@ -17,7 +17,7 @@ func NewService(
 			Transport: config.roundTripper,
 		},
 		subdomain:            subDomain,
-		auth:                 auth,
+		zendeskAuth:          zendeskAuth,
 		requestPreProcessors: config.requestPreProcessors,
 	}
 

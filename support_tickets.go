@@ -80,7 +80,7 @@ type TicketService struct {
 func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 	target := TicketResponse{}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/tickets/%d", id),
@@ -107,7 +107,7 @@ func (s TicketService) IncrementalExport(
 	for {
 		target := TicketsIncrementalExportResponse{}
 
-		if err := s.client.jsonRequest(
+		if err := s.client.ZendeskRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/tickets.json?%s", query.Encode()),
@@ -142,7 +142,7 @@ func (s TicketService) AddTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
@@ -166,7 +166,7 @@ func (s TicketService) SetTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodPost,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
@@ -190,7 +190,7 @@ func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags T
 		return Tags{}, err
 	}
 
-	if err := s.client.jsonRequest(
+	if err := s.client.ZendeskRequest(
 		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
