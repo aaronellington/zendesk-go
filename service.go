@@ -2,7 +2,7 @@ package zendesk
 
 import "net/http"
 
-func New(
+func NewService(
 	subDomain string,
 	auth authentication,
 	opts ...configOption,
@@ -34,6 +34,12 @@ func New(
 			},
 		},
 		guideService: &GuideService{
+			categoriesService: &CategoriesService{
+				client: c,
+			},
+			sectionsService: &SectionsService{
+				client: c,
+			},
 			articlesService: &ArticlesService{
 				client: c,
 			},

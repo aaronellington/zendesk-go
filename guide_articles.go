@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -11,6 +12,11 @@ type ArticleID uint64
 
 type ArticleResponse struct {
 	Article Article `json:"article"`
+}
+
+type ArticlesResponse struct {
+	Articles []Article `json:"articles"`
+	CursorPaginationResponse
 }
 
 type Article struct {
@@ -21,14 +27,14 @@ type Article struct {
 	CreatedAt         time.Time `json:"created_at"`
 	Draft             bool      `json:"draft"`
 	EditedAt          time.Time `json:"edited_at"`
-	HtmlURL           string    `json:"html_url"`
+	HTML_URL          string    `json:"html_url"`
 	ID                ArticleID `json:"id"`
 	LabelNames        []any     `json:"label_names"`
 	Locale            string    `json:"locale"`
 	Name              string    `json:"name"`
 	Outdated          bool      `json:"outdated"`
 	PermissionGroupID uint64    `json:"permission_group_id"`
-	Position          uint64    `json:"position"`
+	Position          int64     `json:"position"`
 	Promoted          bool      `json:"promoted"`
 	SectionID         uint64    `json:"section_id"`
 	SourceLocale      string    `json:"source_locale"`
@@ -60,4 +66,39 @@ func (s ArticlesService) Show(ctx context.Context, id ArticleID) (Article, error
 	}
 
 	return target.Article, nil
+}
+
+// https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/#list-articles
+func (s ArticlesService) List(
+	ctx context.Context,
+	pageHandler func(response ArticlesResponse) error,
+) error {
+	query := url.Values{}
+	query.Set("page[size]", "100")
+
+	for {
+		target := ArticlesResponse{}
+
+		if err := s.client.jsonRequest(
+			ctx,
+			http.MethodGet,
+			fmt.Sprintf("/api/v2/help_center/articles?%s", query.Encode()),
+			http.NoBody,
+			&target,
+		); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if !target.Meta.HasMore {
+			break
+		}
+
+		query.Set("page[after]", target.Meta.AfterCursor)
+	}
+
+	return nil
 }

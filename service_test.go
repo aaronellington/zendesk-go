@@ -8,7 +8,7 @@ import (
 )
 
 func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Service {
-	return zendesk.New(
+	return zendesk.NewService(
 		"example",
 		zendesk.AuthenticationToken{
 			Email: "example@example.com",

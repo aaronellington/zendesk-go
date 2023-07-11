@@ -2,12 +2,13 @@
 Zendesk API client library for Go.
 
 ## Getting Started
+
 ### Install
 ```shell
 go get github.com/aaronellington/zendesk-go
 ```
 
-## Create new connection
+### Create new connection
 ```go
 package main
 
