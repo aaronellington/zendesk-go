@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/aaronellington/zendesk-go"
-	"github.com/aaronellington/zendesk-go/internal/study"
+	"github.com/aaronellington/zendesk-go/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
 func Test_SupportTicketsShow_200(t *testing.T) {

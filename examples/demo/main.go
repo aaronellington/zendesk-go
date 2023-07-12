@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/aaronellington/zendesk-go"
+	"github.com/aaronellington/zendesk-go/zendesk"
 )
 
 func main() {

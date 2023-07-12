@@ -86,6 +86,8 @@ func (c *client) json(ctx context.Context, method string, path string, body io.R
 			return err
 		}
 
+		// log.Println(string(bodyBytes))
+
 		if err := json.Unmarshal(bodyBytes, target); err != nil {
 			return err
 		}

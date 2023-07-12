@@ -17,7 +17,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/aaronellington/zendesk-go"
+	"github.com/aaronellington/zendesk-go/zendesk"
 )
 
 func main() {
@@ -28,6 +28,10 @@ func main() {
 		zendesk.AuthenticationToken{
 			Email: os.Getenv("ZENDESK_DEMO_EMAIL"),
 			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
+		},
+		zendesk.ChatCredentials{
+			ClientID:     os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_ID"),
+			ClientSecret: os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_SECRET"),
 		},
 		// Logger is optional, see implementation to see how to add your custom logger here
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),

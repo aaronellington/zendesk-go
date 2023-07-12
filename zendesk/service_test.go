@@ -3,8 +3,8 @@ package zendesk_test
 import (
 	"testing"
 
-	"github.com/aaronellington/zendesk-go"
-	"github.com/aaronellington/zendesk-go/internal/study"
+	"github.com/aaronellington/zendesk-go/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
 func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Service {

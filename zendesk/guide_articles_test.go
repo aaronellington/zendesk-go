@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aaronellington/zendesk-go"
-	"github.com/aaronellington/zendesk-go/internal/study"
+	"github.com/aaronellington/zendesk-go/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
 func Test_Guide_Articles_Show_200(t *testing.T) {
