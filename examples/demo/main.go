@@ -26,7 +26,12 @@ func main() {
 	)
 
 	if err := z.Chat().Chats().IncrementalExport(ctx, (time.Now()).Add(time.Hour*-5).Unix(), func(response zendesk.ChatsIncrementalExportResponse) error {
-		log.Printf("Found %d", len(response.Chats))
+		for _, chat := range response.Chats {
+			for _, eng := range chat.ChatEngagements {
+				log.Printf("eng: %s", eng.ID)
+			}
+		}
+
 		return nil
 	}); err != nil {
 		log.Fatal(err)

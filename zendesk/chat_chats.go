@@ -8,7 +8,10 @@ import (
 	"time"
 )
 
-type ChatID string
+type (
+	ChatID           string
+	ChatEngagementID string
+)
 
 type ChatsResponse struct {
 	Chats   []Chat  `json:"chats"`
@@ -16,11 +19,16 @@ type ChatsResponse struct {
 }
 
 type ChatsIncrementalExportResponse struct {
-	Chats    []Chat `json:"chats"`
-	Count    uint64 `json:"count"`
-	EndID    ChatID `json:"end_id"`
-	EndTime  uint64 `json:"end_time"`
-	NextPage string `json:"next_page"`
+	Chats    []IncrementalExportChat `json:"chats"`
+	Count    uint64                  `json:"count"`
+	EndID    ChatID                  `json:"end_id"`
+	EndTime  uint64                  `json:"end_time"`
+	NextPage string                  `json:"next_page"`
+}
+
+type IncrementalExportChat struct {
+	Chat
+	ChatEngagements []ChatEngagement `json:"engagements"`
 }
 
 type Chat struct {
@@ -43,6 +51,21 @@ type Chat struct {
 	DepartmentID    GroupID          `json:"department_id"`
 	EndTimestamp    time.Time        `json:"end_timestamp"`
 	ZendeskTicketID TicketID         `json:"zendesk_ticket_id"`
+}
+
+type ChatEngagement struct {
+	ID           ChatEngagementID `json:"id"`
+	ChatID       ChatID           `json:"chat_id"`
+	AgentID      UserID           `json:"agent_id"`
+	DepartmentID GroupID          `json:"department_id"`
+	Comment      string           `json:"comment"`
+	Assigned     bool             `json:"assigned"`
+	Accepted     bool             `json:"accepted"`
+	StartedBy    string           `json:"started_by"`
+	Timestamp    time.Time        `json:"timestamp"`
+	Duration     float64          `json:"duration"`
+	Count        ChatCount        `json:"count"`
+	ResponseTime ChatResponseTime `json:"response_time"`
 }
 
 type ChatVisitor struct {
