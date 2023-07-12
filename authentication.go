@@ -32,3 +32,8 @@ func (auth AuthenticationToken) AddZendeskAuthentication(r *http.Request) {
 		auth.Token,
 	)
 }
+
+type ChatCredentials struct {
+	ClientID     string
+	ClientSecret string
+}

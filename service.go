@@ -1,10 +1,14 @@
 package zendesk
 
-import "net/http"
+import (
+	"net/http"
+	"sync"
+)
 
 func NewService(
 	subDomain string,
 	zendeskAuth authentication,
+	chatCredentials ChatCredentials,
 	opts ...configOption,
 ) *Service {
 	config := &internalConfig{}
@@ -18,6 +22,9 @@ func NewService(
 		},
 		subdomain:            subDomain,
 		zendeskAuth:          zendeskAuth,
+		chatCredentials:      chatCredentials,
+		chatMutex:            &sync.Mutex{},
+		chatToken:            nil,
 		requestPreProcessors: config.requestPreProcessors,
 	}
 
@@ -44,12 +51,18 @@ func NewService(
 				client: c,
 			},
 		},
+		chatService: &ChatService{
+			chatsService: &ChatsService{
+				c: c,
+			},
+		},
 	}
 }
 
 type Service struct {
 	supportService *SupportService
 	guideService   *GuideService
+	chatService    *ChatService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
@@ -60,4 +73,9 @@ func (s *Service) Support() *SupportService {
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/introduction/
 func (s *Service) Guide() *GuideService {
 	return s.guideService
+}
+
+// https://developer.zendesk.com/api-reference/live-chat/introduction/
+func (s *Service) Chat() *ChatService {
+	return s.chatService
 }

@@ -3,14 +3,21 @@ package zendesk
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
+	"sync"
 )
 
 type client struct {
 	httpClient           *http.Client
 	zendeskAuth          authentication
+	chatCredentials      ChatCredentials
+	chatToken            *chatToken
+	chatMutex            *sync.Mutex
 	subdomain            string
 	requestPreProcessors []RequestPreProcessor
 }
@@ -94,4 +101,75 @@ func (c *client) ZendeskRequest(ctx context.Context, method string, path string,
 
 		return nil
 	}))
+}
+
+func (c *client) ChatRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
+	if err := c.getAccessToken(ctx); err != nil {
+		return err
+	}
+
+	if err := c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
+		if c.chatToken == nil {
+			return errors.New("no token")
+		}
+
+		if c.chatToken.AccessToken == "" {
+			return errors.New("blank token")
+		}
+
+		r.URL.Host = "www.zopim.com"
+		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
+
+		return nil
+	})); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type chatToken struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+}
+
+func (c *client) getAccessToken(ctx context.Context) error {
+	if c.chatToken != nil {
+		return nil
+	}
+
+	c.chatMutex.Lock()
+	defer c.chatMutex.Unlock()
+
+	if c.chatToken != nil {
+		return nil
+	}
+
+	target := chatToken{}
+
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", c.chatCredentials.ClientID)
+	data.Set("client_secret", c.chatCredentials.ClientSecret)
+
+	if err := c.json(
+		ctx,
+		http.MethodPost,
+		"/oauth2/token",
+		strings.NewReader(data.Encode()),
+		&target,
+		RequestPreProcessorFunc(func(r *http.Request) error {
+			r.URL.Host = "www.zopim.com"
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			return nil
+		}),
+	); err != nil {
+		return err
+	}
+
+	c.chatToken = &target
+
+	return nil
 }

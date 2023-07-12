@@ -64,7 +64,7 @@ func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organ
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-organization-export
 func (s OrganizationService) IncrementalExport(
 	ctx context.Context,
-	startTime uint64,
+	startTime int64,
 	pageHandler func(response OrganizationsIncrementalExportResponse) error,
 ) error {
 	query := url.Values{}

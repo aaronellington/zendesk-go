@@ -76,7 +76,7 @@ func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-user-export-time-based
 func (s UserService) IncrementalExport(
 	ctx context.Context,
-	startTime uint64,
+	startTime int64,
 	pageHandler func(response UsersIncrementalExportResponse) error,
 ) error {
 	query := url.Values{}
