@@ -2,12 +2,37 @@ package zendesk
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
-type UserID uint64
+type (
+	UserID uint64
+)
+
+func (userID *UserID) UnmarshalJSON(b []byte) error {
+	// Try it as a uint64 first
+	var targetUint64 uint64
+	if err := json.Unmarshal(b, &targetUint64); err == nil {
+		*userID = UserID(targetUint64)
+
+		return nil
+	}
+
+	// Only try it as a string as a last resort
+	var targetString string
+	if err := json.Unmarshal(b, &targetString); err != nil {
+		return err
+	}
+
+	typeUint64, _ := strconv.ParseUint(targetString, 0, 64)
+	*userID = UserID(typeUint64)
+
+	return nil
+}
 
 type UserResponse struct {
 	User User `json:"user"`

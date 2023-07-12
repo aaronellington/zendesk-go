@@ -18,7 +18,6 @@ type client struct {
 func (c *client) do(r *http.Request) (*http.Response, error) {
 	r.URL.Scheme = "https"
 	r.Header.Set("Accept", "application/json")
-	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("User-Agent", "aaronellington/zendesk-go")
 
 	for _, requestPreProcessor := range c.requestPreProcessors {
@@ -60,6 +59,8 @@ func (c *client) json(ctx context.Context, method string, path string, body io.R
 	if err != nil {
 		return err
 	}
+
+	request.Header.Set("Content-Type", "application/json")
 
 	if err := requestPreProcessor.ProcessRequest(request); err != nil {
 		return err
