@@ -18,6 +18,18 @@ type ChatsResponse struct {
 	NextURL *string `json:"next_url"`
 }
 
+type ChatsSearchResponse struct {
+	Results []ChatSearchResult `json:"results"`
+	NextURL *string            `json:"next_url"`
+}
+
+type ChatSearchResult struct {
+	ID        ChatID    `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+	Preview   string    `json:"preview"`
+	Type      string    `json:"type"`
+}
+
 type ChatsIncrementalExportResponse struct {
 	Chats    []IncrementalExportChat `json:"chats"`
 	Count    uint64                  `json:"count"`
@@ -132,10 +144,12 @@ type ChatsService struct {
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#list-chats
 func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
+	requestURL := "/api/v2/chats"
+
 	for {
 		target := ChatsResponse{}
 
-		if err := s.c.ChatRequest(ctx, http.MethodGet, "/api/v2/chats", http.NoBody, &target); err != nil {
+		if err := s.c.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
 			return err
 		}
 
@@ -146,6 +160,36 @@ func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResp
 		if target.NextURL == nil {
 			break
 		}
+
+		requestURL = *target.NextURL
+	}
+
+	return nil
+}
+
+// https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#search-chats
+func (s *ChatsService) Search(ctx context.Context, query string, pageHandler func(page ChatsSearchResponse) error) error {
+	values := &url.Values{}
+	values.Set("q", query)
+
+	requestURL := "/api/v2/chats/search?" + values.Encode()
+
+	for {
+		target := ChatsSearchResponse{}
+
+		if err := s.c.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if target.NextURL == nil {
+			break
+		}
+
+		requestURL = *target.NextURL
 	}
 
 	return nil
