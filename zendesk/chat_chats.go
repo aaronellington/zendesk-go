@@ -55,7 +55,6 @@ type Chat struct {
 
 type ChatEngagement struct {
 	ID           ChatEngagementID `json:"id"`
-	ChatID       ChatID           `json:"chat_id"`
 	AgentID      UserID           `json:"agent_id"`
 	DepartmentID GroupID          `json:"department_id"`
 	Comment      string           `json:"comment"`
