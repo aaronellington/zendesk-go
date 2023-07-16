@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
+	"sync"
 	"time"
 )
 
@@ -52,7 +54,10 @@ func (a *AgentEventValue) UnmarshalJSON(data []byte) (err error) {
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/incremental_agent_events_api/
 type AgentEventService struct {
-	client *client
+	client               *client
+	agentStatesMutex     *sync.Mutex
+	agentStates          AgentStates
+	agentStatesStartTime *time.Time
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/incremental_agent_events_api/#incremental-agent-events-export
@@ -92,4 +97,78 @@ func (s *AgentEventService) IncrementalExport(
 	}
 
 	return nil
+}
+
+type AgentStates map[UserID]AgentState
+
+type AgentState struct {
+	AgentID         UserID
+	EngagementCount uint64
+	Status          string
+	Timestamp       time.Time
+}
+
+func (s *AgentEventService) GetAgentStates(
+	ctx context.Context,
+) AgentStates {
+	out := AgentStates{}
+
+	agentStateBytes, err := json.Marshal(s.agentStates)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := json.Unmarshal(agentStateBytes, &out); err != nil {
+		panic(err)
+	}
+
+	return out
+}
+
+func (s *AgentEventService) UpdateAgentStates(
+	ctx context.Context,
+	defaultStateTime time.Time,
+) error {
+	if s.agentStatesStartTime == nil {
+		s.agentStatesStartTime = &defaultStateTime
+	}
+
+	return s.IncrementalExport(
+		ctx, *s.agentStatesStartTime,
+		func(response AgentEventExportResponse) error {
+			s.agentStatesMutex.Lock()
+			defer s.agentStatesMutex.Unlock()
+
+			for _, agentEvent := range response.AgentEvents {
+				agentState := s.agentStates[agentEvent.AgentID]
+
+				agentState.AgentID = agentEvent.AgentID
+				agentState.Timestamp = agentEvent.StartTime
+
+				switch agentEvent.FieldName {
+				case "engagements":
+					engagementCount, err := strconv.ParseUint(string(agentEvent.Value), 10, 64)
+					if err != nil {
+						return err
+					}
+
+					agentState.EngagementCount = engagementCount
+				case "status":
+					if agentEvent.Value == "offline" || agentEvent.Value == "invisible" {
+						delete(s.agentStates, agentEvent.AgentID)
+						continue
+					}
+
+					agentState.Status = string(agentEvent.Value)
+				}
+
+				s.agentStates[agentEvent.AgentID] = agentState
+			}
+
+			endTime := response.EndTime()
+			s.agentStatesStartTime = &endTime
+
+			return nil
+		},
+	)
 }

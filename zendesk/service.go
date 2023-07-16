@@ -56,7 +56,9 @@ func NewService(
 				client: c,
 			},
 			agentsService: &AgentEventService{
-				client: c,
+				client:           c,
+				agentStatesMutex: &sync.Mutex{},
+				agentStates:      AgentStates{},
 			},
 		},
 	}

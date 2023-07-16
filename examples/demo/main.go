@@ -26,50 +26,19 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	type AgentStatus struct {
-		Status          zendesk.AgentEventValue
-		EngagementCount zendesk.AgentEventValue
-	}
-
-	agentList := map[zendesk.UserID]AgentStatus{}
-	startTime := time.Now().Add(time.Hour * -100)
+	defaultStartTime := time.Now().Add(time.Hour * -72)
 
 	check := func(ctx context.Context) {
-		log.Println("Checking....")
-		if err := z.Chat().AgentsService().IncrementalExport(ctx, startTime, func(response zendesk.AgentEventExportResponse) error {
-			for _, agentTimeline := range response.AgentEvents {
-				existingAgent, alreadyExists := agentList[agentTimeline.AgentID]
-				if !alreadyExists {
-					existingAgent = AgentStatus{
-						Status:          "",
-						EngagementCount: "0",
-					}
-				}
-
-				switch agentTimeline.FieldName {
-				case "engagements":
-					existingAgent.EngagementCount = agentTimeline.Value
-				case "status":
-					existingAgent.Status = agentTimeline.Value
-
-				}
-				if agentTimeline.Value == "offline" {
-					delete(agentList, agentTimeline.AgentID)
-					continue
-				}
-
-				agentList[agentTimeline.AgentID] = existingAgent
-			}
-
-			startTime = response.EndTime()
-
-			return nil
-		}); err != nil {
+		if err := z.Chat().AgentsService().UpdateAgentStates(ctx, defaultStartTime); err != nil {
 			log.Println(err)
+			return
 		}
+
+		agentList := z.Chat().AgentsService().GetAgentStates(ctx)
 
 		jsonBytes, _ := json.MarshalIndent(agentList, "", "\t")
 		log.Printf("Agent On Chat: %d %s", len(agentList), string(jsonBytes))
+		agentList[123] = zendesk.AgentState{}
 	}
 
 	check(ctx)
