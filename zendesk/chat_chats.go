@@ -139,7 +139,7 @@ type ChatHistory struct {
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/
 type ChatsService struct {
-	c *client
+	client *client
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#list-chats
@@ -149,7 +149,7 @@ func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResp
 	for {
 		target := ChatsResponse{}
 
-		if err := s.c.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		if err := s.client.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
 			return err
 		}
 
@@ -177,7 +177,7 @@ func (s *ChatsService) Search(ctx context.Context, query string, pageHandler fun
 	for {
 		target := ChatsSearchResponse{}
 
-		if err := s.c.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		if err := s.client.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
 			return err
 		}
 
@@ -199,7 +199,7 @@ func (s *ChatsService) Search(ctx context.Context, query string, pageHandler fun
 func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
 	target := Chat{}
 
-	if err := s.c.ChatRequest(
+	if err := s.client.ChatRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/chats/%s", id),
@@ -227,7 +227,7 @@ func (s *ChatsService) IncrementalExport(
 	for {
 		target := ChatsIncrementalExportResponse{}
 
-		if err := s.c.ChatRequest(
+		if err := s.client.ChatRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/chats?%s", query.Encode()),

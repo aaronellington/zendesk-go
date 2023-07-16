@@ -53,7 +53,10 @@ func NewService(
 		},
 		chatService: &ChatService{
 			chatsService: &ChatsService{
-				c: c,
+				client: c,
+			},
+			agentsService: &AgentEventService{
+				client: c,
 			},
 		},
 	}

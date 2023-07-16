@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -26,31 +26,54 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	query := fmt.Sprintf("timestamp:[%s TO *]", time.Now().UTC().Add(time.Hour*-3).Format(time.RFC3339))
-
-	if err := z.Chat().Chats().Search(ctx, query, func(page zendesk.ChatsSearchResponse) error {
-		for _, searchResult := range page.Results {
-			chat, err := z.Chat().Chats().Show(ctx, searchResult.ID)
-			if err != nil {
-				return err
-			}
-
-			log.Printf("Bla: %s", chat.EndTimestamp)
-		}
-		return nil
-	}); err != nil {
-		log.Fatal(err)
+	type AgentStatus struct {
+		Status          zendesk.AgentEventValue
+		EngagementCount zendesk.AgentEventValue
 	}
 
-	// if err := z.Chat().Chats().IncrementalExport(ctx, (time.Now()).Add(time.Hour*-5).Unix(), func(response zendesk.ChatsIncrementalExportResponse) error {
-	// 	for _, chat := range response.Chats {
-	// 		for _, eng := range chat.ChatEngagements {
-	// 			log.Printf("eng: %s", eng.ID)
-	// 		}
-	// 	}
+	agentList := map[zendesk.UserID]AgentStatus{}
+	startTime := time.Now().Add(time.Hour * -100)
 
-	// 	return nil
-	// }); err != nil {
-	// 	log.Fatal(err)
-	// }
+	check := func(ctx context.Context) {
+		log.Println("Checking....")
+		if err := z.Chat().AgentsService().IncrementalExport(ctx, startTime, func(response zendesk.AgentEventExportResponse) error {
+			for _, agentTimeline := range response.AgentEvents {
+				existingAgent, alreadyExists := agentList[agentTimeline.AgentID]
+				if !alreadyExists {
+					existingAgent = AgentStatus{
+						Status:          "",
+						EngagementCount: "0",
+					}
+				}
+
+				switch agentTimeline.FieldName {
+				case "engagements":
+					existingAgent.EngagementCount = agentTimeline.Value
+				case "status":
+					existingAgent.Status = agentTimeline.Value
+
+				}
+				if agentTimeline.Value == "offline" {
+					delete(agentList, agentTimeline.AgentID)
+					continue
+				}
+
+				agentList[agentTimeline.AgentID] = existingAgent
+			}
+
+			startTime = response.EndTime()
+
+			return nil
+		}); err != nil {
+			log.Println(err)
+		}
+
+		jsonBytes, _ := json.MarshalIndent(agentList, "", "\t")
+		log.Printf("Agent On Chat: %d %s", len(agentList), string(jsonBytes))
+	}
+
+	check(ctx)
+	for range time.NewTicker(time.Second * 5).C {
+		check(ctx)
+	}
 }
