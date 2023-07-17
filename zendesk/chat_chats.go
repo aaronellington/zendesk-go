@@ -51,7 +51,7 @@ type Chat struct {
 	WebPath         []ChatWebPath    `json:"webpath"`
 	Timestamp       time.Time        `json:"timestamp"`
 	Count           ChatCount        `json:"count"`
-	Duration        int              `json:"duration"`
+	Duration        uint64           `json:"duration"`
 	ResponseTime    ChatResponseTime `json:"response_time"`
 	AgentIds        []UserID         `json:"agent_ids"`
 	Triggered       bool             `json:"triggered"`
@@ -109,9 +109,9 @@ type ChatWebPath struct {
 }
 
 type ChatCount struct {
-	Visitor uint `json:"visitor"`
-	Agent   uint `json:"agent"`
-	Total   uint `json:"total"`
+	Visitor uint64 `json:"visitor"`
+	Agent   uint64 `json:"agent"`
+	Total   uint64 `json:"total"`
 }
 
 type ChatResponseTime struct {
