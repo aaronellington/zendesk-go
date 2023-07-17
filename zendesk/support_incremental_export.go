@@ -3,8 +3,8 @@ package zendesk
 import "time"
 
 type IncrementalExportResponse struct {
-	EndTimeUnix uint64 `json:"end_time"`
-	EndOfStream bool   `json:"end_of_stream"`
+	EndTimeUnix int64 `json:"end_time"`
+	EndOfStream bool  `json:"end_of_stream"`
 }
 
 func (response IncrementalExportResponse) EndTime() time.Time {

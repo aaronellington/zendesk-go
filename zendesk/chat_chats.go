@@ -34,7 +34,7 @@ type ChatsIncrementalExportResponse struct {
 	Chats       []IncrementalExportChat `json:"chats"`
 	Count       uint64                  `json:"count"`
 	EndID       ChatID                  `json:"end_id"`
-	EndTimeUnix uint64                  `json:"end_time"`
+	EndTimeUnix int64                   `json:"end_time"`
 	NextPage    string                  `json:"next_page"`
 }
 
