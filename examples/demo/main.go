@@ -26,7 +26,8 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	defaultStartTime := time.Now().Add(time.Hour * -72)
+	// Pulling the last 12 hours of events will not guarantee to capture all users, but if they have not changed their status in over 12 hours, I don't care about their status. lol
+	defaultStartTime := time.Now().Add(time.Hour * -12)
 
 	check := func(ctx context.Context) {
 		if err := z.Chat().AgentsService().UpdateAgentStates(ctx, defaultStartTime); err != nil {
