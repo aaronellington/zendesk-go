@@ -31,11 +31,15 @@ type ChatSearchResult struct {
 }
 
 type ChatsIncrementalExportResponse struct {
-	Chats    []IncrementalExportChat `json:"chats"`
-	Count    uint64                  `json:"count"`
-	EndID    ChatID                  `json:"end_id"`
-	EndTime  uint64                  `json:"end_time"`
-	NextPage string                  `json:"next_page"`
+	Chats       []IncrementalExportChat `json:"chats"`
+	Count       uint64                  `json:"count"`
+	EndID       ChatID                  `json:"end_id"`
+	EndTimeUnix uint64                  `json:"end_time"`
+	NextPage    string                  `json:"next_page"`
+}
+
+func (response ChatsIncrementalExportResponse) EndTime() time.Time {
+	return time.Unix(int64(response.EndTimeUnix), 0)
 }
 
 type IncrementalExportChat struct {
@@ -60,7 +64,7 @@ type Chat struct {
 	Tags            []string         `json:"tags"`
 	Type            string           `json:"type"`
 	History         []ChatHistory    `json:"history"`
-	DepartmentID    GroupID          `json:"department_id"`
+	DepartmentID    *GroupID         `json:"department_id"`
 	EndTimestamp    time.Time        `json:"end_timestamp"`
 	ZendeskTicketID TicketID         `json:"zendesk_ticket_id"`
 }
@@ -68,8 +72,7 @@ type Chat struct {
 type ChatEngagement struct {
 	ID           ChatEngagementID `json:"id"`
 	AgentID      UserID           `json:"agent_id"`
-	DepartmentID GroupID          `json:"department_id"`
-	Comment      string           `json:"comment"`
+	DepartmentID *GroupID         `json:"department_id"`
 	Assigned     bool             `json:"assigned"`
 	Accepted     bool             `json:"accepted"`
 	StartedBy    string           `json:"started_by"`
@@ -215,12 +218,12 @@ func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/incremental_export/#incremental-chat-export
 func (s *ChatsService) IncrementalExport(
 	ctx context.Context,
-	startTime int64,
+	startTime time.Time,
 	pageHandler func(response ChatsIncrementalExportResponse) error,
 ) error {
 	const limit = 1000
 	query := url.Values{}
-	query.Set("start_time", fmt.Sprintf("%d", startTime))
+	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("limit", fmt.Sprintf("%d", limit))
 	query.Set("fields", "chats(*)")
 
@@ -245,7 +248,7 @@ func (s *ChatsService) IncrementalExport(
 			break
 		}
 
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTime))
+		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
 		query.Set("start_id", string(target.EndID))
 	}
 

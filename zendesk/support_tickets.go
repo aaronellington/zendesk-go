@@ -96,12 +96,12 @@ func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based
 func (s TicketService) IncrementalExport(
 	ctx context.Context,
-	startTime int64,
+	startTime time.Time,
 	perPage uint,
 	pageHandler func(response TicketsIncrementalExportResponse) error,
 ) error {
 	query := url.Values{}
-	query.Set("start_time", fmt.Sprintf("%d", startTime))
+	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("per_page", fmt.Sprintf("%d", perPage))
 
 	for {
@@ -125,7 +125,7 @@ func (s TicketService) IncrementalExport(
 			break
 		}
 
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTime))
+		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 )
@@ -85,6 +86,8 @@ func (c *client) json(ctx context.Context, method string, path string, body io.R
 		if err != nil {
 			return err
 		}
+
+		os.WriteFile("stuff.json", bodyBytes, 0o755)
 
 		if err := json.Unmarshal(bodyBytes, target); err != nil {
 			return err

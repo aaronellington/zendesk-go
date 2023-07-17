@@ -91,7 +91,7 @@ func (s OrganizationService) IncrementalExport(
 			break
 		}
 
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTime))
+		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
 	}
 
 	return nil

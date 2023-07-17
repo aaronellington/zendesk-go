@@ -1,0 +1,12 @@
+{
+    "tickets": [
+        {
+            "id": 1
+        },
+        {
+            "id": 2
+        }
+    ],
+    "end_of_stream": true,
+    "end_time": 500
+}

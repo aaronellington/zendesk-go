@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
@@ -170,7 +171,7 @@ func Test_Support_Tickets_IncrementalExport(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	if err := z.Support().Tickets().IncrementalExport(ctx, 0, 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	if err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
 		tickets = append(tickets, response.Tickets...)
 		return nil
 	}); err != nil {
