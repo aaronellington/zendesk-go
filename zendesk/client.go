@@ -104,25 +104,40 @@ func (c *client) ZendeskRequest(ctx context.Context, method string, path string,
 }
 
 func (c *client) ChatRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
-	if err := c.getAccessToken(ctx); err != nil {
-		return err
-	}
+	attempts := 0
+	maxAttempts := 2
 
-	if err := c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
-		if c.chatToken == nil {
-			return errors.New("no token")
+	for attempts < maxAttempts {
+		attempts++
+
+		if err := c.getAccessToken(ctx); err != nil {
+			return err
 		}
 
-		if c.chatToken.AccessToken == "" {
-			return errors.New("blank token")
+		if err := c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
+			if c.chatToken == nil {
+				return errors.New("no token")
+			}
+
+			if c.chatToken.AccessToken == "" {
+				return errors.New("blank token")
+			}
+
+			r.URL.Host = "www.zopim.com"
+			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
+
+			return nil
+		})); err != nil {
+			if err.(*Error).StatusCode == http.StatusUnauthorized {
+				// Clear out the token
+				c.chatToken = nil
+				continue
+			}
+
+			return err
 		}
 
-		r.URL.Host = "www.zopim.com"
-		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
-
-		return nil
-	})); err != nil {
-		return err
+		break
 	}
 
 	return nil
