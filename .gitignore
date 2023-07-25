@@ -1,1 +1,11 @@
+# System
+.DS_Store
+
+# Temp
 /var/
+
+# Secrets
+/.env*local
+
+# Go
+__debug_bin
