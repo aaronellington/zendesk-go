@@ -7,7 +7,6 @@ install:
 
 lint:
 	gofmt -l -e -s .
-	goimports -l .
 
 test:
 	@mkdir -p var
@@ -17,7 +16,6 @@ fix:
 	go get -u ./...
 	go mod tidy
 	gofmt -s -w .
-	goimports -w .
 
 docs:
 	go install golang.org/x/tools/cmd/godoc@latest

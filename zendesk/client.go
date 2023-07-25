@@ -128,10 +128,12 @@ func (c *client) ChatRequest(ctx context.Context, method string, path string, bo
 
 			return nil
 		})); err != nil {
-			if err.(*Error).StatusCode == http.StatusUnauthorized {
-				// Clear out the token
-				c.chatToken = nil
-				continue
+			if zdError, ok := err.(*Error); ok {
+				if zdError.StatusCode == http.StatusUnauthorized {
+					// Clear out the token
+					c.chatToken = nil
+					continue
+				}
 			}
 
 			return err
