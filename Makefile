@@ -1,4 +1,4 @@
-.PHONY: full build test test-go lint lint-go fix fix-go watch clean
+.PHONY: full build test test-go lint lint-go fix fix-go watch clean docs-go
 
 SHELL=/bin/bash -o pipefail
 $(shell git config core.hooksPath ops/git-hooks)
@@ -36,7 +36,6 @@ fix: fix-go
 fix-go:
 	go mod tidy
 	gofmt -s -w .
-	goimports -w .
 
 ## Watch the project
 watch:
@@ -44,3 +43,9 @@ watch:
 ## Clean the project
 clean:
 	git clean -Xdff --exclude="!.env*local"
+
+## Run the docs server for the project
+docs-go:
+	@go install golang.org/x/tools/cmd/godoc@latest
+	@echo "listening on http://127.0.0.1:6060/pkg/github.com/aaronellington/zendesk-go"
+	@godoc -http=127.0.0.1:6060

@@ -132,6 +132,7 @@ func (c *client) ChatRequest(ctx context.Context, method string, path string, bo
 				if zdError.StatusCode == http.StatusUnauthorized {
 					// Clear out the token
 					c.chatToken = nil
+
 					continue
 				}
 			}

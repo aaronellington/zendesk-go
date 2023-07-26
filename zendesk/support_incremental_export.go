@@ -8,5 +8,5 @@ type IncrementalExportResponse struct {
 }
 
 func (response IncrementalExportResponse) EndTime() time.Time {
-	return time.Unix(int64(response.EndTimeUnix), 0)
+	return time.Unix(response.EndTimeUnix, 0)
 }

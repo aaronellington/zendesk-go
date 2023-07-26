@@ -39,7 +39,7 @@ type ChatsIncrementalExportResponse struct {
 }
 
 func (response ChatsIncrementalExportResponse) EndTime() time.Time {
-	return time.Unix(int64(response.EndTimeUnix), 0)
+	return time.Unix(response.EndTimeUnix, 0)
 }
 
 type IncrementalExportChat struct {
@@ -222,6 +222,7 @@ func (s *ChatsService) IncrementalExport(
 	pageHandler func(response ChatsIncrementalExportResponse) error,
 ) error {
 	const limit = 1000
+
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("limit", fmt.Sprintf("%d", limit))

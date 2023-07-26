@@ -9,8 +9,8 @@ import (
 )
 
 type AssertFailure struct {
-	Expected interface{}
-	Actual   interface{}
+	Expected interface{} `json:"expected"`
+	Actual   interface{} `json:"actual"`
 }
 
 var errAssert = errors.New("")
@@ -26,12 +26,16 @@ func Assert(expected interface{}, actual interface{}) error {
 
 	expectedString, expectedIsString := expected.(string)
 	actualString, actualIsString := actual.(string)
+
 	if expectedIsString && actualIsString {
 		if expectedString != actualString {
-			b, _ := json.Marshal(AssertFailure{
+			b, err := json.Marshal(AssertFailure{
 				Expected: expectedString,
 				Actual:   actualString,
 			})
+			if err != nil {
+				return err
+			}
 
 			return errors.New(string(b))
 		}

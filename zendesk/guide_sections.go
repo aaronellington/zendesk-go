@@ -20,7 +20,7 @@ type Section struct {
 	CategoryID      CategoryID `json:"category_id"`
 	CreatedAt       time.Time  `json:"created_at"`
 	Description     string     `json:"description"`
-	HTML_URL        string     `json:"html_url"`
+	HTMLURL         string     `json:"html_url"`
 	ID              SectionID  `json:"id"`
 	Locale          string     `json:"locale"`
 	Name            string     `json:"name"`

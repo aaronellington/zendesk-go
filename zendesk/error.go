@@ -6,10 +6,10 @@ import (
 )
 
 type Error struct {
-	StatusCode  int
-	Body        []byte
-	Message     string
-	Description string
+	StatusCode  int    `json:"status_code"`
+	Body        []byte `json:"body"`
+	Message     string `json:"message"`
+	Description string `json:"description"`
 }
 
 func (err *Error) Error() string {

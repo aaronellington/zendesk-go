@@ -173,6 +173,7 @@ func Test_Support_Tickets_IncrementalExport(t *testing.T) {
 
 	if err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
 		tickets = append(tickets, response.Tickets...)
+
 		return nil
 	}); err != nil {
 		t.Fatal(err)

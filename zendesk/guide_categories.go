@@ -16,7 +16,7 @@ type CategoryResponse struct {
 type Category struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	Description  string     `json:"description"`
-	HTML_URL     string     `json:"html_url"`
+	HTMLURL      string     `json:"html_url"`
 	ID           CategoryID `json:"id"`
 	Locale       string     `json:"locale"`
 	Name         string     `json:"name"`

@@ -35,10 +35,11 @@ type AgentEvent struct {
 
 type AgentEventValue string
 
-func (a *AgentEventValue) UnmarshalJSON(data []byte) (err error) {
+func (a *AgentEventValue) UnmarshalJSON(data []byte) error {
 	var intTarget int64
 	if err := json.Unmarshal(data, &intTarget); err == nil {
 		*a = AgentEventValue(fmt.Sprintf("%d", intTarget))
+
 		return nil
 	}
 
@@ -46,6 +47,7 @@ func (a *AgentEventValue) UnmarshalJSON(data []byte) (err error) {
 
 	if err := json.Unmarshal(data, &stringTarget); err == nil {
 		*a = AgentEventValue(stringTarget)
+
 		return nil
 	}
 
@@ -67,6 +69,7 @@ func (s *AgentEventService) IncrementalExport(
 	pageHandler func(response AgentEventExportResponse) error,
 ) error {
 	const limit = 1000
+
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("limit", fmt.Sprintf("%d", limit))
@@ -156,6 +159,7 @@ func (s *AgentEventService) UpdateAgentStates(
 				case "status":
 					if agentEvent.Value == "offline" || agentEvent.Value == "invisible" {
 						delete(s.agentStates, agentEvent.AgentID)
+
 						continue
 					}
 

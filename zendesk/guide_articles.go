@@ -27,7 +27,7 @@ type Article struct {
 	CreatedAt         time.Time `json:"created_at"`
 	Draft             bool      `json:"draft"`
 	EditedAt          time.Time `json:"edited_at"`
-	HTML_URL          string    `json:"html_url"`
+	HTMLURL           string    `json:"html_url"`
 	ID                ArticleID `json:"id"`
 	LabelNames        []any     `json:"label_names"`
 	Locale            string    `json:"locale"`

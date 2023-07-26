@@ -46,5 +46,6 @@ type loggerWrapper struct {
 
 func (l *loggerWrapper) ProcessRequest(r *http.Request) error {
 	l.logger.Printf("Request: %s %s", r.Method, r.URL.String())
+
 	return nil
 }
