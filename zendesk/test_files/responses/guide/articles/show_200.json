@@ -1,8 +1,8 @@
 {
     "article": {
         "id": 123,
-        "url": "https://kaseya.zendesk.com/api/v2/help_center/en-us/articles/123.json",
-        "html_url": "https://helpdesk.kaseya.com/hc/en-us/articles/123-hello-there-a-story-about-awesome-greetings",
+        "url": "https://example.zendesk.com/api/v2/help_center/en-us/articles/123.json",
+        "html_url": "https://kb.example.com/hc/en-us/articles/123-hello-there-a-story-about-awesome-greetings",
         "author_id": 789,
         "comments_disabled": false,
         "draft": true,
