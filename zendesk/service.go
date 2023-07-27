@@ -58,6 +58,9 @@ func NewService(
 			userFieldsService: &UserFieldService{
 				client: c,
 			},
+			userIdentityService: &UserIdentityService{
+				client: c,
+			},
 		},
 		guideService: &GuideService{
 			categoriesService: &CategoryService{
