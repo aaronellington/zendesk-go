@@ -2,8 +2,6 @@ package zendesk
 
 import "time"
 
-type SectionID uint64
-
 type SectionsResponse struct {
 	Sections     []Section `json:"sections"`
 	Page         int       `json:"page"`
@@ -35,6 +33,6 @@ type Section struct {
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/sections/
-type SectionsService struct {
+type SectionService struct {
 	client *client
 }

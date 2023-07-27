@@ -20,7 +20,7 @@ func NewService(
 		httpClient: &http.Client{
 			Transport: config.roundTripper,
 		},
-		subdomain:            subDomain,
+		subDomain:            subDomain,
 		zendeskAuth:          zendeskAuth,
 		chatCredentials:      chatCredentials,
 		chatMutex:            &sync.Mutex{},
@@ -29,6 +29,7 @@ func NewService(
 	}
 
 	return &Service{
+		subDomain: subDomain,
 		supportService: &SupportService{
 			organizationService: &OrganizationService{
 				client: c,
@@ -39,23 +40,41 @@ func NewService(
 			ticketService: &TicketService{
 				client: c,
 			},
+			ticketAuditService: &TicketAuditService{
+				client: c,
+			},
+			scheduleService: &ScheduleService{
+				client: c,
+			},
+			groupMembershipService: &GroupMembershipService{
+				client: c,
+			},
+			groupService: &GroupsService{
+				client: c,
+			},
+			suspendedTicketService: &SuspendedTicketService{
+				client: c,
+			},
+			userFieldsService: &UserFieldService{
+				client: c,
+			},
 		},
 		guideService: &GuideService{
-			categoriesService: &CategoriesService{
+			categoriesService: &CategoryService{
 				client: c,
 			},
-			sectionsService: &SectionsService{
+			sectionsService: &SectionService{
 				client: c,
 			},
-			articlesService: &ArticlesService{
+			articlesService: &ArticleService{
 				client: c,
 			},
 		},
-		chatService: &ChatService{
-			chatsService: &ChatsService{
+		liveChatService: &LiveChatService{
+			chatService: &ChatService{
 				client: c,
 			},
-			agentsService: &AgentEventService{
+			agentEventService: &AgentEventService{
 				client:           c,
 				agentStatesMutex: &sync.Mutex{},
 				agentStates:      AgentStates{},
@@ -65,9 +84,14 @@ func NewService(
 }
 
 type Service struct {
-	supportService *SupportService
-	guideService   *GuideService
-	chatService    *ChatService
+	subDomain       string
+	supportService  *SupportService
+	guideService    *GuideService
+	liveChatService *LiveChatService
+}
+
+func (s *Service) SubDomain() string {
+	return s.subDomain
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
@@ -81,6 +105,6 @@ func (s *Service) Guide() *GuideService {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/introduction/
-func (s *Service) Chat() *ChatService {
-	return s.chatService
+func (s *Service) LiveChat() *LiveChatService {
+	return s.liveChatService
 }

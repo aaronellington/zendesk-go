@@ -5,10 +5,21 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
+
+func prettyPrint(v any) error {
+	bytes, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(bytes)
+	os.Stdout.WriteString("\n")
+
+	return nil
+}
 
 func main() {
 	ctx := context.Background()
@@ -26,24 +37,10 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	// Pulling the last 12 hours of events will not guarantee to capture all users, but if they have not changed their status in over 12 hours, I don't care about their status. lol
-	defaultStartTime := time.Now().Add(time.Hour * -12)
-
-	check := func(ctx context.Context) {
-		if err := z.Chat().AgentsService().UpdateAgentStates(ctx, defaultStartTime); err != nil {
-			log.Println(err)
-			return
-		}
-
-		agentList := z.Chat().AgentsService().GetAgentStates(ctx)
-
-		jsonBytes, _ := json.MarshalIndent(agentList, "", "\t")
-		log.Printf("Agent On Chat: %d %s", len(agentList), string(jsonBytes))
-		agentList[123] = zendesk.AgentState{}
+	s, err := z.Support().Schedules().List(ctx)
+	if err != nil {
+		panic(err)
 	}
 
-	check(ctx)
-	for range time.NewTicker(time.Second * 5).C {
-		check(ctx)
-	}
+	prettyPrint(s)
 }

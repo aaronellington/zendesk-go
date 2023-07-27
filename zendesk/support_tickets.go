@@ -10,7 +10,9 @@ import (
 	"time"
 )
 
-type TicketID uint64
+type TicketPayload struct {
+	Ticket any `json:"ticket"`
+}
 
 type TicketResponse struct {
 	Ticket Ticket `json:"ticket"`
@@ -23,7 +25,7 @@ type TicketsResponse struct {
 type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
-	CustomFields       []TicketCustomField      `json:"custom_fields"`
+	CustomFields       TicketCustomFields       `json:"custom_fields"`
 	Description        string                   `json:"description"`
 	DueAt              *time.Time               `json:"due_at"`
 	ExternalID         *string                  `json:"external_id"`
@@ -51,9 +53,20 @@ type TicketVia struct {
 	Channel string `json:"channel"`
 }
 
+type TicketCustomFields []TicketCustomField
+
+func (fields TicketCustomFields) CreateMap() map[TicketFieldID]any {
+	fieldMap := map[TicketFieldID]any{}
+	for _, field := range fields {
+		fieldMap[field.ID] = field.Value
+	}
+
+	return fieldMap
+}
+
 type TicketCustomField struct {
-	ID    int `json:"id"`
-	Value any `json:"value"`
+	ID    TicketFieldID `json:"id"`
+	Value any           `json:"value"`
 }
 
 type TicketSatisfactionRating struct {
@@ -65,6 +78,16 @@ type TagsPayload struct {
 }
 
 type Tags []string
+
+func (tags Tags) HasTag(targetTag string) bool {
+	for _, tag := range tags {
+		if tag == targetTag {
+			return true
+		}
+	}
+
+	return false
+}
 
 type TicketsIncrementalExportResponse struct {
 	TicketsResponse
@@ -91,6 +114,40 @@ func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 	}
 
 	return target.Ticket, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#create-ticket
+func (s TicketService) Create(ctx context.Context, payload TicketPayload) (TicketResponse, error) {
+	target := TicketResponse{}
+
+	if err := s.client.ZendeskRequest(
+		ctx,
+		http.MethodPost,
+		"/api/v2/tickets",
+		structToReader(payload),
+		&target,
+	); err != nil {
+		return TicketResponse{}, err
+	}
+
+	return target, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#update-ticket
+func (s TicketService) Update(ctx context.Context, id TicketID, payload TicketPayload) (TicketResponse, error) {
+	target := TicketResponse{}
+
+	if err := s.client.ZendeskRequest(
+		ctx,
+		http.MethodPut,
+		fmt.Sprintf("/api/v2/tickets/%d", id),
+		structToReader(payload),
+		&target,
+	); err != nil {
+		return TicketResponse{}, err
+	}
+
+	return target, nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based

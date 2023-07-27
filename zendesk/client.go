@@ -18,7 +18,7 @@ type client struct {
 	chatCredentials      ChatCredentials
 	chatToken            *chatToken
 	chatMutex            *sync.Mutex
-	subdomain            string
+	subDomain            string
 	requestPreProcessors []RequestPreProcessor
 }
 
@@ -96,14 +96,14 @@ func (c *client) json(ctx context.Context, method string, path string, body io.R
 
 func (c *client) ZendeskRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
 	return c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
-		r.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subdomain)
+		r.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
 		c.zendeskAuth.AddZendeskAuthentication(r)
 
 		return nil
 	}))
 }
 
-func (c *client) ChatRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
+func (c *client) LiveChatRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
 	attempts := 0
 	maxAttempts := 2
 

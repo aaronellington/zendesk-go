@@ -2,8 +2,6 @@ package zendesk
 
 import "time"
 
-type CategoryID uint64
-
 type CategoriesResponse struct {
 	Categories []Category `json:"categories"`
 	CursorPaginationResponse
@@ -28,6 +26,6 @@ type Category struct {
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/categories/
-type CategoriesService struct {
+type CategoryService struct {
 	client *client
 }

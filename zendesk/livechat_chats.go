@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-type (
-	ChatID           string
-	ChatEngagementID string
-)
-
 type ChatsResponse struct {
 	Chats   []Chat  `json:"chats"`
 	NextURL *string `json:"next_url"`
@@ -141,18 +136,18 @@ type ChatHistory struct {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/
-type ChatsService struct {
+type ChatService struct {
 	client *client
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#list-chats
-func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
+func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
 	requestURL := "/api/v2/chats"
 
 	for {
 		target := ChatsResponse{}
 
-		if err := s.client.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		if err := s.client.LiveChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
 			return err
 		}
 
@@ -171,7 +166,7 @@ func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResp
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#search-chats
-func (s *ChatsService) Search(ctx context.Context, query string, pageHandler func(page ChatsSearchResponse) error) error {
+func (s *ChatService) Search(ctx context.Context, query string, pageHandler func(page ChatsSearchResponse) error) error {
 	values := &url.Values{}
 	values.Set("q", query)
 
@@ -180,7 +175,7 @@ func (s *ChatsService) Search(ctx context.Context, query string, pageHandler fun
 	for {
 		target := ChatsSearchResponse{}
 
-		if err := s.client.ChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		if err := s.client.LiveChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
 			return err
 		}
 
@@ -199,10 +194,10 @@ func (s *ChatsService) Search(ctx context.Context, query string, pageHandler fun
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#show-chat
-func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
+func (s *ChatService) Show(ctx context.Context, id ChatID) (Chat, error) {
 	target := Chat{}
 
-	if err := s.client.ChatRequest(
+	if err := s.client.LiveChatRequest(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/chats/%s", id),
@@ -216,7 +211,7 @@ func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/incremental_export/#incremental-chat-export
-func (s *ChatsService) IncrementalExport(
+func (s *ChatService) IncrementalExport(
 	ctx context.Context,
 	startTime time.Time,
 	pageHandler func(response ChatsIncrementalExportResponse) error,
@@ -231,7 +226,7 @@ func (s *ChatsService) IncrementalExport(
 	for {
 		target := ChatsIncrementalExportResponse{}
 
-		if err := s.client.ChatRequest(
+		if err := s.client.LiveChatRequest(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/chats?%s", query.Encode()),

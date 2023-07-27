@@ -102,7 +102,7 @@ func Test_SupportTicketsShow_404(t *testing.T) {
 	}
 }
 
-func Test_SupportTicketsShow_404_Wrong_Subdomain(t *testing.T) {
+func Test_SupportTicketsShow_404_Wrong_SubDomain(t *testing.T) {
 	ctx := context.Background()
 
 	z := createTestService(t, []study.RoundTripFunc{

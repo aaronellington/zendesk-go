@@ -20,6 +20,18 @@ func (err *Error) Error() string {
 	return err.Message
 }
 
+func (err *Error) ImmutableRecord() bool {
+	if err.Message == "RecordInvalid" {
+		return true
+	}
+
+	if err.Message == "RecordNotFound" {
+		return true
+	}
+
+	return false
+}
+
 func (err *Error) UnmarshalJSON(b []byte) error {
 	err1 := errorResponse1{}
 	if err1err := json.Unmarshal(b, &err1); err1err == nil {

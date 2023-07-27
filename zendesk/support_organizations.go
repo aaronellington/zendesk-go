@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
-type OrganizationID uint64
+type OrganizationPayload struct {
+	Organization any `json:"organization"`
+}
 
 type OrganizationResponse struct {
 	Organization Organization `json:"organization"`
@@ -18,7 +21,50 @@ type OrganizationsResponse struct {
 }
 
 type Organization struct {
-	ID OrganizationID `json:"id"`
+	ID                 OrganizationID     `json:"id"`
+	CreatedAt          time.Time          `json:"created_at"`
+	DeletedAt          *time.Time         `json:"deleted_at"`
+	Details            string             `json:"details"`
+	DomainNames        []string           `json:"domain_names"`
+	ExternalID         *string            `json:"external_id"`
+	GroupID            *GroupID           `json:"group_id"`
+	Name               string             `json:"name"`
+	Notes              string             `json:"notes"`
+	SharedComments     bool               `json:"shared_comments"`
+	SharedTickets      bool               `json:"shared_tickets"`
+	Tags               []string           `json:"tags"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+	OrganizationFields OrganizationFields `json:"organization_fields"`
+}
+
+type OrganizationFields map[string]any
+
+func (fields OrganizationFields) GetString(key string) *string {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return nil
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return &value
+}
+
+func (fields OrganizationFields) GetBool(key string) bool {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return false
+	}
+
+	value, ok := rawValue.(bool)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return value
 }
 
 type OrganizationVia struct {
@@ -95,4 +141,38 @@ func (s OrganizationService) IncrementalExport(
 	}
 
 	return nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#create-organization
+func (s OrganizationService) Create(ctx context.Context, payload OrganizationPayload) (OrganizationResponse, error) {
+	target := OrganizationResponse{}
+
+	if err := s.client.ZendeskRequest(
+		ctx,
+		http.MethodPost,
+		"/api/v2/organizations",
+		structToReader(payload),
+		&target,
+	); err != nil {
+		return OrganizationResponse{}, err
+	}
+
+	return target, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#update-organization
+func (s OrganizationService) Update(ctx context.Context, id OrganizationID, payload OrganizationPayload) (OrganizationResponse, error) {
+	target := OrganizationResponse{}
+
+	if err := s.client.ZendeskRequest(
+		ctx,
+		http.MethodPut,
+		fmt.Sprintf("/api/v2/organizations/%d", id),
+		structToReader(payload),
+		&target,
+	); err != nil {
+		return OrganizationResponse{}, err
+	}
+
+	return target, nil
 }

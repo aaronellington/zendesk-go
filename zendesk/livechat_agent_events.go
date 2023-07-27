@@ -25,7 +25,7 @@ func (response AgentEventExportResponse) EndTime() time.Time {
 
 type AgentEvent struct {
 	StartTime     time.Time       `json:"timestamp"`
-	AccountID     uint64          `json:"account_id"`
+	AccountID     ChatAccountID   `json:"account_id"`
 	AgentID       UserID          `json:"agent_id"`
 	FieldName     string          `json:"field_name"`
 	ID            string          `json:"id"`
@@ -78,7 +78,7 @@ func (s *AgentEventService) IncrementalExport(
 	for {
 		target := AgentEventExportResponse{}
 
-		if err := s.client.ChatRequest(
+		if err := s.client.LiveChatRequest(
 			ctx,
 			http.MethodGet,
 			url,
