@@ -25,7 +25,7 @@ type UserIdentityService struct {
 // https://developer.zendesk.com/api-reference/ticketing/users/user_identities/#list-identities
 func (s *UserIdentityService) List(
 	ctx context.Context,
-	userID uint64,
+	userID UserID,
 	pageHandler func(response UserIdentitiesResponse) error,
 ) error {
 	query := url.Values{}

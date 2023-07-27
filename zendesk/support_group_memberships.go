@@ -9,7 +9,7 @@ import (
 )
 
 type GroupMembershipPayload struct {
-	GroupMembership any `json:""`
+	GroupMembership any `json:"group_membership"`
 }
 
 type GroupMembership struct {
@@ -22,7 +22,7 @@ type GroupMembership struct {
 }
 
 type GroupMembershipsResponse struct {
-	GroupMemberships []GroupMembership
+	GroupMemberships []GroupMembership `json:"group_memberships"`
 	CursorPaginationResponse
 }
 
