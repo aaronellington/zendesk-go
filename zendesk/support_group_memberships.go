@@ -180,8 +180,8 @@ func (s GroupMembershipService) Create(
 		"/api/v2/group_memberships",
 		structToReader(GroupMembershipPayload{
 			GroupMembership: map[string]any{
-				"userID":  userID,
-				"groupID": groupID,
+				"user_id":  userID,
+				"group_id": groupID,
 			},
 		}),
 		nil,
