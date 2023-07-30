@@ -1,4 +1,9 @@
 # zendesk-go
+
+<!-- aaronellington/stencil -->
+[![Go](https://github.com/aaronellington/zendesk-go/actions/workflows/go.yml/badge.svg)](https://github.com/aaronellington/zendesk-go/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/aaronellington/zendesk-go)](https://goreportcard.com/report/github.com/aaronellington/zendesk-go)
+<!-- aaronellington/stencil -->
+
 Zendesk API client library for Go.
 
 ## Getting Started
