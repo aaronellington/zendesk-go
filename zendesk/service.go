@@ -43,6 +43,9 @@ func NewService(
 			ticketAuditService: &TicketAuditService{
 				client: c,
 			},
+			ticketMetricEventService: &TicketMetricEventService{
+				client: c,
+			},
 			scheduleService: &ScheduleService{
 				client: c,
 			},

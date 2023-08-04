@@ -2,16 +2,17 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 type SupportService struct {
-	groupMembershipService *GroupMembershipService
-	groupService           *GroupsService
-	organizationService    *OrganizationService
-	scheduleService        *ScheduleService
-	suspendedTicketService *SuspendedTicketService
-	ticketAuditService     *TicketAuditService
-	ticketService          *TicketService
-	userFieldsService      *UserFieldService
-	userService            *UserService
-	userIdentityService    *UserIdentityService
+	groupMembershipService   *GroupMembershipService
+	groupService             *GroupsService
+	organizationService      *OrganizationService
+	scheduleService          *ScheduleService
+	suspendedTicketService   *SuspendedTicketService
+	ticketAuditService       *TicketAuditService
+	ticketService            *TicketService
+	ticketMetricEventService *TicketMetricEventService
+	userFieldsService        *UserFieldService
+	userService              *UserService
+	userIdentityService      *UserIdentityService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -52,6 +53,11 @@ func (s *SupportService) Tickets() *TicketService {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_audits/
 func (s *SupportService) TicketAudits() *TicketAuditService {
 	return s.ticketAuditService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events/
+func (s *SupportService) TicketMetricEvents() *TicketMetricEventService {
+	return s.ticketMetricEventService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/
