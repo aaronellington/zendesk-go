@@ -45,7 +45,7 @@ type (
 	TicketFormID        uint64
 	TicketID            uint64
 	TicketMetricEventID uint64
-	PolicyID            uint64
+	SLAPolicyID         uint64
 	UserFieldID         uint64
 	UserID              uint64
 	UserSegmentID       uint64

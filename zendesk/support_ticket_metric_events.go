@@ -28,15 +28,15 @@ type TicketMetricEvent struct {
 }
 
 type ServiceLevelAgreement struct {
-	Target        uint64 `json:"target"`
-	BusinessHours bool   `json:"business_hours"`
-	Policy        Policy `json:"policy"`
+	Target        uint64    `json:"target"`
+	BusinessHours bool      `json:"business_hours"`
+	Policy        SLAPolicy `json:"policy"`
 }
 
-type Policy struct {
-	ID          PolicyID `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
+type SLAPolicy struct {
+	ID          SLAPolicyID `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events
@@ -45,13 +45,14 @@ type TicketMetricEventService struct {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events/#list-ticket-metric-events
-func (s TicketMetricEventService) IncrementalExport(
+func (s TicketMetricEventService) List(
 	ctx context.Context,
 	startTime time.Time,
 	pageHandler func(response TicketMetricEventsIncrementalExportResponse) error,
 ) error {
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
+	query.Set("page[size]", "100")
 
 	for {
 		target := TicketMetricEventsIncrementalExportResponse{}
