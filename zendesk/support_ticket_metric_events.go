@@ -12,9 +12,9 @@ type TicketMetricEventsResponse struct {
 	TicketMetricEvents []TicketMetricEvent `json:"ticket_metric_events"`
 }
 
-type TicketMetricEventsIncrementalExportResponse struct {
+type TicketMetricEventsListResponse struct {
 	TicketMetricEventsResponse
-	IncrementalExportResponse
+	CursorPaginationResponse
 }
 
 type TicketMetricEvent struct {
@@ -48,14 +48,14 @@ type TicketMetricEventService struct {
 func (s TicketMetricEventService) List(
 	ctx context.Context,
 	startTime time.Time,
-	pageHandler func(response TicketMetricEventsIncrementalExportResponse) error,
+	pageHandler func(response TicketMetricEventsListResponse) error,
 ) error {
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("page[size]", "100")
 
 	for {
-		target := TicketMetricEventsIncrementalExportResponse{}
+		target := TicketMetricEventsListResponse{}
 
 		if err := s.client.ZendeskRequest(
 			ctx,
@@ -71,11 +71,11 @@ func (s TicketMetricEventService) List(
 			return err
 		}
 
-		if target.EndOfStream {
+		if !target.Meta.HasMore {
 			break
 		}
 
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
+		query.Set("page[after]", target.Meta.AfterCursor)
 	}
 
 	return nil
