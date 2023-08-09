@@ -25,6 +25,7 @@ type UsersIncrementalExportResponse struct {
 	IncrementalExportResponse
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/users/users/#json-format
 type User struct {
 	ID                   UserID          `json:"id"`
 	Active               bool            `json:"active"`
@@ -41,6 +42,7 @@ type User struct {
 	Phone                *string         `json:"phone"`
 	Role                 string          `json:"role"`
 	RoleType             *int            `json:"role_type"`
+	Signature            string          `json:"signature"`
 	Shared               bool            `json:"shared"`
 	Suspended            bool            `json:"suspended"`
 	Tags                 []string        `json:"tags"`
