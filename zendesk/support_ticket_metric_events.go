@@ -25,6 +25,9 @@ type TicketMetricEvent struct {
 	Type       string                 `json:"type"`
 	Time       time.Time              `json:"time"`
 	SLA        *ServiceLevelAgreement `json:"sla,omitempty"`
+	GroupSLA   *ServiceLevelAgreement `json:"group_sla,omitempty"`
+	Deleted    *bool                  `json:"deleted,omitempty"`
+	Status     *SLAStatus             `json:"status,omitempty"`
 }
 
 type ServiceLevelAgreement struct {
@@ -37,6 +40,11 @@ type SLAPolicy struct {
 	ID          SLAPolicyID `json:"id"`
 	Title       string      `json:"title"`
 	Description string      `json:"description"`
+}
+
+type SLAStatus struct {
+	Calendar int `json:"calendar"`
+	Business int `json:"business"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events
