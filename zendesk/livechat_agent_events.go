@@ -108,6 +108,7 @@ type AgentState struct {
 	AgentID         UserID
 	EngagementCount uint64
 	Status          string
+	StatusSince     time.Time
 	Timestamp       time.Time
 }
 
@@ -164,6 +165,7 @@ func (s *AgentEventService) UpdateAgentStates(
 					}
 
 					agentState.Status = string(agentEvent.Value)
+					agentState.StatusSince = agentEvent.StartTime
 				}
 
 				s.agentStates[agentEvent.AgentID] = agentState
