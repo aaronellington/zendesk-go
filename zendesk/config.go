@@ -19,12 +19,19 @@ func (p RequestPreProcessorFunc) ProcessRequest(r *http.Request) error {
 
 type internalConfig struct {
 	roundTripper         http.RoundTripper
+	userAgent            string
 	requestPreProcessors []RequestPreProcessor
 }
 
 func WithRoundTripper(roundTripper http.RoundTripper) configOption {
 	return func(s *internalConfig) {
 		s.roundTripper = roundTripper
+	}
+}
+
+func WithUserAgent(userAgent string) configOption {
+	return func(s *internalConfig) {
+		s.userAgent = userAgent
 	}
 }
 

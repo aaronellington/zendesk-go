@@ -19,13 +19,14 @@ type client struct {
 	chatToken            *chatToken
 	chatMutex            *sync.Mutex
 	subDomain            string
+	userAgent            string
 	requestPreProcessors []RequestPreProcessor
 }
 
 func (c *client) do(r *http.Request) (*http.Response, error) {
 	r.URL.Scheme = "https"
 	r.Header.Set("Accept", "application/json")
-	r.Header.Set("User-Agent", "aaronellington/zendesk-go")
+	r.Header.Set("User-Agent", c.userAgent)
 
 	for _, requestPreProcessor := range c.requestPreProcessors {
 		if err := requestPreProcessor.ProcessRequest(r); err != nil {

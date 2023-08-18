@@ -11,7 +11,9 @@ func NewService(
 	chatCredentials ChatCredentials,
 	opts ...configOption,
 ) *Service {
-	config := &internalConfig{}
+	config := &internalConfig{
+		userAgent: "aaronellington/zendesk-go",
+	}
 	for _, opt := range opts {
 		opt(config)
 	}
@@ -20,6 +22,7 @@ func NewService(
 		httpClient: &http.Client{
 			Transport: config.roundTripper,
 		},
+		userAgent:            config.userAgent,
 		subDomain:            subDomain,
 		zendeskAuth:          zendeskAuth,
 		chatCredentials:      chatCredentials,
