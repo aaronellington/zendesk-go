@@ -77,9 +77,9 @@ type TagsPayload struct {
 	Tags Tags `json:"tags"`
 }
 
-type Tags []string
+type Tags []Tag
 
-func (tags Tags) HasTag(targetTag string) bool {
+func (tags Tags) HasTag(targetTag Tag) bool {
 	for _, tag := range tags {
 		if tag == targetTag {
 			return true

@@ -39,6 +39,7 @@ type (
 	ScheduleID          uint64
 	SectionID           uint64
 	SuspendedTicketID   uint64
+	Tag                 string
 	TicketAuditEventID  uint64
 	TicketAuditID       uint64
 	TicketFieldID       uint64

@@ -32,7 +32,7 @@ type Organization struct {
 	Notes              string             `json:"notes"`
 	SharedComments     bool               `json:"shared_comments"`
 	SharedTickets      bool               `json:"shared_tickets"`
-	Tags               []string           `json:"tags"`
+	Tags               []Tag              `json:"tags"`
 	UpdatedAt          time.Time          `json:"updated_at"`
 	OrganizationFields OrganizationFields `json:"organization_fields"`
 }

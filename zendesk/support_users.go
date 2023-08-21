@@ -45,7 +45,7 @@ type User struct {
 	Signature            string          `json:"signature"`
 	Shared               bool            `json:"shared"`
 	Suspended            bool            `json:"suspended"`
-	Tags                 []string        `json:"tags"`
+	Tags                 []Tag           `json:"tags"`
 	TwoFactorAuthEnabled bool            `json:"two_factor_auth_enabled"`
 	UpdatedAt            time.Time       `json:"updated_at"`
 	Verified             bool            `json:"verified"`
