@@ -56,7 +56,7 @@ type Chat struct {
 	Triggered       bool             `json:"triggered"`
 	Unread          bool             `json:"unread"`
 	Missed          bool             `json:"missed"`
-	Tags            []string         `json:"tags"`
+	Tags            []Tag            `json:"tags"`
 	Type            string           `json:"type"`
 	History         []ChatHistory    `json:"history"`
 	DepartmentID    *GroupID         `json:"department_id"`

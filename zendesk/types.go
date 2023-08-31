@@ -3,8 +3,10 @@ package zendesk
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -39,6 +41,7 @@ type (
 	ScheduleID          uint64
 	SectionID           uint64
 	SuspendedTicketID   uint64
+	Tag                 string
 	TicketAuditEventID  uint64
 	TicketAuditID       uint64
 	TicketFieldID       uint64
@@ -67,6 +70,13 @@ func (userID *UserID) UnmarshalJSON(b []byte) error {
 	typeUint64, _ := strconv.ParseUint(targetString, 0, 64)
 	*userID = UserID(typeUint64)
 
+	return nil
+}
+
+func (tag Tag) Validate() error {
+	if strings.Contains(string(tag), " ") {
+		return errors.New("zendesk tag cannot contain spaces")
+	}
 	return nil
 }
 
