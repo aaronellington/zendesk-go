@@ -33,6 +33,8 @@ func (schedule Schedule) Location() (*time.Location, error) {
 		timeZoneLabel = "America/New_York"
 	case "Central Time (US & Canada)":
 		timeZoneLabel = "America/Chicago"
+	case "Pacific Time (US & Canada)":
+		timeZoneLabel = "America/Los_Angeles"
 	}
 
 	loc, err := time.LoadLocation(timeZoneLabel)
