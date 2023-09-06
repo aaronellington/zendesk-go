@@ -30,6 +30,18 @@ type MergeRequestPayload struct {
 	TargetCommentIsPublic bool       `json:"target_comment_is_public"`
 }
 
+type MergeResponse struct {
+	JobStatus struct {
+		ID       string `json:"id"`
+		URL      string `json:"url"`
+		Total    string `json:"total"`
+		Progress string `json:"progress"`
+		Status   string `json:"status"`
+		Message  string `json:"message"`
+		Results  string `json:"results"`
+	} `json:"job_status"`
+}
+
 type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
@@ -142,8 +154,8 @@ func (s TicketService) Create(ctx context.Context, payload TicketPayload) (Ticke
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#merge-tickets-into-target-ticket
-func (s TicketService) Merge(ctx context.Context, destination TicketID, payload MergeRequestPayload) (TicketResponse, error) {
-	target := TicketResponse{}
+func (s TicketService) Merge(ctx context.Context, destination TicketID, payload MergeRequestPayload) (MergeResponse, error) {
+	target := MergeResponse{}
 
 	if err := s.client.ZendeskRequest(
 		ctx,
@@ -153,7 +165,7 @@ func (s TicketService) Merge(ctx context.Context, destination TicketID, payload 
 		structToReader(payload),
 		&target,
 	); err != nil {
-		return TicketResponse{}, err
+		return MergeResponse{}, err
 	}
 
 	return target, nil

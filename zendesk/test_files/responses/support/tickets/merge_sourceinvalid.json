@@ -1,0 +1,4 @@
+{
+    "error": "SourceInvalid",
+    "description": "You selected the same ticket as source and target: #6752. You cannot merge a ticket into itself."
+}
