@@ -26,8 +26,19 @@ const (
 	StatusDeleted = "deleted"
 )
 
+type AuditLogAction string
+
+const (
+	Create   AuditLogAction = "create"
+	Destroy  AuditLogAction = "destroy"
+	Exported AuditLogAction = "exported"
+	Login    AuditLogAction = "login"
+	Update   AuditLogAction = "update"
+)
+
 type (
 	ArticleID           uint64
+	AuditLogID          uint64
 	CategoryID          uint64
 	ChatAccountID       uint64
 	ChatEngagementID    string
