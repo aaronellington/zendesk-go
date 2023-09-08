@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const timeFormat = "2006-01-02T15:04:05Z"
+
 const (
 	PriorityUrgent = "urgent"
 	PriorityHigh   = "high"
@@ -26,8 +28,20 @@ const (
 	StatusDeleted = "deleted"
 )
 
+type AuditLogAction string
+
+const (
+	Create   AuditLogAction = "create"
+	Destroy  AuditLogAction = "destroy"
+	Exported AuditLogAction = "exported"
+	Login    AuditLogAction = "login"
+	Update   AuditLogAction = "update"
+)
+
 type (
+	ActorID             int64
 	ArticleID           uint64
+	AuditLogID          uint64
 	CategoryID          uint64
 	ChatAccountID       uint64
 	ChatEngagementID    string

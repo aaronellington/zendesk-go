@@ -33,6 +33,11 @@ func NewService(
 
 	return &Service{
 		subDomain: subDomain,
+		accountConfigurationService: &AccountConfigurationService{
+			auditLogService: &AuditLogService{
+				client: c,
+			},
+		},
 		supportService: &SupportService{
 			organizationService: &OrganizationService{
 				client: c,
@@ -90,10 +95,11 @@ func NewService(
 }
 
 type Service struct {
-	subDomain       string
-	supportService  *SupportService
-	guideService    *GuideService
-	liveChatService *LiveChatService
+	subDomain                   string
+	accountConfigurationService *AccountConfigurationService
+	supportService              *SupportService
+	guideService                *GuideService
+	liveChatService             *LiveChatService
 }
 
 func (s *Service) SubDomain() string {
@@ -103,6 +109,11 @@ func (s *Service) SubDomain() string {
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 func (s *Service) Support() *SupportService {
 	return s.supportService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/introduction/
+func (s *Service) AccountConfiguration() *AccountConfigurationService {
+	return s.accountConfigurationService
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/introduction/

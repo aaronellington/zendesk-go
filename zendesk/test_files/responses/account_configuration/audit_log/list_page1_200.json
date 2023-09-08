@@ -1,0 +1,69 @@
+{
+  "audit_logs": [
+    {
+      "url": "https://subdomain.zendesk.com/api/v2/audit_logs/1834209611111.json",
+      "id": 1834209611111,
+      "action_label": "Signed in",
+      "actor_id": 123456,
+      "source_id": 789101112,
+      "source_type": "user",
+      "source_label": "Team member: Luke Skywalker",
+      "action": "login",
+      "change_description": "Successful sign-in using JWT from https://subdomain.zendesk.com/access/jwt",
+      "ip_address": "1.1.1.1",
+      "created_at": "2023-09-06T11:09:33Z",
+      "actor_name": "Luke Skywalker"
+    },
+    {
+      "url": "https://subdomain.zendesk.com/api/v2/audit_logs/1834209611112.json",
+      "id": 1834209611112,
+      "action_label": "Deleted",
+      "actor_id": -1,
+      "source_id": 2281908,
+      "source_type": "account",
+      "source_label": "Deleted users: Deleted users",
+      "action": "destroy",
+      "change_description": "Automatically finished 30-day deletion for 1 users",
+      "ip_address": null,
+      "created_at": "2023-09-05T22:00:19Z",
+      "actor_name": "Zendesk"
+    },
+    {
+      "url": "https://subdomain.zendesk.com/api/v2/audit_logs/1834209611123.json",
+      "id": 1834209611123,
+      "action_label": "Signed in",
+      "actor_id": 654321,
+      "source_id": 121110987,
+      "source_type": "user",
+      "source_label": "Team member: Anakin Skywalker",
+      "action": "login",
+      "change_description": "Successful sign-in using JWT from https://subdomain.zendesk.com/access/jwt",
+      "ip_address": "1.2.3.4",
+      "created_at": "2023-09-05T16:48:03Z",
+      "actor_name": "Anakin Skywalker"
+    },
+    {
+      "url": "https://subdomain.zendesk.com/api/v2/audit_logs/1834209611145.json",
+      "id": 1834209611145,
+      "action_label": "Signed in",
+      "actor_id": 123456,
+      "source_id": 789101112,
+      "source_type": "user",
+      "source_label": "Team member: Luke Skywalker",
+      "action": "login",
+      "change_description": "Successful sign-in using JWT from https://subdomain.zendesk.com/access/jwt",
+      "ip_address": "1.2.3.4",
+      "created_at": "2023-09-05T14:03:52Z",
+      "actor_name": "Luke Skywalker"
+    }
+  ],
+  "meta": {
+    "has_more": true,
+    "after_cursor": "eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9",
+    "before_cursor": "eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidie6IlpPMWQrR1FBQUFBQWFaSG9INXF1RUFBQSJ9"
+  },
+  "links": {
+    "prev": "https://subdomain.zendesk.com/api/v2/audit_logs.json?page%5Bbefore%5D=eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidie6IlpPMWQrR1FBQUFBQWFaSG9INXF1RUFBQSJ9&page%5Bsize%5D=4&sort=-created_at",
+    "next": "https://subdomain.zendesk.com/api/v2/audit_logs.json?page%5Bafter%5D=eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9&page%5Bsize%5D=4&sort=-created_at"
+  }
+}
