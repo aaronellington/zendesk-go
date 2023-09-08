@@ -91,6 +91,7 @@ func (tag Tag) Validate() error {
 	if strings.Contains(string(tag), " ") {
 		return errors.New("zendesk tag cannot contain spaces")
 	}
+
 	return nil
 }
 

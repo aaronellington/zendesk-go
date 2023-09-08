@@ -2,6 +2,7 @@ package zendesk_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -182,6 +183,80 @@ func Test_Support_Tickets_IncrementalExport(t *testing.T) {
 	expectedTicketCount := 3
 
 	if err := study.Assert(expectedTicketCount, len(tickets)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_Support_Tickets_Merge_Success(t *testing.T) {
+	ctx := context.Background()
+	targetTicket := zendesk.TicketID(1000)
+	sourceTickets := []zendesk.TicketID{2565, 3323}
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/merge_success.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPost,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", targetTicket),
+			},
+		),
+	})
+
+	actual, err := z.Support().Tickets().Merge(ctx, targetTicket, zendesk.MergeRequestPayload{
+		IDs:                   sourceTickets,
+		SourceComment:         "test",
+		SourceCommentIsPublic: true,
+		TargetComment:         "done",
+		TargetCommentIsPublic: true,
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	expected := "queued"
+
+	if err := study.Assert(expected, actual.JobStatus.Status); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_Support_Tickets_Merge_TicketID_Closed(t *testing.T) {
+	ctx := context.Background()
+	targetTicket := zendesk.TicketID(1000)
+	sourceTickets := []zendesk.TicketID{1000, 3323}
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusBadRequest,
+				FilePath:   "test_files/responses/support/tickets/merge_source_invalid.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPost,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", targetTicket),
+			},
+		),
+	})
+
+	_, err := z.Support().Tickets().Merge(ctx, targetTicket, zendesk.MergeRequestPayload{
+		IDs:                   sourceTickets,
+		SourceComment:         "test",
+		SourceCommentIsPublic: true,
+		TargetComment:         "done",
+		TargetCommentIsPublic: true,
+	})
+	if err == nil {
+		t.Fatal("should have had an error")
+	}
+
+	expected := "SourceInvalid"
+
+	if err := study.Assert(expected, err.Error()); err != nil {
 		t.Fatal(err)
 	}
 }

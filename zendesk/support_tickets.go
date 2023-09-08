@@ -22,6 +22,14 @@ type TicketsResponse struct {
 	Tickets []Ticket `json:"tickets"`
 }
 
+type MergeRequestPayload struct {
+	IDs                   []TicketID `json:"ids"`
+	SourceComment         string     `json:"source_comment"`
+	SourceCommentIsPublic bool       `json:"source_comment_is_public"`
+	TargetComment         string     `json:"target_comment"`
+	TargetCommentIsPublic bool       `json:"target_comment_is_public"`
+}
+
 type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
@@ -128,6 +136,24 @@ func (s TicketService) Create(ctx context.Context, payload TicketPayload) (Ticke
 		&target,
 	); err != nil {
 		return TicketResponse{}, err
+	}
+
+	return target, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#merge-tickets-into-target-ticket
+func (s TicketService) Merge(ctx context.Context, destination TicketID, payload MergeRequestPayload) (JobStatusResponse, error) {
+	target := JobStatusResponse{}
+
+	if err := s.client.ZendeskRequest(
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("/api/v2/tickets/%d/merge", destination),
+
+		structToReader(payload),
+		&target,
+	); err != nil {
+		return JobStatusResponse{}, err
 	}
 
 	return target, nil
