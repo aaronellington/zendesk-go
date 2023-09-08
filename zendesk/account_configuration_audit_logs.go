@@ -9,7 +9,7 @@ import (
 )
 
 type AuditLogsResponse struct {
-	AuditLogs []AuditLog
+	AuditLogs []AuditLog `json:"audit_logs"`
 	CursorPaginationResponse
 }
 
@@ -17,12 +17,12 @@ type AuditLogsResponse struct {
 type AuditLog struct {
 	Action            AuditLogAction `json:"action"`
 	ActionLabel       string         `json:"action_label"`
-	ActorID           UserID         `json:"actor_id"`
+	ActorID           ActorID        `json:"actor_id"`
 	ActorName         string         `json:"actor_name"`
 	ChangeDescription string         `json:"change_description"`
 	CreatedAt         time.Time      `json:"created_at"`
 	ID                AuditLogID     `json:"id"`
-	IPAddress         string         `json:"ip_address"`
+	IPAddress         *string        `json:"ip_address"`
 	SourceID          uint64         `json:"source_id"`
 	SourceLabel       string         `json:"source_label"`
 	SourceType        string         `json:"source_type"`
@@ -47,7 +47,7 @@ func (s AuditLogService) List(
 		modifier.ModifyListAccountConfigurationAuditLogRequest(&query)
 	}
 
-	endpoint := fmt.Sprintf("/api/v2/audit_logs?%s", query.Encode())
+	endpoint := fmt.Sprintf("/api/v2/audit_logs.json?%s", query.Encode())
 
 	for {
 		target := AuditLogsResponse{}
@@ -93,21 +93,22 @@ func WithFilterForAction(action AuditLogAction) listAccountConfigurationAuditLog
 	})
 }
 
-func WithFilterForActorID(actorID UserID) listAccountConfigurationAuditLogModifier {
+func WithFilterForActorID(actorID ActorID) listAccountConfigurationAuditLogModifier {
 	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
 		queryParameters.Add("filter[actor_id]", fmt.Sprintf("%d", actorID))
 	})
 }
 
-func WithFilterForCreatedAt(createdAt time.Time) listAccountConfigurationAuditLogModifier {
+func WithFilterForCreatedAt(startTime time.Time, endTime time.Time) listAccountConfigurationAuditLogModifier {
 	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
-		queryParameters.Add("filter[created_at]", createdAt.Format("2006-01-02T15:04:05Z"))
+		queryParameters.Add("filter[created_at][]", startTime.Format(timeFormat))
+		queryParameters.Add("filter[created_at][]", endTime.Format(timeFormat))
 	})
 }
 
-func WithFilterForIpAddress(createdAt time.Time) listAccountConfigurationAuditLogModifier {
+func WithFilterForIpAddress(ipAddress string) listAccountConfigurationAuditLogModifier {
 	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
-		queryParameters.Add("filter[ip_address]", createdAt.Format(""))
+		queryParameters.Add("filter[ip_address]", ipAddress)
 	})
 }
 
