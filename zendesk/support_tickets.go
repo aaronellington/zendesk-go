@@ -40,6 +40,8 @@ type MergeResponse struct {
 		Message  string `json:"message"`
 		Results  string `json:"results"`
 	} `json:"job_status"`
+	ErrorStr     string `json:"error"`
+	ErrorMessage string `json:"description"`
 }
 
 type Ticket struct {

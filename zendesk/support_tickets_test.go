@@ -189,7 +189,8 @@ func Test_Support_Tickets_IncrementalExport(t *testing.T) {
 
 func Test_Support_Tickets_Merge(t *testing.T) {
 	ctx := context.Background()
-	destination := 1000
+	var TargetTicket zendesk.TicketID = 1000
+	var sourceTickets = []zendesk.TicketID{2565, 3323}
 
 	z := createTestService(t, []study.RoundTripFunc{
 		study.ServeAndValidate(
@@ -200,13 +201,13 @@ func Test_Support_Tickets_Merge(t *testing.T) {
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodPost,
-				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", destination),
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", TargetTicket),
 			},
 		),
 	})
 
-	actual, err := z.Support().Tickets().Merge(ctx, 1000, zendesk.MergeRequestPayload{
-		IDs:                   []zendesk.TicketID{2565, 3323},
+	actual, err := z.Support().Tickets().Merge(ctx, TargetTicket, zendesk.MergeRequestPayload{
+		IDs:                   sourceTickets,
 		SourceComment:         "test",
 		SourceCommentIsPublic: true,
 		TargetComment:         "done",
@@ -224,5 +225,84 @@ func Test_Support_Tickets_Merge(t *testing.T) {
 		t.Fatal("Actual does not match expected")
 
 	}
+}
 
+func Test_Support_Tickets_Merge_TicketID(t *testing.T) {
+	ctx := context.Background()
+	var TargetTicket zendesk.TicketID = 1000
+	var sourceTickets = []zendesk.TicketID{2565, 3323}
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/merge_success.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPost,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", TargetTicket),
+			},
+		),
+	})
+
+	actual, err := z.Support().Tickets().Merge(ctx, TargetTicket, zendesk.MergeRequestPayload{
+		IDs:                   sourceTickets,
+		SourceComment:         "test",
+		SourceCommentIsPublic: true,
+		TargetComment:         "done",
+		TargetCommentIsPublic: true,
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	expected := "queued"
+
+	if actual.JobStatus.Status != expected {
+		println("Actual: " + actual.JobStatus.Status)
+		println("Expected: " + expected)
+		t.Fatal("Actual does not match expected")
+
+	}
+}
+
+func Test_Support_Tickets_Merge_TicketID_Closed(t *testing.T) {
+	ctx := context.Background()
+	var TargetTicket zendesk.TicketID = 1000
+	var sourceTickets = []zendesk.TicketID{1000, 3323}
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/merge_sourceinvalid.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPost,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/merge", TargetTicket),
+			},
+		),
+	})
+
+	actual, err := z.Support().Tickets().Merge(ctx, TargetTicket, zendesk.MergeRequestPayload{
+		IDs:                   sourceTickets,
+		SourceComment:         "test",
+		SourceCommentIsPublic: true,
+		TargetComment:         "done",
+		TargetCommentIsPublic: true,
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	expected := "SourceInvalid"
+
+	if actual.ErrorStr != expected {
+		println("Actual: " + actual.ErrorStr)
+		println("Expected: " + expected)
+		t.Fatal("Actual does not match expected")
+
+	}
 }
