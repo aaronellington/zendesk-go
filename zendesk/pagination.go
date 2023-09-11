@@ -20,6 +20,6 @@ type CursorPaginationLinks struct {
 type CursorPaginationSortDirection string
 
 const (
-	Asc  CursorPaginationSortDirection = "+"
+	Asc  CursorPaginationSortDirection = ""
 	Desc CursorPaginationSortDirection = "-"
 )

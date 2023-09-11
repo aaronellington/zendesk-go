@@ -43,7 +43,7 @@ func (s AuditLogService) List(
 	query := url.Values{}
 	// Default values
 	query.Set("page[size]", "100")
-	query.Set("sort", "+created_at")
+	query.Set("sort", "created_at")
 
 	for _, modifier := range modifiers {
 		modifier.ModifyListAccountConfigurationAuditLogRequest(&query)
