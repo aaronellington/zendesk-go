@@ -23,7 +23,7 @@ type AuditLog struct {
 	CreatedAt         time.Time      `json:"created_at"`
 	ID                AuditLogID     `json:"id"`
 	IPAddress         *string        `json:"ip_address"`
-	SourceID          uint64         `json:"source_id"`
+	SourceID          SourceID       `json:"source_id"`
 	SourceLabel       string         `json:"source_label"`
 	SourceType        string         `json:"source_type"`
 	URL               string         `json:"url"`
