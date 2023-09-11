@@ -54,6 +54,7 @@ type (
 	PermissionGroupID   uint64
 	ScheduleID          uint64
 	SectionID           uint64
+	SourceID            int64
 	SuspendedTicketID   uint64
 	Tag                 string
 	TicketAuditEventID  uint64
