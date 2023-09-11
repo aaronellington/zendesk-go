@@ -25,6 +25,7 @@ func Test_Account_Configuration_Audit_Logs_List_200(t *testing.T) {
 				Path:   "/api/v2/audit_logs.json",
 				Query: url.Values{
 					"page[size]": []string{"100"},
+					"sort":       []string{"created_at"},
 				},
 			},
 		),
@@ -40,7 +41,7 @@ func Test_Account_Configuration_Audit_Logs_List_200(t *testing.T) {
 				Query: url.Values{
 					"page[size]":  []string{"4"},
 					"page[after]": []string{"eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9"},
-					"sort":        []string{"-created_at"},
+					"sort":        []string{"created_at"},
 				},
 			},
 		),
@@ -74,6 +75,7 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 				Path:   "/api/v2/audit_logs.json",
 				Query: url.Values{
 					"page[size]":       []string{"100"},
+					"sort":             []string{"created_at"},
 					"filter[actor_id]": []string{"-1"},
 				},
 			},
@@ -90,7 +92,7 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 				Query: url.Values{
 					"page[size]":  []string{"4"},
 					"page[after]": []string{"eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9"},
-					"sort":        []string{"-created_at"},
+					"sort":        []string{"created_at"},
 				},
 			},
 		),
@@ -105,6 +107,7 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 				Path:   "/api/v2/audit_logs.json",
 				Query: url.Values{
 					"page[size]":       []string{"100"},
+					"sort":             []string{"created_at"},
 					"filter[actor_id]": []string{"1234"},
 					"filter[action]":   []string{"create"},
 				},
@@ -122,7 +125,7 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 				Query: url.Values{
 					"page[size]":  []string{"4"},
 					"page[after]": []string{"eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9"},
-					"sort":        []string{"-created_at"},
+					"sort":        []string{"created_at"},
 				},
 			},
 		),

@@ -63,7 +63,7 @@
     "before_cursor": "eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidiI2IlpFZzE5MlFBQUFBQWFaRlZmdHVvRUFBQSJ9"
   },
   "links": {
-    "prev": "https://subdomain.zendesk.com/api/v2/audit_logs.json?page%5Bbefore%5D=eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidie6IlpPMWQrR1FBQUFBQWFaSG9INXF1RUFBQSJ9&page%5Bsize%5D=4&sort=-created_at",
+    "prev": "https://subdomain.zendesk.com/api/v2/audit_logs.json?page%5Bbefore%5D=eyJvIjoiLWNyZWF0ZWRfYXQsLWlkIiwidie6IlpPMWQrR1FBQUFBQWFaSG9INXF1RUFBQSJ9&page%5Bsize%5D=4&sort=created_at",
     "next": ""
   }
 }
