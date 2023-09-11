@@ -41,7 +41,9 @@ func (s AuditLogService) List(
 	modifiers ...ListAccountConfigurationAuditLogModifier,
 ) error {
 	query := url.Values{}
+	// Default values
 	query.Set("page[size]", "100")
+	query.Set("sort", "+created_at")
 
 	for _, modifier := range modifiers {
 		modifier.ModifyListAccountConfigurationAuditLogRequest(&query)
@@ -85,6 +87,18 @@ type listAccountConfigurationAuditLogModifier func(queryParameters *url.Values)
 
 func (l listAccountConfigurationAuditLogModifier) ModifyListAccountConfigurationAuditLogRequest(queryParameters *url.Values) {
 	l(queryParameters)
+}
+
+func WithPageSize(pageSize uint8) listAccountConfigurationAuditLogModifier {
+	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
+		queryParameters.Set("page[size]", fmt.Sprintf("%d", pageSize))
+	})
+}
+
+func WithSort(field string, direction CursorPaginationSortDirection) listAccountConfigurationAuditLogModifier {
+	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
+		queryParameters.Set("sort", fmt.Sprintf("%s%s", direction, field))
+	})
 }
 
 func WithFilterForAction(action AuditLogAction) listAccountConfigurationAuditLogModifier {

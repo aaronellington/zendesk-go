@@ -16,3 +16,10 @@ type CursorPaginationLinks struct {
 	Last  string `json:"last"`
 	Next  string `json:"next"`
 }
+
+type CursorPaginationSortDirection string
+
+const (
+	Asc  CursorPaginationSortDirection = "+"
+	Desc CursorPaginationSortDirection = "-"
+)
