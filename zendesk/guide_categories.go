@@ -1,6 +1,12 @@
 package zendesk
 
-import "time"
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+)
 
 type CategoriesResponse struct {
 	Categories []Category `json:"categories"`
@@ -28,4 +34,36 @@ type Category struct {
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/categories/
 type CategoryService struct {
 	client *client
+}
+
+func (s CategoryService) List(ctx context.Context, pageHandler func(response CategoriesResponse) error) error {
+
+	query := url.Values{}
+	query.Set("page[size]", "100")
+
+	for {
+		target := CategoriesResponse{}
+
+		if err := s.client.ZendeskRequest(
+			ctx,
+			http.MethodGet,
+			fmt.Sprintf("/api/v2/help_center/categories?%s", query.Encode()),
+			http.NoBody,
+			&target,
+		); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if !target.Meta.HasMore {
+			break
+		}
+
+		query.Set("page[after]", target.Meta.AfterCursor)
+	}
+
+	return nil
 }
