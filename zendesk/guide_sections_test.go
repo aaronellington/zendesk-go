@@ -64,7 +64,10 @@ func TestSectionService_List(t *testing.T) {
 			name: "test5", actual: c.Sections[0].CategoryID, expected: zendesk.SectionID(1), result: false,
 		},
 		{
-			name: "test6", actual: c.Sections[2].ThemeTemplate, expected: "default", result: true,
+			name: "test6", actual: len(c.Sections), expected: 5, result: false,
+		},
+		{
+			name: "test7", actual: c.Sections[2].ThemeTemplate, expected: "default", result: true,
 		},
 	}
 
