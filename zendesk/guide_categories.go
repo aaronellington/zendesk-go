@@ -9,7 +9,7 @@ import (
 )
 
 type CategoriesResponse struct {
-	Categories []Category `json:"categories"`
+	Section []Category `json:"categories"`
 	CursorPaginationResponse
 }
 
