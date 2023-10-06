@@ -149,6 +149,20 @@ func (s *AgentEventService) UpdateAgentStates(
 				agentState.AgentID = agentEvent.AgentID
 				agentState.Timestamp = agentEvent.StartTime
 
+				// Fix an issue where an agent has not changed their status before
+				// the defaultStateTime so we don't ever get a status update.
+				// But we do get engagements so we should just default the status fields
+				// to something reasonable so they are at least set
+				{
+					if agentState.StatusSince.IsZero() {
+						agentState.StatusSince = agentEvent.StartTime
+					}
+
+					if agentState.Status == "" {
+						agentState.Status = "unknown"
+					}
+				}
+
 				switch agentEvent.FieldName {
 				case "engagements":
 					engagementCount, err := strconv.ParseUint(string(agentEvent.Value), 10, 64)
