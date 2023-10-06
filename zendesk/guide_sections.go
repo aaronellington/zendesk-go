@@ -1,6 +1,12 @@
 package zendesk
 
-import "time"
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+)
 
 type SectionsResponse struct {
 	Sections     []Section `json:"sections"`
@@ -12,6 +18,7 @@ type SectionsResponse struct {
 	Count        int       `json:"count"`
 	SortBy       string    `json:"sort_by"`
 	SortOrder    string    `json:"sort_order"`
+	CursorPaginationResponse
 }
 
 type Section struct {
@@ -35,4 +42,37 @@ type Section struct {
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/sections/
 type SectionService struct {
 	client *client
+}
+
+func (s SectionService) List(ctx context.Context, pageHandler func(response SectionsResponse) error) error {
+
+	query := url.Values{}
+	query.Set("page[size]", "100")
+
+	for {
+		target := SectionsResponse{}
+
+		if err := s.client.ZendeskRequest(
+			ctx,
+			http.MethodGet,
+			fmt.Sprintf("/api/v2/help_center/sections?%s", query.Encode()),
+			http.NoBody,
+			&target,
+		); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if !target.Meta.HasMore {
+			break
+		}
+
+		query.Set("page[after]", target.Meta.AfterCursor)
+
+	}
+
+	return nil
 }
