@@ -120,7 +120,7 @@ func WithFilterForCreatedAt(startTime time.Time, endTime time.Time) listAccountC
 	})
 }
 
-func WithFilterForIpAddress(ipAddress string) listAccountConfigurationAuditLogModifier {
+func WithFilterForIPAddress(ipAddress string) listAccountConfigurationAuditLogModifier {
 	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
 		queryParameters.Add("filter[ip_address]", ipAddress)
 	})

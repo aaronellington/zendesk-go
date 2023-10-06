@@ -48,8 +48,10 @@ func Test_Account_Configuration_Audit_Logs_List_200(t *testing.T) {
 	})
 
 	allItems := []zendesk.AuditLog{}
+
 	if err := z.AccountConfiguration().AuditLogs().List(ctx, func(response zendesk.AuditLogsResponse) error {
 		allItems = append(allItems, response.AuditLogs...)
+
 		return nil
 	}); err != nil {
 		t.Fatal(err)
