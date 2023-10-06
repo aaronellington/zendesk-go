@@ -49,25 +49,46 @@ func TestSectionService_List(t *testing.T) {
 		result   bool
 	}{
 		{
-			name: "test1", actual: c.Sections[0].Name, expected: "Main Characters", result: true,
+			name:     "test1",
+			actual:   c.Sections[0].Name,
+			expected: "Main Characters",
+			result:   true,
 		},
 		{
-			name: "test2", actual: c.Sections[1].ParentSectionID, expected: nil, result: true,
+			name:     "test2",
+			actual:   c.Sections[1].ParentSectionID,
+			expected: nil,
+			result:   true,
 		},
 		{
-			name: "test3", actual: c.Sections[1].CategoryID, expected: zendesk.CategoryID(2), result: false,
+			name:     "test3",
+			actual:   c.Sections[1].CategoryID,
+			expected: zendesk.CategoryID(2),
+			result:   false,
 		},
 		{
-			name: "test4", actual: c.Sections[0].CategoryID, expected: zendesk.CategoryID(1), result: true,
+			name:     "test4",
+			actual:   c.Sections[0].CategoryID,
+			expected: zendesk.CategoryID(1),
+			result:   true,
 		},
 		{
-			name: "test5", actual: c.Sections[0].CategoryID, expected: zendesk.SectionID(1), result: false,
+			name:     "test5",
+			actual:   c.Sections[0].CategoryID,
+			expected: zendesk.SectionID(1),
+			result:   false,
 		},
 		{
-			name: "test6", actual: len(c.Sections), expected: 5, result: false,
+			name:     "test6",
+			actual:   len(c.Sections),
+			expected: 5,
+			result:   false,
 		},
 		{
-			name: "test7", actual: c.Sections[2].ThemeTemplate, expected: "default", result: true,
+			name:     "test7",
+			actual:   c.Sections[2].ThemeTemplate,
+			expected: "default",
+			result:   true,
 		},
 	}
 

@@ -49,22 +49,40 @@ func TestCategoryService_List(t *testing.T) {
 		result   bool
 	}{
 		{
-			name: "test1", actual: c.Section[0].Name, expected: "South Park", result: true,
+			name:     "test1",
+			actual:   c.Categories[0].Name,
+			expected: "South Park",
+			result:   true,
 		},
 		{
-			name: "test2", actual: c.Section[1].URL, expected: "https://southpark.fandom.com/wiki/Portal:Episodes", result: true,
+			name:     "test2",
+			actual:   c.Categories[1].URL,
+			expected: "https://southpark.fandom.com/wiki/Portal:Episodes",
+			result:   true,
 		},
 		{
-			name: "test3", actual: c.Section[1].ID, expected: zendesk.CategoryID(2), result: true,
+			name:     "test3",
+			actual:   c.Categories[1].ID,
+			expected: zendesk.CategoryID(2),
+			result:   true,
 		},
 		{
-			name: "test4", actual: c.Section[4].Description, expected: "South Park Trivia", result: true,
+			name:     "test4",
+			actual:   c.Categories[4].Description,
+			expected: "South Park Trivia",
+			result:   true,
 		},
 		{
-			name: "test5", actual: c.Section[3].Outdated, expected: false, result: true,
+			name:     "test5",
+			actual:   c.Categories[3].Outdated,
+			expected: false,
+			result:   true,
 		},
 		{
-			name: "test6", actual: c.Section[3].Outdated, expected: "false", result: false,
+			name:     "test6",
+			actual:   c.Categories[3].Outdated,
+			expected: "false",
+			result:   false,
 		},
 	}
 
