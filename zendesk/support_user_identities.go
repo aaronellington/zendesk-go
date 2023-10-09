@@ -35,13 +35,17 @@ func (s *UserIdentityService) List(
 	for {
 		target := UserIdentitiesResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

@@ -68,13 +68,17 @@ type UserService struct {
 func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 	target := UserResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/users/%d", id),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return User{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return User{}, err
 	}
 
@@ -85,13 +89,17 @@ func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 func (s UserService) ShowSelf(ctx context.Context) (User, error) {
 	target := UserResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		"/api/v2/users/me",
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return User{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return User{}, err
 	}
 
@@ -105,13 +113,17 @@ func (s UserService) Search(ctx context.Context, query string) (UsersResponse, e
 	q := url.Values{}
 	q.Set("query", query)
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/users/search?%s", q.Encode()),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return UsersResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return UsersResponse{}, err
 	}
 
@@ -130,13 +142,17 @@ func (s UserService) IncrementalExport(
 	for {
 		target := UsersIncrementalExportResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/users.json?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -158,13 +174,17 @@ func (s UserService) IncrementalExport(
 func (s UserService) Create(ctx context.Context, payload UserPayload) (UserResponse, error) {
 	target := UserResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"/api/v2/users",
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return UserResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return UserResponse{}, err
 	}
 
@@ -175,13 +195,17 @@ func (s UserService) Create(ctx context.Context, payload UserPayload) (UserRespo
 func (s UserService) Update(ctx context.Context, id UserID, payload UserPayload) (UserResponse, error) {
 	target := UserResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/users/%d", id),
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return UserResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return UserResponse{}, err
 	}
 

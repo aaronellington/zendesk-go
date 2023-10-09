@@ -53,13 +53,17 @@ type ArticleService struct {
 func (s ArticleService) Show(ctx context.Context, id ArticleID) (Article, error) {
 	target := ArticleResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/help_center/articles/%d", id),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Article{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Article{}, err
 	}
 
@@ -77,13 +81,17 @@ func (s ArticleService) List(
 	for {
 		target := ArticlesResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/help_center/articles?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

@@ -37,20 +37,23 @@ type CategoryService struct {
 }
 
 func (s CategoryService) List(ctx context.Context, pageHandler func(response CategoriesResponse) error) error {
-
 	query := url.Values{}
 	query.Set("page[size]", "100")
 
 	for {
 		target := CategoriesResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/help_center/categories?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

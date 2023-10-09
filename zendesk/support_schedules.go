@@ -76,13 +76,17 @@ func (s *ScheduleService) List(
 ) (SchedulesResponse, error) {
 	target := SchedulesResponse{}
 
-	if err := s.client.ZendeskRequest(
+	response, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		"/api/v2/business_hours/schedules",
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return SchedulesResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(response, &target); err != nil {
 		return SchedulesResponse{}, err
 	}
 

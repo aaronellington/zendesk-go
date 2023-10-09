@@ -52,15 +52,19 @@ func (s AuditLogService) List(
 	endpoint := fmt.Sprintf("/api/v2/audit_logs.json?%s", query.Encode())
 
 	for {
-		target := AuditLogsResponse{}
-
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		target := AuditLogsResponse{}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

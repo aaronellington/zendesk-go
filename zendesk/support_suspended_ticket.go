@@ -42,13 +42,17 @@ func (s SuspendedTicketService) List(
 	for {
 		target := SuspendedTicketsResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -73,22 +77,30 @@ func (s *SuspendedTicketService) RecoverMultiple(ctx context.Context, ids []Susp
 		stringIDs = append(stringIDs, fmt.Sprintf("%d", id))
 	}
 
-	return s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/suspended_tickets/recover_many?ids=%s", strings.Join(stringIDs, ",")),
 		http.NoBody,
-		nil,
 	)
+	if err != nil {
+		return err
+	}
+
+	return s.client.ZendeskRequest(request, nil)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#delete-suspended-ticket
 func (s *SuspendedTicketService) Delete(ctx context.Context, id SuspendedTicketID) error {
-	return s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("/api/v2/suspended_tickets/%d", id),
 		http.NoBody,
-		nil,
 	)
+	if err != nil {
+		return err
+	}
+
+	return s.client.ZendeskRequest(request, nil)
 }

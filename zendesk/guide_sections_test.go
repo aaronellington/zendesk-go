@@ -11,7 +11,6 @@ import (
 )
 
 func TestSectionService_List(t *testing.T) {
-
 	ctx := context.Background()
 
 	z := createTestService(t, []study.RoundTripFunc{
@@ -33,13 +32,11 @@ func TestSectionService_List(t *testing.T) {
 	c := zendesk.SectionsResponse{}
 
 	if err := z.Guide().Sections().List(ctx, func(response zendesk.SectionsResponse) error {
-
 		c = response
+
 		return nil
 	}); err != nil {
-
 		t.Fatal(err)
-
 	}
 
 	tests := []struct {
@@ -93,12 +90,8 @@ func TestSectionService_List(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		if (test.actual != test.expected) == test.result {
-
 			t.Errorf("test %s failed", test.name)
-
 		}
-
 	}
 }

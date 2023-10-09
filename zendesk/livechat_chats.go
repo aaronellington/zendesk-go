@@ -147,7 +147,17 @@ func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsRespo
 	for {
 		target := ChatsResponse{}
 
-		if err := s.client.LiveChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			requestURL,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.LiveChatRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -175,7 +185,17 @@ func (s *ChatService) Search(ctx context.Context, query string, pageHandler func
 	for {
 		target := ChatsSearchResponse{}
 
-		if err := s.client.LiveChatRequest(ctx, http.MethodGet, requestURL, http.NoBody, &target); err != nil {
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			requestURL,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.LiveChatRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -197,13 +217,17 @@ func (s *ChatService) Search(ctx context.Context, query string, pageHandler func
 func (s *ChatService) Show(ctx context.Context, id ChatID) (Chat, error) {
 	target := Chat{}
 
-	if err := s.client.LiveChatRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/chats/%s", id),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Chat{}, err
+	}
+
+	if err := s.client.LiveChatRequest(request, &target); err != nil {
 		return Chat{}, err
 	}
 
@@ -226,13 +250,17 @@ func (s *ChatService) IncrementalExport(
 	for {
 		target := ChatsIncrementalExportResponse{}
 
-		if err := s.client.LiveChatRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/chats?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.LiveChatRequest(request, &target); err != nil {
 			return err
 		}
 

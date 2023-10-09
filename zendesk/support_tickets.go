@@ -111,13 +111,17 @@ type TicketService struct {
 func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 	target := TicketResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/tickets/%d", id),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Ticket{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Ticket{}, err
 	}
 
@@ -128,13 +132,17 @@ func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 func (s TicketService) Create(ctx context.Context, payload TicketPayload) (TicketResponse, error) {
 	target := TicketResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"/api/v2/tickets",
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return TicketResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return TicketResponse{}, err
 	}
 
@@ -145,14 +153,17 @@ func (s TicketService) Create(ctx context.Context, payload TicketPayload) (Ticke
 func (s TicketService) Merge(ctx context.Context, destination TicketID, payload MergeRequestPayload) (JobStatusResponse, error) {
 	target := JobStatusResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		fmt.Sprintf("/api/v2/tickets/%d/merge", destination),
-
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return JobStatusResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return JobStatusResponse{}, err
 	}
 
@@ -163,13 +174,17 @@ func (s TicketService) Merge(ctx context.Context, destination TicketID, payload 
 func (s TicketService) Update(ctx context.Context, id TicketID, payload TicketPayload) (TicketResponse, error) {
 	target := TicketResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/tickets/%d", id),
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return TicketResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return TicketResponse{}, err
 	}
 
@@ -190,13 +205,17 @@ func (s TicketService) IncrementalExport(
 	for {
 		target := TicketsIncrementalExportResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/tickets.json?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -225,13 +244,17 @@ func (s TicketService) AddTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
 		payloadBuf,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Tags{}, err
 	}
 
@@ -249,13 +272,17 @@ func (s TicketService) SetTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
 		payloadBuf,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Tags{}, err
 	}
 
@@ -273,11 +300,18 @@ func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags T
 		return Tags{}, err
 	}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
 		payloadBuf,
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(
+		request,
 		&target,
 	); err != nil {
 		return Tags{}, err

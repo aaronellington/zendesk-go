@@ -47,13 +47,17 @@ func (s GroupMembershipService) List(
 	for {
 		target := GroupMembershipsResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -84,13 +88,17 @@ func (s GroupMembershipService) ListByUser(
 	for {
 		target := GroupMembershipsResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -121,13 +129,17 @@ func (s GroupMembershipService) ListByGroup(
 	for {
 		target := GroupMembershipsResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			endpoint,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -153,13 +165,17 @@ func (s GroupMembershipService) SetDefault(
 ) (GroupMembershipsResponse, error) {
 	target := GroupMembershipsResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/users/%d/group_memberships/%d/make_default", userID, groupMembershipID),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return GroupMembershipsResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return GroupMembershipsResponse{}, err
 	}
 
@@ -174,7 +190,7 @@ func (s GroupMembershipService) Create(
 ) (GroupMembershipResponse, error) {
 	target := GroupMembershipResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"/api/v2/group_memberships",
@@ -184,8 +200,12 @@ func (s GroupMembershipService) Create(
 				"group_id": groupID,
 			},
 		}),
-		nil,
-	); err != nil {
+	)
+	if err != nil {
+		return GroupMembershipResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return GroupMembershipResponse{}, err
 	}
 
@@ -198,11 +218,18 @@ func (s GroupMembershipService) Delete(
 	userID UserID,
 	groupMembershipID GroupMembershipID,
 ) error {
-	return s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("/api/v2/users/%d/group_memberships/%d", userID, groupMembershipID),
 		http.NoBody,
+	)
+	if err != nil {
+		return err
+	}
+
+	return s.client.ZendeskRequest(
+		request,
 		nil,
 	)
 }

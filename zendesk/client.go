@@ -23,20 +23,21 @@ type client struct {
 	requestPreProcessors []RequestPreProcessor
 }
 
-func (c *client) do(r *http.Request) (*http.Response, error) {
-	r.URL.Scheme = "https"
-	r.Header.Set("Accept", "application/json")
-	r.Header.Set("User-Agent", c.userAgent)
+func (c *client) do(request *http.Request, target any) error {
+	request.URL.Scheme = "https"
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("User-Agent", c.userAgent)
 
 	for _, requestPreProcessor := range c.requestPreProcessors {
-		if err := requestPreProcessor.ProcessRequest(r); err != nil {
-			return nil, err
+		if err := requestPreProcessor.ProcessRequest(request); err != nil {
+			return err
 		}
 	}
 
-	response, err := c.httpClient.Do(r)
+	response, err := c.httpClient.Do(request)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if response.StatusCode >= http.StatusBadRequest {
@@ -44,7 +45,7 @@ func (c *client) do(r *http.Request) (*http.Response, error) {
 
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		responseErr := &Error{
@@ -53,30 +54,10 @@ func (c *client) do(r *http.Request) (*http.Response, error) {
 		}
 
 		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
-			return nil, err
+			return err
 		}
 
-		return nil, responseErr
-	}
-
-	return response, nil
-}
-
-func (c *client) json(ctx context.Context, method string, path string, body io.Reader, target any, requestPreProcessor RequestPreProcessor) error {
-	request, err := http.NewRequestWithContext(ctx, method, path, body)
-	if err != nil {
-		return err
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-
-	if err := requestPreProcessor.ProcessRequest(request); err != nil {
-		return err
-	}
-
-	response, err := c.do(request)
-	if err != nil {
-		return err
+		return responseErr
 	}
 
 	if target != nil {
@@ -95,40 +76,34 @@ func (c *client) json(ctx context.Context, method string, path string, body io.R
 	return nil
 }
 
-func (c *client) ZendeskRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
-	return c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
-		r.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
-		c.zendeskAuth.AddZendeskAuthentication(r)
+func (c *client) ZendeskRequest(request *http.Request, target any) error {
+	c.zendeskAuth.AddZendeskAuthentication(request)
 
-		return nil
-	}))
+	return c.do(request, target)
 }
 
-func (c *client) LiveChatRequest(ctx context.Context, method string, path string, body io.Reader, target any) error {
+func (c *client) LiveChatRequest(request *http.Request, target any) error {
 	attempts := 0
 	maxAttempts := 2
 
 	for attempts < maxAttempts {
 		attempts++
 
-		if err := c.getAccessToken(ctx); err != nil {
+		if err := c.getAccessToken(request.Context()); err != nil {
 			return err
 		}
 
-		if err := c.json(ctx, method, path, body, target, RequestPreProcessorFunc(func(r *http.Request) error {
-			if c.chatToken == nil {
-				return errors.New("no token")
-			}
+		if c.chatToken == nil {
+			return errors.New("no token")
+		}
 
-			if c.chatToken.AccessToken == "" {
-				return errors.New("blank token")
-			}
+		if c.chatToken.AccessToken == "" {
+			return errors.New("blank token")
+		}
 
-			r.URL.Host = "www.zopim.com"
-			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
 
-			return nil
-		})); err != nil {
+		if err := c.do(request, target); err != nil {
 			if zdError, ok := err.(*Error); ok {
 				if zdError.StatusCode == http.StatusUnauthorized {
 					// Clear out the token
@@ -165,26 +140,21 @@ func (c *client) getAccessToken(ctx context.Context) error {
 		return nil
 	}
 
-	target := chatToken{}
-
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 	data.Set("client_id", c.chatCredentials.ClientID)
 	data.Set("client_secret", c.chatCredentials.ClientSecret)
 
-	if err := c.json(
-		ctx,
-		http.MethodPost,
-		"/oauth2/token",
-		strings.NewReader(data.Encode()),
-		&target,
-		RequestPreProcessorFunc(func(r *http.Request) error {
-			r.URL.Host = "www.zopim.com"
-			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://www.zopim.com/oauth2/token", strings.NewReader(data.Encode()))
+	if err != nil {
+		return err
+	}
 
-			return nil
-		}),
-	); err != nil {
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	target := chatToken{}
+
+	if err := c.do(request, &target); err != nil {
 		return err
 	}
 

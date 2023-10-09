@@ -94,13 +94,17 @@ type OrganizationService struct {
 func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organization, error) {
 	target := OrganizationResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("/api/v2/organizations/%d", id),
 		http.NoBody,
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return Organization{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Organization{}, err
 	}
 
@@ -119,13 +123,17 @@ func (s OrganizationService) IncrementalExport(
 	for {
 		target := OrganizationsIncrementalExportResponse{}
 
-		if err := s.client.ZendeskRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			fmt.Sprintf("/api/v2/incremental/organizations.json?%s", query.Encode()),
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -147,13 +155,17 @@ func (s OrganizationService) IncrementalExport(
 func (s OrganizationService) Create(ctx context.Context, payload OrganizationPayload) (OrganizationResponse, error) {
 	target := OrganizationResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"/api/v2/organizations",
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return OrganizationResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return OrganizationResponse{}, err
 	}
 
@@ -164,13 +176,17 @@ func (s OrganizationService) Create(ctx context.Context, payload OrganizationPay
 func (s OrganizationService) Update(ctx context.Context, id OrganizationID, payload OrganizationPayload) (OrganizationResponse, error) {
 	target := OrganizationResponse{}
 
-	if err := s.client.ZendeskRequest(
+	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("/api/v2/organizations/%d", id),
 		structToReader(payload),
-		&target,
-	); err != nil {
+	)
+	if err != nil {
+		return OrganizationResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return OrganizationResponse{}, err
 	}
 

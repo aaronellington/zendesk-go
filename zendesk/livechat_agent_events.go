@@ -78,13 +78,17 @@ func (s *AgentEventService) IncrementalExport(
 	for {
 		target := AgentEventExportResponse{}
 
-		if err := s.client.LiveChatRequest(
+		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
 			url,
 			http.NoBody,
-			&target,
-		); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.LiveChatRequest(request, &target); err != nil {
 			return err
 		}
 
