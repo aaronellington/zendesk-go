@@ -63,6 +63,15 @@ func NewService(
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
+			ticketAttachmentService: &TicketAttachmentService{
+				client: c,
+			},
+			ticketCommentService: &TicketCommentService{
+				client: c,
+			},
+			ticketFormService: &TicketFormService{
+				client: c,
+			},
 			userFieldsService: &UserFieldService{
 				client: c,
 			},

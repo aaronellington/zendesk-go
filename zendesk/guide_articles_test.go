@@ -26,14 +26,14 @@ func Test_Guide_Articles_Show_200(t *testing.T) {
 		),
 	})
 
-	var exampleTicketID zendesk.ArticleID = 123
+	var exampleArticleID zendesk.ArticleID = 123
 
-	actual, err := z.Guide().Articles().Show(ctx, exampleTicketID)
+	actual, err := z.Guide().Articles().Show(ctx, exampleArticleID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleTicketID, actual.ID); err != nil {
+	if err := study.Assert(exampleArticleID, actual.ID); err != nil {
 		t.Fatal(err)
 	}
 }
