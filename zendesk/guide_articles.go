@@ -41,7 +41,7 @@ type Article struct {
 	URL               string            `json:"url"`
 	UserSegmentID     UserSegmentID     `json:"user_segment_id"`
 	VoteCount         uint64            `json:"vote_count"`
-	VoteSum           uint64            `json:"vote_sum"`
+	VoteSum           int64             `json:"vote_sum"`
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/
