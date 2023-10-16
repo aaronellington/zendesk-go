@@ -24,6 +24,10 @@ type client struct {
 }
 
 func (c *client) do(request *http.Request, target any) error {
+	if request.URL.Host == "" {
+		request.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
+	}
+
 	request.URL.Scheme = "https"
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Content-Type", "application/json")
