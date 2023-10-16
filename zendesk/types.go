@@ -50,6 +50,7 @@ type (
 	ChatID              string
 	CustomFieldOptionID uint64
 	CustomRoleID        uint64
+	CustomStatusID      uint64
 	GroupID             uint64
 	GroupMembershipID   uint64
 	OrganizationID      uint64
