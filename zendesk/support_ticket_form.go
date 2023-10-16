@@ -18,9 +18,12 @@ type TicketForm struct {
 	DisplayName string       `json:"display_name"`
 }
 
-type TicketFormResponse struct {
+type TicketFormsResponse struct {
 	TicketForms []TicketForm `json:"ticket_forms"`
-	TicketForm  TicketForm   `json:"ticket_form"`
+}
+
+type TicketFormResponse struct {
+	TicketForm TicketForm `json:"ticket_form"`
 }
 
 /*
@@ -31,7 +34,7 @@ Does not support pagination
 func (s TicketFormService) List(
 	ctx context.Context,
 ) ([]TicketForm, error) {
-	target := TicketFormResponse{}
+	target := TicketFormsResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
