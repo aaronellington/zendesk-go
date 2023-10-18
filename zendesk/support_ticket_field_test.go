@@ -27,14 +27,14 @@ func Test_SupportTicketField_Show_200(t *testing.T) {
 		),
 	})
 
-	var exampleFormID zendesk.TicketFieldID = 9001
+	var exampleTicketFieldID zendesk.TicketFieldID = 9001
 
-	actual, err := z.Support().TicketFields().Show(ctx, exampleFormID)
+	actual, err := z.Support().TicketFields().Show(ctx, exampleTicketFieldID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleFormID, actual.ID); err != nil {
+	if err := study.Assert(exampleTicketFieldID, actual.ID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -91,5 +91,4 @@ func Test_SupportTicketField_List_200(t *testing.T) {
 	if err := study.Assert(expectedFieldsLen, actualFieldsLen); err != nil {
 		t.Fatal(err)
 	}
-
 }

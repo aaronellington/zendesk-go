@@ -29,7 +29,7 @@ type OrganizationFieldsResponse struct {
 }
 
 type OrganizationFieldResponse struct {
-	OrganizationField
+	OrganizationField OrganizationField `json:"organization_field"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#list-organization-fields
@@ -101,7 +101,7 @@ func (s OrganizationFieldService) Create(ctx context.Context, payload Organizati
 	target := OrganizationFieldResponse{}
 	request, err := http.NewRequestWithContext(
 		ctx,
-		http.MethodGet,
+		http.MethodPost,
 		"/api/v2/organization_fields",
 		structToReader(payload),
 	)
