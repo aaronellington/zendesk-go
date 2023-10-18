@@ -1,8 +1,8 @@
 {
 	"ticket_fields": [
 		{
-			"url": "https://kaseya.zendesk.com/api/v2/ticket_fields/23413648.json",
-			"id": 23413648,
+			"url": "https://subdomain.zendesk.com/api/v2/ticket_fields/5002.json",
+			"id": 5002,
 			"type": "status",
 			"title": "Status",
 			"raw_title": "Status",
@@ -45,8 +45,8 @@
 			"sub_type_id": 1
 		},
 		{
-			"url": "https://kaseya.zendesk.com/api/v2/ticket_fields/23413658.json",
-			"id": 23413658,
+			"url": "https://subdomain.zendesk.com/api/v2/ticket_fields/5003.json",
+			"id": 5003,
 			"type": "tickettype",
 			"title": "Type",
 			"raw_title": "Type",
@@ -94,7 +94,7 @@
 		"before_cursor": "dCursor="
 	},
 	"links": {
-		"prev": "https://kaseya.zendesk.com/api/v2/ticket_fields.json?page%5Bbefore%5D=dCursor%3D&page%5Bsize%5D=2",
-		"next": "https://kaseya.zendesk.com/api/v2/ticket_fields.json?page%5Bafter%5D=cCursor%3D&page%5Bsize%5D=2"
+		"prev": "https://subdomain.zendesk.com/api/v2/ticket_fields.json?page%5Bbefore%5D=dCursor%3D&page%5Bsize%5D=2",
+		"next": "https://subdomain.zendesk.com/api/v2/ticket_fields.json?page%5Bafter%5D=cCursor%3D&page%5Bsize%5D=2"
 	}
 }
