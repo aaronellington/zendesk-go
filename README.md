@@ -4,6 +4,8 @@
 [![Go](https://github.com/aaronellington/zendesk-go/actions/workflows/go.yml/badge.svg)](https://github.com/aaronellington/zendesk-go/actions/workflows/go.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/aaronellington/zendesk-go.svg)](https://pkg.go.dev/github.com/aaronellington/zendesk-go) [![Go Report Card](https://goreportcard.com/badge/github.com/aaronellington/zendesk-go)](https://goreportcard.com/report/github.com/aaronellington/zendesk-go)
 <!-- aaronellington/stencil -->
 
+![zendesk-go logo](./ops/images/zendesk-go.png)
+
 Zendesk API client library for Go.
 
 ## Getting Started
