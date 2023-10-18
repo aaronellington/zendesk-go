@@ -13,17 +13,17 @@ import (
 )
 
 type client struct {
-	httpClient           *http.Client
-	zendeskAuth          authentication
-	chatCredentials      ChatCredentials
-	chatToken            *chatToken
-	chatMutex            *sync.Mutex
-	subDomain            string
-	userAgent            string
-	requestPreProcessors []RequestPreProcessor
+	httpClient                 *http.Client
+	zendeskAuth                authentication
+	chatCredentials            ChatCredentials
+	chatToken                  *chatToken
+	chatMutex                  *sync.Mutex
+	subDomain                  string
+	userAgent                  string
+	globalRequestPreProcessors []RequestPreProcessor
 }
 
-func (c *client) do(request *http.Request, target any) error {
+func (c *client) do(request *http.Request, target any, individualRequestOverrides ...RequestPreProcessor) error {
 	if request.URL.Host == "" {
 		request.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
 	}
@@ -33,8 +33,14 @@ func (c *client) do(request *http.Request, target any) error {
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
 
-	for _, requestPreProcessor := range c.requestPreProcessors {
-		if err := requestPreProcessor.ProcessRequest(request); err != nil {
+	for _, globalRequestPreProcessor := range c.globalRequestPreProcessors {
+		if err := globalRequestPreProcessor.ProcessRequest(request); err != nil {
+			return err
+		}
+	}
+
+	for _, individualRequestOverride := range individualRequestOverrides {
+		if err := individualRequestOverride.ProcessRequest(request); err != nil {
 			return err
 		}
 	}
@@ -80,10 +86,10 @@ func (c *client) do(request *http.Request, target any) error {
 	return nil
 }
 
-func (c *client) ZendeskRequest(request *http.Request, target any) error {
+func (c *client) ZendeskRequest(request *http.Request, target any, individualRequestOverrides ...RequestPreProcessor) error {
 	c.zendeskAuth.AddZendeskAuthentication(request)
 
-	return c.do(request, target)
+	return c.do(request, target, individualRequestOverrides...)
 }
 
 func (c *client) LiveChatRequest(request *http.Request, target any) error {

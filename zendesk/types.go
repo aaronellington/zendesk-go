@@ -67,6 +67,7 @@ type (
 	TicketFieldID       uint64
 	TicketFormID        uint64
 	TicketID            uint64
+	UploadToken         string
 	UserFieldID         uint64
 	UserID              uint64
 	UserSegmentID       uint64

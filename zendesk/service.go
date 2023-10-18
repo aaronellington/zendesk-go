@@ -22,13 +22,13 @@ func NewService(
 		httpClient: &http.Client{
 			Transport: config.roundTripper,
 		},
-		userAgent:            config.userAgent,
-		subDomain:            subDomain,
-		zendeskAuth:          zendeskAuth,
-		chatCredentials:      chatCredentials,
-		chatMutex:            &sync.Mutex{},
-		chatToken:            nil,
-		requestPreProcessors: config.requestPreProcessors,
+		userAgent:                  config.userAgent,
+		subDomain:                  subDomain,
+		zendeskAuth:                zendeskAuth,
+		chatCredentials:            chatCredentials,
+		chatMutex:                  &sync.Mutex{},
+		chatToken:                  nil,
+		globalRequestPreProcessors: config.requestPreProcessors,
 	}
 
 	return &Service{
