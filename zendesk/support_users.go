@@ -53,6 +53,14 @@ type User struct {
 	Photo                *UserPhoto      `json:"photo"`
 }
 
+type UserRole string
+
+const (
+	Admin   UserRole = "admin"
+	Agent   UserRole = "agent"
+	EndUser UserRole = "end-user"
+)
+
 type UserPhoto struct {
 	ContentURL string `json:"content_url"`
 }
