@@ -319,3 +319,50 @@ func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags T
 
 	return target.Tags, nil
 }
+
+type ListProblemTicketIncidentsResponse struct {
+	Tickets []Ticket `json:"tickets"`
+	CursorPaginationResponse
+}
+
+func (s TicketService) ListProblemTicketIncidents(
+	ctx context.Context,
+	problemTicket TicketID,
+	pageHandler func(response ListProblemTicketIncidentsResponse) error,
+) error {
+	query := url.Values{}
+	// Default values
+	query.Set("page[size]", "100")
+
+	endpoint := fmt.Sprintf("/api/v2/tickets/%d/incidents.json?%s", problemTicket, query.Encode())
+
+	for {
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		target := ListProblemTicketIncidentsResponse{}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if !target.Meta.HasMore {
+			break
+		}
+
+		endpoint = target.Links.Next
+	}
+
+	return nil
+}
