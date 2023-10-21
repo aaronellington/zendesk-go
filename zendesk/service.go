@@ -3,6 +3,7 @@ package zendesk
 import (
 	"net/http"
 	"sync"
+	"time"
 )
 
 func NewService(
@@ -13,6 +14,7 @@ func NewService(
 ) *Service {
 	config := &internalConfig{
 		userAgent: "aaronellington/zendesk-go",
+		timeout:   time.Second * 15,
 	}
 	for _, opt := range opts {
 		opt(config)
@@ -21,6 +23,7 @@ func NewService(
 	c := &client{
 		httpClient: &http.Client{
 			Transport: config.roundTripper,
+			Timeout:   config.timeout,
 		},
 		userAgent:            config.userAgent,
 		subDomain:            subDomain,
