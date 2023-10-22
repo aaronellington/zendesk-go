@@ -21,6 +21,19 @@ func prettyPrint(v any) error {
 	return nil
 }
 
+func PrintErr(err error) {
+	if err == nil {
+		return
+	}
+
+	zdErr, ok := err.(*zendesk.Error)
+	if ok {
+		log.Fatalf("Zendesk Error: [%d] %s", zdErr.StatusCode, string(zdErr.Body))
+	}
+
+	log.Fatal(err)
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -37,10 +50,6 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	s, err := z.Support().Schedules().List(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	prettyPrint(s)
+	_, err := z.Support().Users().ShowSelf(ctx)
+	PrintErr(err)
 }
