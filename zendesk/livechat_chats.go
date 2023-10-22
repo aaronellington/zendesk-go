@@ -142,7 +142,7 @@ type ChatService struct {
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#list-chats
 func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
-	requestURL := "/api/v2/chats"
+	requestURL := "https://www.zopim.com/api/v2/chats"
 
 	for {
 		target := ChatsResponse{}
@@ -180,7 +180,7 @@ func (s *ChatService) Search(ctx context.Context, query string, pageHandler func
 	values := &url.Values{}
 	values.Set("q", query)
 
-	requestURL := "/api/v2/chats/search?" + values.Encode()
+	requestURL := "https://www.zopim.com/api/v2/chats/search?" + values.Encode()
 
 	for {
 		target := ChatsSearchResponse{}
@@ -220,7 +220,7 @@ func (s *ChatService) Show(ctx context.Context, id ChatID) (Chat, error) {
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("/api/v2/chats/%s", id),
+		fmt.Sprintf("https://www.zopim.com/api/v2/chats/%s", id),
 		http.NoBody,
 	)
 	if err != nil {
@@ -253,7 +253,7 @@ func (s *ChatService) IncrementalExport(
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
-			fmt.Sprintf("/api/v2/incremental/chats?%s", query.Encode()),
+			fmt.Sprintf("https://www.zopim.com/api/v2/incremental/chats?%s", query.Encode()),
 			http.NoBody,
 		)
 		if err != nil {
