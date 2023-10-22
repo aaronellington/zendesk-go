@@ -9,7 +9,7 @@ import (
 type configOption func(s *internalConfig)
 
 type RequestPreProcessor interface {
-	ProcessRequest(*http.Request) error
+	ProcessRequest(r *http.Request) error
 }
 
 type RequestPreProcessorFunc func(*http.Request) error
