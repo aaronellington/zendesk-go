@@ -54,6 +54,9 @@ func NewService(
 			ticketAuditService: &TicketAuditService{
 				client: c,
 			},
+			sideConversationService: &SideConversationService{
+				client: c,
+			},
 			scheduleService: &ScheduleService{
 				client: c,
 			},
