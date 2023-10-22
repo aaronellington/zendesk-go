@@ -72,6 +72,9 @@ func NewService(
 			userFieldsService: &UserFieldService{
 				client: c,
 			},
+			ticketFormService: &TicketFormService{
+				client: c,
+			},
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},

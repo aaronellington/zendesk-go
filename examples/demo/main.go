@@ -50,6 +50,12 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	_, err := z.Support().Users().ShowSelf(ctx)
-	PrintErr(err)
+	response, err := z.Support().TicketForms().List(ctx, func(response zendesk.TicketFormsResponse) error {
+		return nil
+	})
+	if err != nil {
+		PrintErr(err)
+	}
+
+	prettyPrint(response)
 }

@@ -13,6 +13,7 @@ type SupportService struct {
 	userService             *UserService
 	userIdentityService     *UserIdentityService
 	sideConversationService *SideConversationService
+	ticketFormService       *TicketFormService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -43,6 +44,11 @@ func (s *SupportService) UserIdentities() *UserIdentityService {
 // https://developer.zendesk.com/api-reference/ticketing/users/user_fields/
 func (s *SupportService) UserFields() *UserFieldService {
 	return s.userFieldsService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
+func (s *SupportService) TicketForms() *TicketFormService {
+	return s.ticketFormService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
