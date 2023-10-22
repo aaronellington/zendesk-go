@@ -35,7 +35,6 @@ type TicketFormService struct {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
 func (s TicketFormService) List(
 	ctx context.Context,
-	pageHandler func(response TicketFormsResponse) error,
 ) (TicketFormsResponse, error) {
 	target := TicketFormsResponse{}
 
