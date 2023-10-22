@@ -51,7 +51,7 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now(), func(response zendesk.AgentEventExportResponse) error {
+	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now().Add(time.Minute*-8), func(response zendesk.AgentEventExportResponse) error {
 		_ = prettyPrint(response)
 		return nil
 	})
