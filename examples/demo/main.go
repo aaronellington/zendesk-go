@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -50,10 +51,11 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	response, err := z.Support().TicketForms().List(ctx)
+	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now(), func(response zendesk.AgentEventExportResponse) error {
+		_ = prettyPrint(response)
+		return nil
+	})
 	if err != nil {
 		PrintErr(err)
 	}
-
-	_ = prettyPrint(response)
 }

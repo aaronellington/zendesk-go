@@ -30,8 +30,11 @@ func (c *client) do(request *http.Request, target any) error {
 
 	request.URL.Scheme = "https"
 	request.Header.Set("Accept", "application/json")
-	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
+
+	if request.Header.Get("Content-Type") == "" {
+		request.Header.Set("Content-Type", "application/json")
+	}
 
 	for _, requestPreProcessor := range c.requestPreProcessors {
 		if err := requestPreProcessor.ProcessRequest(request); err != nil {
