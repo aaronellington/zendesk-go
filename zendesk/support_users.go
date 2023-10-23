@@ -56,9 +56,9 @@ type User struct {
 type UserRole string
 
 const (
-	Admin   UserRole = "admin"
-	Agent   UserRole = "agent"
-	EndUser UserRole = "end-user"
+	UserRoleAdmin   UserRole = "admin"
+	UserRoleAgent   UserRole = "agent"
+	UserRoleEndUser UserRole = "end-user"
 )
 
 type UserPhoto struct {

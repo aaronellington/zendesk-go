@@ -75,11 +75,9 @@ func NewService(
 			organizationFieldService: &OrganizationFieldService{
 				client: c,
 			},
-
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
-
 			ticketAttachmentService: &TicketAttachmentService{
 				client: c,
 			},
@@ -92,11 +90,9 @@ func NewService(
 			ticketFieldService: &TicketFieldService{
 				client: c,
 			},
-
 			userFieldsService: &UserFieldService{
 				client: c,
 			},
-
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},

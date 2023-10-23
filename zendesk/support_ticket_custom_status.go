@@ -22,12 +22,12 @@ type CustomStatus struct {
 type CustomStatusCategory string
 
 const (
-	New     CustomStatusCategory = "new"
-	Open    CustomStatusCategory = "open"
-	Pending CustomStatusCategory = "pending"
-	Hold    CustomStatusCategory = "hold"
-	// Tickets with a "Closed" status belong to the "Solved" status category
-	Solved CustomStatusCategory = "solved"
+	StatusCategoryNew     CustomStatusCategory = "new"
+	StatusCategoryOpen    CustomStatusCategory = "open"
+	StatusCategoryPending CustomStatusCategory = "pending"
+	StatusCategoryHold    CustomStatusCategory = "hold"
+	// Tickets with a "Closed" status belong to the "StatusCategorySolved" status category
+	StatusCategorySolved CustomStatusCategory = "solved"
 )
 
 type CustomStatusesResponse struct {
