@@ -1,0 +1,31 @@
+{
+	"tickets": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/tickets/4001.json",
+			"id": 4001,
+			"external_id": null,
+			"via": {
+				"channel": "api",
+				"source": { "from": {}, "to": {}, "rel": null }
+			}
+		},
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/tickets/5001.json",
+			"id": 5001,
+			"external_id": null,
+			"via": {
+				"channel": "api",
+				"source": { "from": {}, "to": {}, "rel": null }
+			}
+		}
+	],
+	"meta": {
+		"has_more": false,
+		"after_cursor": "cCursor==",
+		"before_cursor": "dCursor=="
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/tickets/2000/incidents.json?page%5Bbefore%5D=dCursor%3D%3D&page%5Bsize%5D=100",
+		"next": "https://subdomain.zendesk.com/api/v2/tickets/2000/incidents.json?page%5Bafter%5D=cCursor%3D%3D&page%5Bsize%5D=100"
+	}
+}
