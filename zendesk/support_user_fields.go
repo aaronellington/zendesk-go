@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+type UserFieldResponse struct {
+	UserField UserField `json:"user_field"`
+}
+
 type UserFieldsResponse struct {
 	UserFields []UserField `json:"user_fields"`
 	CursorPaginationResponse
@@ -82,4 +86,27 @@ func (s UserFieldService) List(
 	}
 
 	return nil
+}
+
+func (s UserFieldService) Show(
+	ctx context.Context,
+	id UserFieldID,
+) (UserField, error) {
+	target := UserFieldResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/user_fields/%d", id),
+		http.NoBody,
+	)
+	if err != nil {
+		return UserField{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return UserField{}, err
+	}
+
+	return target.UserField, nil
 }
