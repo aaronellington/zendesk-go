@@ -73,6 +73,18 @@ func (s TicketAttachmentService) Upload(
 	}
 	defer file.Close()
 
+	// The content-type header has to be overridden, specify .json to account for this
+	// https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/adding-ticket-attachments-with-the-api/
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"/api/v2/uploads.json",
+		file,
+	)
+	if err != nil {
+		return TicketAttachmentUploadResponse{}, err
+	}
+
 	// Attempt to identify filetype by extension. If that fails, read the first 512 bytes of the file.
 	contentType := mime.TypeByExtension(filepath.Ext(localFilePath))
 	if contentType == "" {
@@ -88,17 +100,8 @@ func (s TicketAttachmentService) Upload(
 		contentType = http.DetectContentType(fileHeadBuffer)
 	}
 
-	// The content-type header has to be overridden, specify .json to account for this
-	// https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/adding-ticket-attachments-with-the-api/
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"/api/v2/uploads.json",
-		file,
-	)
-	if err != nil {
-		return TicketAttachmentUploadResponse{}, err
-	}
+	// Set the content-type header
+	request.Header.Set("Content-Type", contentType)
 
 	// Set the URL Parameters filename (required) and token (optional)
 	queryParams := request.URL.Query()
@@ -114,7 +117,6 @@ func (s TicketAttachmentService) Upload(
 	if err := s.client.ZendeskRequest(
 		request,
 		&target,
-		withContentType(contentType),
 	); err != nil {
 		return TicketAttachmentUploadResponse{}, err
 	}

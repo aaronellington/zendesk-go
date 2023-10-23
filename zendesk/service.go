@@ -25,13 +25,13 @@ func NewService(
 			Transport: config.roundTripper,
 			Timeout:   config.timeout,
 		},
-		userAgent:                  config.userAgent,
-		subDomain:                  subDomain,
-		zendeskAuth:                zendeskAuth,
-		chatCredentials:            chatCredentials,
-		chatMutex:                  &sync.Mutex{},
-		chatToken:                  nil,
-		globalRequestPreProcessors: config.requestPreProcessors,
+		userAgent:            config.userAgent,
+		subDomain:            subDomain,
+		zendeskAuth:          zendeskAuth,
+		chatCredentials:      chatCredentials,
+		chatMutex:            &sync.Mutex{},
+		chatToken:            nil,
+		requestPreProcessors: config.requestPreProcessors,
 	}
 
 	return &Service{
