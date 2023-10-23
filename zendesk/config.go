@@ -64,10 +64,3 @@ func (l *loggerWrapper) ProcessRequest(r *http.Request) error {
 
 	return nil
 }
-
-func withContentType(contentType string) RequestPreProcessorFunc {
-	return func(r *http.Request) error {
-		r.Header.Set("content-type", contentType)
-		return nil
-	}
-}
