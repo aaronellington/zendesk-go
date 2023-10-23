@@ -85,12 +85,11 @@ func Test_SupportOrganizationField_Delete_200(t *testing.T) {
 	z := createTestService(t, []study.RoundTripFunc{
 		study.ServeAndValidate(
 			t,
-			&study.TestResponseFile{
-				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/support/organization_field/show_200.json",
+			&study.TestResponseNoContent{
+				StatusCode: http.StatusNoContent,
 			},
 			study.ExpectedTestRequest{
-				Method: http.MethodGet,
+				Method: http.MethodDelete,
 				Path:   "/api/v2/organization_fields/4321",
 			},
 		),
@@ -98,12 +97,7 @@ func Test_SupportOrganizationField_Delete_200(t *testing.T) {
 
 	var exampleOrganizationFieldID zendesk.OrganizationFieldID = 4321
 
-	actual, err := z.Support().OrganizationFields().Show(ctx, exampleOrganizationFieldID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := study.Assert(exampleOrganizationFieldID, actual.ID); err != nil {
+	if err := z.Support().OrganizationFields().Delete(ctx, exampleOrganizationFieldID); err != nil {
 		t.Fatal(err)
 	}
 }
