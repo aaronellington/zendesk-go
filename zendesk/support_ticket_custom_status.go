@@ -32,6 +32,9 @@ const (
 
 type CustomStatusesResponse struct {
 	CustomStatuses []CustomStatus `json:"custom_statuses"`
+	NextPage       *string        `json:"next_page"`
+	PreviousPage   *string        `json:"previous_page"`
+	Count          uint64         `json:"count"`
 }
 
 type CustomStatusResponse struct {
@@ -41,28 +44,44 @@ type CustomStatusResponse struct {
 /*
 https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/#list-custom-ticket-statuses
 
-Does not support pagination
+Does not support cursor pagination
 */
 func (s CustomStatusService) List(
 	ctx context.Context,
-) ([]CustomStatus, error) {
-	target := CustomStatusesResponse{}
+	pageHandler func(response CustomStatusesResponse) error,
+) error {
+	endpoint := "/api/v2/custom_statuses"
 
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		"/api/v2/custom_statuses",
-		http.NoBody,
-	)
-	if err != nil {
-		return nil, err
+	for {
+		target := CustomStatusesResponse{}
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if target.NextPage != nil {
+			endpoint = *target.NextPage
+			continue
+		}
+
+		break
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return nil, err
-	}
-
-	return target.CustomStatuses, nil
+	return nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/#show-custom-ticket-status
