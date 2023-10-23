@@ -3,6 +3,7 @@ package zendesk
 import (
 	"net/http"
 	"sync"
+	"time"
 )
 
 func NewService(
@@ -13,6 +14,7 @@ func NewService(
 ) *Service {
 	config := &internalConfig{
 		userAgent: "aaronellington/zendesk-go",
+		timeout:   time.Second * 15,
 	}
 	for _, opt := range opts {
 		opt(config)
@@ -21,6 +23,7 @@ func NewService(
 	c := &client{
 		httpClient: &http.Client{
 			Transport: config.roundTripper,
+			Timeout:   config.timeout,
 		},
 		userAgent:                  config.userAgent,
 		subDomain:                  subDomain,
@@ -45,6 +48,24 @@ func NewService(
 			customStatusService: &CustomStatusService{
 				client: c,
 			},
+			organizationService: &OrganizationService{
+				client: c,
+			},
+			userService: &UserService{
+				client: c,
+			},
+			ticketService: &TicketService{
+				client: c,
+			},
+			ticketAuditService: &TicketAuditService{
+				client: c,
+			},
+			sideConversationService: &SideConversationService{
+				client: c,
+			},
+			scheduleService: &ScheduleService{
+				client: c,
+			},
 			groupMembershipService: &GroupMembershipService{
 				client: c,
 			},
@@ -54,18 +75,11 @@ func NewService(
 			organizationFieldService: &OrganizationFieldService{
 				client: c,
 			},
-			organizationService: &OrganizationService{
-				client: c,
-			},
-			scheduleService: &ScheduleService{
-				client: c,
-			},
+
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
-			ticketAuditService: &TicketAuditService{
-				client: c,
-			},
+
 			ticketAttachmentService: &TicketAttachmentService{
 				client: c,
 			},
@@ -78,16 +92,12 @@ func NewService(
 			ticketFieldService: &TicketFieldService{
 				client: c,
 			},
-			ticketService: &TicketService{
-				client: c,
-			},
+
 			userFieldsService: &UserFieldService{
 				client: c,
 			},
+
 			userIdentityService: &UserIdentityService{
-				client: c,
-			},
-			userService: &UserService{
 				client: c,
 			},
 		},

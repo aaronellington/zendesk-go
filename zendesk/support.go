@@ -18,6 +18,7 @@ type SupportService struct {
 	userFieldsService        *UserFieldService
 	userService              *UserService
 	userIdentityService      *UserIdentityService
+	sideConversationService  *SideConversationService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -60,6 +61,11 @@ func (s *SupportService) UserFields() *UserFieldService {
 	return s.userFieldsService
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
+func (s *SupportService) TicketForms() *TicketFormService {
+	return s.ticketFormService
+}
+
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
 func (s *SupportService) Tickets() *TicketService {
 	return s.ticketService
@@ -85,14 +91,14 @@ func (s *SupportService) TicketFields() *TicketFieldService {
 	return s.ticketFieldService
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms
-func (s *SupportService) TicketForms() *TicketFormService {
-	return s.ticketFormService
-}
-
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/
 func (s *SupportService) SuspendedTickets() *SuspendedTicketService {
 	return s.suspendedTicketService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/side_conversation/side_conversation/
+func (s *SupportService) SideConversations() *SideConversationService {
+	return s.sideConversationService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/schedules/

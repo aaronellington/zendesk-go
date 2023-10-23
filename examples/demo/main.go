@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -19,6 +20,19 @@ func prettyPrint(v any) error {
 	os.Stdout.WriteString("\n")
 
 	return nil
+}
+
+func PrintErr(err error) {
+	if err == nil {
+		return
+	}
+
+	zdErr, ok := err.(*zendesk.Error)
+	if ok {
+		log.Fatalf("Zendesk Error: [%d] %s", zdErr.StatusCode, string(zdErr.Body))
+	}
+
+	log.Fatal(err)
 }
 
 func main() {
@@ -37,10 +51,11 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	s, err := z.Support().Schedules().List(ctx)
+	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now().Add(time.Minute*-8), func(response zendesk.AgentEventExportResponse) error {
+		_ = prettyPrint(response)
+		return nil
+	})
 	if err != nil {
-		panic(err)
+		PrintErr(err)
 	}
-
-	prettyPrint(s)
 }

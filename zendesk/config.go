@@ -3,12 +3,13 @@ package zendesk
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 type configOption func(s *internalConfig)
 
 type RequestPreProcessor interface {
-	ProcessRequest(*http.Request) error
+	ProcessRequest(r *http.Request) error
 }
 
 type RequestPreProcessorFunc func(*http.Request) error
@@ -20,12 +21,19 @@ func (p RequestPreProcessorFunc) ProcessRequest(r *http.Request) error {
 type internalConfig struct {
 	roundTripper         http.RoundTripper
 	userAgent            string
+	timeout              time.Duration
 	requestPreProcessors []RequestPreProcessor
 }
 
 func WithRoundTripper(roundTripper http.RoundTripper) configOption {
 	return func(s *internalConfig) {
 		s.roundTripper = roundTripper
+	}
+}
+
+func SetTimeout(timeout time.Duration) configOption {
+	return func(s *internalConfig) {
+		s.timeout = timeout
 	}
 }
 
