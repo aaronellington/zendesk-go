@@ -82,3 +82,44 @@ func Test_SupportTicketCustomStatus_Show_200(t *testing.T) {
 		t.Fatalf("expected ID: %d - got ID: %d", expectedCustomStatusID, actual.ID)
 	}
 }
+
+func Test_SupportTicketCustomStatus_Create_200(t *testing.T) {
+	ctx := context.Background()
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusCreated,
+				FilePath:   "test_files/responses/support/ticket_custom_status/create_200.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPost,
+				Path:   "/api/v2/custom_statuses",
+			},
+		),
+	})
+
+	newCustomStatusLabel := "A Test Status for new tickets"
+
+	newCustomStatus := zendesk.CustomStatusPayload{
+		CustomStatus: struct {
+			Active         bool   `json:"active"`
+			AgentLabel     string `json:"agent_label"`
+			StatusCategory string `json:"status_category"`
+		}{
+			Active:         true,
+			AgentLabel:     newCustomStatusLabel,
+			StatusCategory: zendesk.StatusNew,
+		},
+	}
+
+	actual, err := z.Support().CustomStatuses().Create(ctx, newCustomStatus)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if actual.CustomStatus.AgentLabel != newCustomStatusLabel {
+		t.Fatalf("expected ID: %s - got ID: %s", newCustomStatusLabel, actual.CustomStatus.AgentLabel)
+	}
+}

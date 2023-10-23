@@ -41,6 +41,10 @@ type CustomStatusResponse struct {
 	CustomStatus CustomStatus `json:"custom_status"`
 }
 
+type CustomStatusPayload struct {
+	CustomStatus any `json:"custom_status"`
+}
+
 /*
 https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/#list-custom-ticket-statuses
 
@@ -106,7 +110,7 @@ func (s CustomStatusService) Show(ctx context.Context, id CustomStatusID) (Custo
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/#create-custom-ticket-status
-func (s CustomStatusService) Create(ctx context.Context, payload any) (CustomStatusResponse, error) {
+func (s CustomStatusService) Create(ctx context.Context, payload CustomStatusPayload) (CustomStatusResponse, error) {
 	target := CustomStatusResponse{}
 
 	request, err := http.NewRequestWithContext(
