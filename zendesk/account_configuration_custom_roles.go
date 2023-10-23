@@ -49,6 +49,7 @@ type CustomRoleConfiguration struct {
 
 type CustomRolesResponse struct {
 	CustomRoles []CustomRole `json:"custom_roles"`
+	OffsetPaginationResponse
 }
 
 type CustomRoleResponse struct {
@@ -58,28 +59,44 @@ type CustomRoleResponse struct {
 /*
 https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#list-custom-roles
 
-Does not support pagination
+Does not support cursor pagination
 */
 func (s CustomRoleService) List(
 	ctx context.Context,
-) ([]CustomRole, error) {
-	target := CustomRolesResponse{}
+	pageHandler func(response CustomRolesResponse) error,
+) error {
+	endpoint := "/api/v2/custom_roles"
 
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		"/api/v2/custom_roles",
-		http.NoBody,
-	)
-	if err != nil {
-		return nil, err
+	for {
+		target := CustomRolesResponse{}
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if target.NextPage != nil {
+			endpoint = *target.NextPage
+			continue
+		}
+
+		break
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return nil, err
-	}
-
-	return target.CustomRoles, nil
+	return nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#show-custom-role

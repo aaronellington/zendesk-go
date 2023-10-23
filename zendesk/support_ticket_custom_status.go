@@ -32,9 +32,7 @@ const (
 
 type CustomStatusesResponse struct {
 	CustomStatuses []CustomStatus `json:"custom_statuses"`
-	NextPage       *string        `json:"next_page"`
-	PreviousPage   *string        `json:"previous_page"`
-	Count          uint64         `json:"count"`
+	OffsetPaginationResponse
 }
 
 type CustomStatusResponse struct {
