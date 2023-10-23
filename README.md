@@ -20,9 +20,12 @@ go get github.com/aaronellington/zendesk-go
 
 ### Create new connection
 
-> [!NOTE]
+> [!NOTE]  
 > You will need to set your Zendesk Credentials in your environment before the below example will work. In bash, you can do this by running:  
-> `export ZENDESK_DEMO_EMAIL=<YOUR_EMAIL>; export ZENDESK_DEMO_TOKEN=<YOUR_TOKEN>; bash;`
+> REST:  
+> `export ZENDESK_DEMO_EMAIL=<YOUR_EMAIL>; export ZENDESK_DEMO_TOKEN=<YOUR_TOKEN>;`  
+> CHAT:  
+> `export ZENDESK_DEMO_CHAT_CLIENT_ID=<YOUR_CLIENT_ID>; export ZENDESK_DEMO_CHAT_CLIENT_SECRET=<YOUR_CLIENT_SECRET>;`
 
 ```go
 package main
