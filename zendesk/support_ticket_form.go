@@ -2,10 +2,17 @@ package zendesk
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 )
 
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
+type TicketFormService struct {
+	client *client
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#json-format
 type TicketForm struct {
 	URL            string          `json:"url"`
 	Name           string          `json:"name"`
@@ -27,15 +34,18 @@ type TicketFormsResponse struct {
 	TicketForms []TicketForm `json:"ticket_forms"`
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
-type TicketFormService struct {
-	client *client
+type TicketFormResponse struct {
+	TicketForm TicketForm `json:"ticket_form"`
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
+/*
+https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
+
+Does not support pagination
+*/
 func (s TicketFormService) List(
 	ctx context.Context,
-) (TicketFormsResponse, error) {
+) ([]TicketForm, error) {
 	target := TicketFormsResponse{}
 
 	request, err := http.NewRequestWithContext(
@@ -45,12 +55,36 @@ func (s TicketFormService) List(
 		http.NoBody,
 	)
 	if err != nil {
-		return TicketFormsResponse{}, err
+		return nil, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return TicketFormsResponse{}, err
+		return nil, err
 	}
 
-	return target, nil
+	return target.TicketForms, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#show-ticket-form
+func (s TicketFormService) Show(
+	ctx context.Context,
+	ticketFormID TicketFormID,
+) (TicketForm, error) {
+	target := TicketFormResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/ticket_forms/%d", ticketFormID),
+		http.NoBody,
+	)
+	if err != nil {
+		return TicketForm{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return TicketForm{}, err
+	}
+
+	return target.TicketForm, nil
 }

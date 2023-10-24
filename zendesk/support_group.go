@@ -9,8 +9,16 @@ import (
 )
 
 type GroupsResponse struct {
-	Groups []Group
+	Groups []Group `json:"groups"`
 	CursorPaginationResponse
+}
+
+type GroupPayload struct {
+	Group any `json:"group"`
+}
+
+type GroupResponse struct {
+	Group Group `json:"group"`
 }
 
 type Group struct {
@@ -65,4 +73,49 @@ func (s GroupsService) List(
 	}
 
 	return nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/groups/groups/#show-group
+func (s GroupsService) Show(
+	ctx context.Context,
+	id GroupID,
+) (Group, error) {
+	target := GroupResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/groups/%d", id),
+		http.NoBody,
+	)
+	if err != nil {
+		return Group{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return Group{}, err
+	}
+
+	return target.Group, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/groups/groups/#create-group
+func (s GroupsService) Create(ctx context.Context, payload GroupPayload) (GroupResponse, error) {
+	target := GroupResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"/api/v2/groups",
+		structToReader(payload),
+	)
+	if err != nil {
+		return GroupResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return GroupResponse{}, err
+	}
+
+	return target, nil
 }

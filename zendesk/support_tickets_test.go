@@ -260,3 +260,56 @@ func Test_Support_Tickets_Merge_TicketID_Closed(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func Test_SupportTickets_ListProblemTicketIncidents_200(t *testing.T) {
+	ctx := context.Background()
+	problemTicketID := zendesk.TicketID(2000)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/list_problem_ticket_incidents_page_1.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/incidents.json", problemTicketID),
+				Query: url.Values{
+					"page[size]": []string{"100"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/list_problem_ticket_incidents_page_2.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d/incidents.json", problemTicketID),
+				Query: url.Values{
+					"page[size]":  []string{"100"},
+					"page[after]": []string{"aCursor=="},
+				},
+			},
+		),
+	})
+
+	linkedIncidents := []zendesk.Ticket{}
+
+	if err := z.Support().Tickets().ListProblemTicketIncidents(
+		ctx,
+		problemTicketID,
+		func(response zendesk.ListProblemTicketIncidentsResponse) error {
+			linkedIncidents = append(linkedIncidents, response.Tickets...)
+			return nil
+		}); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(linkedIncidents) != 4 {
+		t.Fatalf("expected %d incidents, got %d", 4, len(linkedIncidents))
+	}
+}

@@ -41,6 +41,8 @@ const (
 type (
 	ActorID             int64
 	ArticleID           uint64
+	AttachmentID        uint64
+	AuditID             uint64
 	AuditLogID          uint64
 	CategoryID          uint64
 	ChatAccountID       uint64
@@ -48,9 +50,11 @@ type (
 	ChatID              string
 	CustomFieldOptionID uint64
 	CustomRoleID        uint64
+	CustomStatusID      uint64
 	GroupID             uint64
 	GroupMembershipID   uint64
 	OrganizationID      uint64
+	OrganizationFieldID uint64
 	PermissionGroupID   uint64
 	ScheduleID          uint64
 	SectionID           uint64
@@ -59,9 +63,11 @@ type (
 	Tag                 string
 	TicketAuditEventID  uint64
 	TicketAuditID       uint64
+	TicketCommentID     uint64
 	TicketFieldID       uint64
 	TicketFormID        uint64
 	TicketID            uint64
+	UploadToken         string
 	UserFieldID         uint64
 	UserID              uint64
 	UserSegmentID       uint64

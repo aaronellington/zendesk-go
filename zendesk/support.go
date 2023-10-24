@@ -2,18 +2,33 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 type SupportService struct {
-	groupMembershipService  *GroupMembershipService
-	groupService            *GroupsService
-	organizationService     *OrganizationService
-	scheduleService         *ScheduleService
-	suspendedTicketService  *SuspendedTicketService
-	ticketAuditService      *TicketAuditService
-	ticketService           *TicketService
-	userFieldsService       *UserFieldService
-	userService             *UserService
-	userIdentityService     *UserIdentityService
-	sideConversationService *SideConversationService
-	ticketFormService       *TicketFormService
+	customStatusService      *CustomStatusService
+	groupMembershipService   *GroupMembershipService
+	groupService             *GroupsService
+	organizationFieldService *OrganizationFieldService
+	organizationService      *OrganizationService
+	scheduleService          *ScheduleService
+	suspendedTicketService   *SuspendedTicketService
+	ticketAttachmentService  *TicketAttachmentService
+	ticketAuditService       *TicketAuditService
+	ticketCommentService     *TicketCommentService
+	ticketFieldService       *TicketFieldService
+	ticketFormService        *TicketFormService
+	ticketService            *TicketService
+	userFieldsService        *UserFieldService
+	userService              *UserService
+	userIdentityService      *UserIdentityService
+	sideConversationService  *SideConversationService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+func (s *SupportService) CustomStatuses() *CustomStatusService {
+	return s.customStatusService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+func (s *SupportService) OrganizationFields() *OrganizationFieldService {
+	return s.organizationFieldService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -59,6 +74,21 @@ func (s *SupportService) Tickets() *TicketService {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_audits/
 func (s *SupportService) TicketAudits() *TicketAuditService {
 	return s.ticketAuditService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket-attachments/
+func (s *SupportService) TicketAttachments() *TicketAttachmentService {
+	return s.ticketAttachmentService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments
+func (s *SupportService) TicketComments() *TicketCommentService {
+	return s.ticketCommentService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields
+func (s *SupportService) TicketFields() *TicketFieldService {
+	return s.ticketFieldService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/

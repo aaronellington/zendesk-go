@@ -1,0 +1,43 @@
+{
+	"ticket_field": {
+		"url": "https://subdomain.zendesk.com/api/v2/ticket_fields/9001.json",
+		"id": 9001,
+		"type": "tagger",
+		"title": "Title",
+		"raw_title": "Title",
+		"description": "",
+		"raw_description": "",
+		"position": 9999,
+		"active": false,
+		"required": false,
+		"collapsed_for_agents": false,
+		"regexp_for_validation": null,
+		"title_in_portal": "Title",
+		"raw_title_in_portal": "Title",
+		"visible_in_portal": false,
+		"editable_in_portal": false,
+		"required_in_portal": false,
+		"tag": null,
+		"created_at": "2014-10-26T23:23:27Z",
+		"updated_at": "2018-06-22T18:56:01Z",
+		"removable": true,
+		"key": null,
+		"agent_description": null,
+		"custom_field_options": [
+			{
+				"id": 1111,
+				"name": "Field 1",
+				"raw_name": "Field 1",
+				"value": "field_1",
+				"default": true
+			},
+			{
+				"id": 2222,
+				"name": "Field 2",
+				"raw_name": "Field 2",
+				"value": "field_2",
+				"default": false
+			}
+		]
+	}
+}

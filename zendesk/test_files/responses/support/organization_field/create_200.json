@@ -1,0 +1,17 @@
+{
+	"organization_field": {
+		"active": true,
+		"created_at": "2013-02-27T20:35:55Z",
+		"description": "This field describes the support plan this organization has",
+		"id": 75,
+		"key": "support_description",
+		"position": 0,
+		"raw_description": "This field describes the support plan this organization has",
+		"raw_title": "Support description",
+		"regexp_for_validation": null,
+		"title": "Support description",
+		"type": "text",
+		"updated_at": "2013-02-27T20:35:55Z",
+		"url": "https://subdomain.zendesk.com/api/v2/organization_fields/75.json"
+	}
+}

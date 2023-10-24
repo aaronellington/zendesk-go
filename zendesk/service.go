@@ -40,8 +40,14 @@ func NewService(
 			auditLogService: &AuditLogService{
 				client: c,
 			},
+			customRoleService: &CustomRoleService{
+				client: c,
+			},
 		},
 		supportService: &SupportService{
+			customStatusService: &CustomStatusService{
+				client: c,
+			},
 			organizationService: &OrganizationService{
 				client: c,
 			},
@@ -66,13 +72,25 @@ func NewService(
 			groupService: &GroupsService{
 				client: c,
 			},
+			organizationFieldService: &OrganizationFieldService{
+				client: c,
+			},
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
-			userFieldsService: &UserFieldService{
+			ticketAttachmentService: &TicketAttachmentService{
+				client: c,
+			},
+			ticketCommentService: &TicketCommentService{
 				client: c,
 			},
 			ticketFormService: &TicketFormService{
+				client: c,
+			},
+			ticketFieldService: &TicketFieldService{
+				client: c,
+			},
+			userFieldsService: &UserFieldService{
 				client: c,
 			},
 			userIdentityService: &UserIdentityService{

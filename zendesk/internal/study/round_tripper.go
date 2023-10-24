@@ -67,6 +67,16 @@ func (f *TestResponseFile) CreateResponse() (*http.Response, error) {
 	}, nil
 }
 
+type TestResponseNoContent struct {
+	StatusCode int
+}
+
+func (f *TestResponseNoContent) CreateResponse() (*http.Response, error) {
+	return &http.Response{
+		StatusCode: http.StatusNoContent,
+	}, nil
+}
+
 func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest) RoundTripFunc {
 	return func(t *testing.T, request *http.Request) (*http.Response, error) {
 		if err := Assert(expected.Method, request.Method); err != nil {

@@ -1,0 +1,24 @@
+{
+	"ticket_form": {
+		"url": "https://subdomain.zendesk.com/api/v2/ticket_forms/123123123.json",
+		"name": "Main Support Form",
+		"display_name": "Main Support Form",
+		"id": 123123123,
+		"raw_name": "Main Support Form",
+		"raw_display_name": "Main Support Form",
+		"end_user_visible": true,
+		"position": 0,
+		"ticket_field_ids": [
+			360000000001, 360000000002, 360000000003, 360000000004,
+			360000000005, 360000000006, 360000000007, 360000000008, 360000000009
+		],
+		"active": true,
+		"default": true,
+		"created_at": "2021-05-05T05:14:28Z",
+		"updated_at": "2023-08-18T13:03:35Z",
+		"in_all_brands": false,
+		"restricted_brand_ids": [360000446032],
+		"end_user_conditions": [],
+		"agent_conditions": []
+	}
+}

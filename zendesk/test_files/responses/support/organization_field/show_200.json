@@ -1,0 +1,19 @@
+{
+	"organization_field": {
+		"url": "https://subdomain.zendesk.com/api/v2/organization_fields/4321.json",
+		"id": 4321,
+		"type": "checkbox",
+		"key": "organization_field_key",
+		"title": "Organization Field Key",
+		"description": "",
+		"raw_title": "Organization Field Key",
+		"raw_description": "",
+		"position": 0,
+		"active": true,
+		"system": false,
+		"regexp_for_validation": null,
+		"created_at": "2022-02-24T17:16:04Z",
+		"updated_at": "2022-03-29T19:22:08Z",
+		"tag": "organizationfieldkey"
+	}
+}

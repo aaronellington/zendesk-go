@@ -1,0 +1,18 @@
+{
+	"custom_status": {
+		"active": true,
+		"agent_label": "A Test Status for new tickets",
+		"created_at": "2021-07-20T22:55:29Z",
+		"default": false,
+		"description": "",
+		"end_user_description": "",
+		"end_user_label": "",
+		"id": 35436,
+		"raw_agent_label": "A Test Status for new tickets",
+		"raw_description": "",
+		"raw_end_user_description": "",
+		"raw_end_user_label": "",
+		"status_category": "new",
+		"updated_at": "2021-07-20T22:55:29Z"
+	}
+}
