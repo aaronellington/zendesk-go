@@ -15,6 +15,7 @@ type SupportService struct {
 	ticketFieldService       *TicketFieldService
 	ticketFormService        *TicketFormService
 	ticketService            *TicketService
+	ticketTagService         *TicketTagService
 	userFieldsService        *UserFieldService
 	userService              *UserService
 	userIdentityService      *UserIdentityService
@@ -89,6 +90,11 @@ func (s *SupportService) TicketComments() *TicketCommentService {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields
 func (s *SupportService) TicketFields() *TicketFieldService {
 	return s.ticketFieldService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags
+func (s *SupportService) TicketTagService() *TicketTagService {
+	return s.ticketTagService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/

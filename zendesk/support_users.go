@@ -40,7 +40,7 @@ type User struct {
 	Name                 string          `json:"name"`
 	OrganizationID       *OrganizationID `json:"organization_id"`
 	Phone                *string         `json:"phone"`
-	Role                 string          `json:"role"`
+	Role                 UserRole        `json:"role"`
 	RoleType             *int            `json:"role_type"`
 	Signature            string          `json:"signature"`
 	Shared               bool            `json:"shared"`
@@ -65,6 +65,8 @@ type UserPhoto struct {
 	ContentURL string `json:"content_url"`
 }
 
+// NOTE: User Fields are returned as a map[string (name of field)]any (value of field), instead of the
+// way in which Ticket Fields are returned.
 type UserFields map[string]any
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/

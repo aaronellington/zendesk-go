@@ -78,7 +78,7 @@ func Test_SupportTicketField_List_200(t *testing.T) {
 	actualFieldsLen := 0
 
 	if err := z.Support().TicketFields().List(ctx,
-		func(response zendesk.TicketFieldsResponse) error {
+		func(response zendesk.TicketFieldsConfigurationResponse) error {
 			for range response.TicketFields {
 				actualFieldsLen++
 			}

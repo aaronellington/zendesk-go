@@ -60,7 +60,6 @@ type (
 	SectionID           uint64
 	SourceID            int64
 	SuspendedTicketID   uint64
-	Tag                 string
 	TicketAuditEventID  uint64
 	TicketAuditID       uint64
 	TicketCommentID     uint64

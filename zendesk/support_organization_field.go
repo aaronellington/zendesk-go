@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/
@@ -17,19 +18,48 @@ type OrganizationFieldPayload struct {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#json-format
-type OrganizationField struct {
-	Active      bool                `json:"active"`
-	Description string              `json:"description"`
-	ID          OrganizationFieldID `json:"id"`
+type OrganizationFieldConfiguration struct {
+	Active              bool                `json:"active"`
+	CreatedAt           time.Time           `json:"created_at"`
+	CustomFieldOptions  []CustomFieldOption `json:"custom_field_options"`
+	Description         string              `json:"description"`
+	ID                  OrganizationFieldID `json:"id"`
+	Key                 string              `json:"key"`
+	Position            uint64              `json:"position"`
+	RawDescription      string              `json:"raw_description"`
+	RawTitle            string              `json:"raw_title"`
+	RegexpForValidation *string             `json:"regexp_for_validation"`
+	// RelationshipFilter object `json:"relationship_filter"`
+	// RelationshipTargetType string `json:"relationship_target_type"`
+	System    bool                  `json:"system"`
+	Tag       Tag                   `json:"tag"`
+	Title     string                `json:"title"`
+	Type      OrganizationFieldType `json:"organization_field_type"`
+	UpdatedAt time.Time             `json:"updated_at"`
+	URL       string                `json:"url"`
 }
 
+type OrganizationFieldType string
+
+const (
+	OrganizationFieldTypeText     OrganizationFieldType = "text"     // Default custom field type when type is not specified
+	OrganizationFieldTypeTextArea OrganizationFieldType = "textarea" // For multi-line text
+	OrganizationFieldTypeCheckbox OrganizationFieldType = "checkbox" // To capture a boolean value. Allowed values are true or false
+	OrganizationFieldTypeDate     OrganizationFieldType = "date"     // Example: 2021-04-16
+	OrganizationFieldTypeDropdown OrganizationFieldType = "dropdown" //
+	OrganizationFieldTypeInteger  OrganizationFieldType = "integer"  // String composed of numbers. May contain an optional decimal point
+	OrganizationFieldTypeDecimal  OrganizationFieldType = "decimal"  // For numbers containing decimals
+	OrganizationFieldTypeRegexp   OrganizationFieldType = "regexp"   // Matches the Regex pattern found in the custom field settings
+	OrganizationFieldTypeLookup   OrganizationFieldType = "lookup"   // A field to create a relationship  to another object such as a user, ticket, or organization
+)
+
 type OrganizationFieldsResponse struct {
-	OrganizationFields []OrganizationField `json:"organization_fields"`
+	OrganizationFields []OrganizationFieldConfiguration `json:"organization_fields"`
 	CursorPaginationResponse
 }
 
 type OrganizationFieldResponse struct {
-	OrganizationField OrganizationField `json:"organization_field"`
+	OrganizationField OrganizationFieldConfiguration `json:"organization_field"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#list-organization-fields
@@ -76,7 +106,7 @@ func (s OrganizationFieldService) List(
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#show-organization-field
-func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationFieldID) (OrganizationField, error) {
+func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationFieldID) (OrganizationFieldConfiguration, error) {
 	target := OrganizationFieldResponse{}
 
 	request, err := http.NewRequestWithContext(
@@ -86,11 +116,11 @@ func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationField
 		http.NoBody,
 	)
 	if err != nil {
-		return OrganizationField{}, err
+		return OrganizationFieldConfiguration{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationField{}, err
+		return OrganizationFieldConfiguration{}, err
 	}
 
 	return target.OrganizationField, nil
