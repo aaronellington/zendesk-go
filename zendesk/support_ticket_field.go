@@ -36,10 +36,13 @@ type TicketFieldConfiguration struct {
 	RequiredInPortal bool `json:"required_in_portal"`
 	// SubTypeID uint64 `json:"sub_type_id"`
 	// SystemFieldOptions []string `json:"system_field_options"`
-	Tag           Tag             `json:"tag"`
-	Title         string          `json:"title"`
-	TitleInPortal string          `json:"title_in_portal"`
-	Type          TicketFieldType `json:"type"`
+	Tag             Tag             `json:"tag"`
+	Title           string          `json:"title"`
+	TitleInPortal   string          `json:"title_in_portal"`
+	Type            TicketFieldType `json:"type"`
+	UpdatedAt       time.Time       `json:"updated_at"`
+	URL             string          `json:"url"`
+	VisibleInPortal bool            `json:"visible_in_portal"`
 }
 
 type TicketFieldType string

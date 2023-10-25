@@ -34,7 +34,7 @@ type OrganizationFieldConfiguration struct {
 	System    bool                  `json:"system"`
 	Tag       Tag                   `json:"tag"`
 	Title     string                `json:"title"`
-	Type      OrganizationFieldType `json:"organization_field_type"`
+	Type      OrganizationFieldType `json:"type"`
 	UpdatedAt time.Time             `json:"updated_at"`
 	URL       string                `json:"url"`
 }
