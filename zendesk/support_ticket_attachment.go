@@ -89,11 +89,13 @@ func (s TicketAttachmentService) Upload(
 	contentType := mime.TypeByExtension(filepath.Ext(localFilePath))
 	if contentType == "" {
 		fileHeadBuffer := make([]byte, 512)
+
 		byteCount, err := file.Read(fileHeadBuffer)
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
 				return TicketAttachmentUploadResponse{}, err
 			}
+
 			fileHeadBuffer = fileHeadBuffer[:byteCount]
 		}
 
@@ -106,9 +108,11 @@ func (s TicketAttachmentService) Upload(
 	// Set the URL Parameters filename (required) and token (optional)
 	queryParams := request.URL.Query()
 	queryParams.Set("filename", filepath.Base(localFilePath))
+
 	if uploadToken != "" {
 		queryParams.Set("token", string(uploadToken))
 	}
+
 	request.URL.RawQuery = queryParams.Encode()
 
 	target := TicketAttachmentUploadResponse{}

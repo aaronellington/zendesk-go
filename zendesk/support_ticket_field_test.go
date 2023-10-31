@@ -82,6 +82,7 @@ func Test_SupportTicketField_List_200(t *testing.T) {
 			for range response.TicketFields {
 				actualFieldsLen++
 			}
+
 			return nil
 		},
 	); err != nil {

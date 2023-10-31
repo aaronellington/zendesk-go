@@ -42,8 +42,10 @@ func Test_AccountConfiguration_TicketCustomRoles_List_200(t *testing.T) {
 	})
 
 	actual := []zendesk.CustomRole{}
+
 	if err := z.AccountConfiguration().CustomRoles().List(ctx, func(response zendesk.CustomRolesResponse) error {
 		actual = append(actual, response.CustomRoles...)
+
 		return nil
 	}); err != nil {
 		t.Fatal(err)

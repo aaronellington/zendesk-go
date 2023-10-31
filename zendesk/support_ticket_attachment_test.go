@@ -11,6 +11,8 @@ import (
 	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
+const expectedContentType = "image/png"
+
 func Test_SupportTicketAttachmentShow_200(t *testing.T) {
 	ctx := context.Background()
 
@@ -57,7 +59,6 @@ func Test_SupportTicketAttachmentUpload_png_200(t *testing.T) {
 					"filename": []string{"gopher.png"},
 				},
 				Validator: func(r *http.Request) error {
-					expectedContentType := "image/png"
 					if r.Header.Get("Content-Type") != expectedContentType {
 						return fmt.Errorf(
 							"expected content type to be '%s', got '%s'",
@@ -65,6 +66,7 @@ func Test_SupportTicketAttachmentUpload_png_200(t *testing.T) {
 							r.Header.Get("Content-Type"),
 						)
 					}
+
 					return nil
 				},
 			},
@@ -108,6 +110,7 @@ func Test_SupportTicketAttachmentUpload_svg_200(t *testing.T) {
 							r.Header.Get("Content-Type"),
 						)
 					}
+
 					return nil
 				},
 			},
@@ -143,8 +146,8 @@ func Test_SupportTicketAttachmentUpload_noFileExt_200(t *testing.T) {
 					"filename": []string{"gopherNoFileExt"},
 				},
 				Validator: func(r *http.Request) error {
-					expectedContentType := "image/png"
 					actualContentType := r.Header.Get("Content-Type")
+
 					return study.Assert(expectedContentType, actualContentType)
 				},
 			},
@@ -180,8 +183,8 @@ func Test_SupportTicketAttachmentUpload_Multiple_200(t *testing.T) {
 					"filename": []string{"gopher.png"},
 				},
 				Validator: func(r *http.Request) error {
-					expectedContentType := "image/png"
 					actualContentType := r.Header.Get("Content-Type")
+
 					return study.Assert(expectedContentType, actualContentType)
 				},
 			},
@@ -202,6 +205,7 @@ func Test_SupportTicketAttachmentUpload_Multiple_200(t *testing.T) {
 				Validator: func(r *http.Request) error {
 					expectedContentType := "image/svg+xml"
 					actualContentType := r.Header.Get("Content-Type")
+
 					return study.Assert(expectedContentType, actualContentType)
 				},
 			},

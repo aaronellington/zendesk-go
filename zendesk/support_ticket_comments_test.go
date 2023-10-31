@@ -39,6 +39,7 @@ func Test_Support_Ticket_Comments_List_200(t *testing.T) {
 		exampleTicketID,
 		func(response zendesk.TicketCommentResponse) error {
 			actual = append(actual, response.Comments...)
+
 			return nil
 		},
 	); err != nil {

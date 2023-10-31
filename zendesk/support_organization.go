@@ -21,20 +21,50 @@ type OrganizationsResponse struct {
 }
 
 type Organization struct {
-	ID                 OrganizationID      `json:"id"`
-	CreatedAt          time.Time           `json:"created_at"`
-	DeletedAt          *time.Time          `json:"deleted_at"`
-	Details            string              `json:"details"`
-	DomainNames        []string            `json:"domain_names"`
-	ExternalID         *string             `json:"external_id"`
-	GroupID            *GroupID            `json:"group_id"`
-	Name               string              `json:"name"`
-	Notes              string              `json:"notes"`
-	SharedComments     bool                `json:"shared_comments"`
-	SharedTickets      bool                `json:"shared_tickets"`
-	Tags               []Tag               `json:"tags"`
-	UpdatedAt          time.Time           `json:"updated_at"`
-	OrganizationFields []OrganizationField `json:"organization_fields"`
+	ID                 OrganizationID     `json:"id"`
+	CreatedAt          time.Time          `json:"created_at"`
+	DeletedAt          *time.Time         `json:"deleted_at"`
+	Details            string             `json:"details"`
+	DomainNames        []string           `json:"domain_names"`
+	ExternalID         *string            `json:"external_id"`
+	GroupID            *GroupID           `json:"group_id"`
+	Name               string             `json:"name"`
+	Notes              string             `json:"notes"`
+	SharedComments     bool               `json:"shared_comments"`
+	SharedTickets      bool               `json:"shared_tickets"`
+	Tags               []Tag              `json:"tags"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+	OrganizationFields OrganizationFields `json:"organization_fields"`
+}
+
+type OrganizationFields map[string]any
+
+func (fields OrganizationFields) GetString(key string) *string {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return nil
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return &value
+}
+
+func (fields OrganizationFields) GetBool(key string) bool {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return false
+	}
+
+	value, ok := rawValue.(bool)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return value
 }
 
 type OrganizationVia struct {

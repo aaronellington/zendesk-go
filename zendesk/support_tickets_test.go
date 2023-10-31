@@ -304,6 +304,7 @@ func Test_SupportTickets_ListProblemTicketIncidents_200(t *testing.T) {
 		problemTicketID,
 		func(response zendesk.ListProblemTicketIncidentsResponse) error {
 			linkedIncidents = append(linkedIncidents, response.Tickets...)
+
 			return nil
 		}); err != nil {
 		t.Fatal(err)

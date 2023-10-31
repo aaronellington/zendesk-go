@@ -21,12 +21,12 @@ type CustomRole struct {
 	Name            string                  `json:"name"`
 	RoleType        uint64                  `json:"role_type"`
 	TeamMemberCount uint64                  `json:"team_member_count"`
-	UdpatedAt       time.Time               `json:"updated_at"`
+	UpdatedAt       time.Time               `json:"updated_at"`
 }
 
 // A list of custom object keys mapped to JSON objects that define the agent's permissions (scopes) for each object.
 // Allowed values: "read", "update", "delete", "create". The "read" permission is required if any other scopes are
-// specified. Example: { "shipment": { "scopes": ["read", "update"] } }
+// specified. Example: { "shipment": { "scopes": ["read", "update"] } }.
 type CustomRoleCustomObject struct {
 	Scopes []AgentScopePermission `json:"scopes"`
 }
@@ -59,7 +59,7 @@ type CustomRoleResponse struct {
 /*
 https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#list-custom-roles
 
-Does not support cursor pagination
+Does not support cursor pagination.
 */
 func (s CustomRoleService) List(
 	ctx context.Context,
@@ -90,6 +90,7 @@ func (s CustomRoleService) List(
 
 		if target.NextPage != nil {
 			endpoint = *target.NextPage
+
 			continue
 		}
 
