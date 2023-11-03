@@ -6,10 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type client struct {
@@ -21,6 +24,18 @@ type client struct {
 	subDomain            string
 	userAgent            string
 	requestPreProcessors []RequestPreProcessor
+}
+
+func (c *client) doWithRetry {
+
+	tries := 0
+	for tries < 3 {
+		
+	}
+	for status. != 429 {
+
+	}
+	reutrn nil
 }
 
 func (c *client) do(request *http.Request, target any) error {
@@ -46,30 +61,34 @@ func (c *client) do(request *http.Request, target any) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode >= http.StatusBadRequest {
-		defer response.Body.Close()
+		switch response.StatusCode {
+		case http.StatusTooManyRequests:
+			waitTime := response.Header.Get("retry-after")
+			log.Printf("got a api exceeded, waiting %s\n", waitTime)
+			return c.handleTooManyRequests(request, target, waitTime)
+		default:
+			bodyBytes, err := io.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
 
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
+			responseErr := &Error{
+				StatusCode: response.StatusCode,
+				Body:       bodyBytes,
+			}
+
+			if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
+				return err
+			}
+
+			return responseErr
 		}
-
-		responseErr := &Error{
-			StatusCode: response.StatusCode,
-			Body:       bodyBytes,
-		}
-
-		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
-			return err
-		}
-
-		return responseErr
 	}
 
 	if target != nil {
-		defer response.Body.Close()
-
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
@@ -168,4 +187,18 @@ func (c *client) getAccessToken(ctx context.Context) error {
 	c.chatToken = &target
 
 	return nil
+}
+
+func (c *client) handleTooManyRequests(request *http.Request, target any, wait string) error {
+	// Get the wait time from the response header
+	if wait != "" {
+		waitDuration, err := strconv.ParseInt(wait, 10, 64)
+		if err != nil {
+			return err
+		}
+		// Maybe log here?
+		time.Sleep(time.Second * time.Duration(waitDuration))
+		return c.do(request, target)
+	}
+	return errors.New("wanted to retry but couldn't, no retry-after header")
 }
