@@ -129,6 +129,7 @@ func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationField
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#create-organization-field
 func (s OrganizationFieldService) Create(ctx context.Context, payload OrganizationFieldPayload) (OrganizationFieldResponse, error) {
 	target := OrganizationFieldResponse{}
+
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -153,6 +154,7 @@ func (s OrganizationFieldService) Update(
 	payload OrganizationFieldPayload,
 ) (OrganizationFieldResponse, error) {
 	target := OrganizationFieldResponse{}
+
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,

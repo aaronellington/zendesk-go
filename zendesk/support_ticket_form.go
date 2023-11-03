@@ -41,7 +41,7 @@ type TicketFormResponse struct {
 /*
 https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
 
-Does not support pagination
+Does not support pagination.
 */
 func (s TicketFormService) List(
 	ctx context.Context,

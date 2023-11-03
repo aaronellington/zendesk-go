@@ -42,8 +42,10 @@ func Test_SupportTicketCustomStatus_List_200(t *testing.T) {
 	})
 
 	actual := []zendesk.CustomStatus{}
+
 	if err := z.Support().CustomStatuses().List(ctx, func(response zendesk.CustomStatusesResponse) error {
 		actual = append(actual, response.CustomStatuses...)
+
 		return nil
 	}); err != nil {
 		t.Fatal(err)

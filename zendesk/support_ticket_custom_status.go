@@ -26,7 +26,7 @@ const (
 	StatusCategoryOpen    CustomStatusCategory = "open"
 	StatusCategoryPending CustomStatusCategory = "pending"
 	StatusCategoryHold    CustomStatusCategory = "hold"
-	// Tickets with a "Closed" status belong to the "StatusCategorySolved" status category
+	// Tickets with a "Closed" status belong to the "StatusCategorySolved" status category.
 	StatusCategorySolved CustomStatusCategory = "solved"
 )
 
@@ -46,7 +46,7 @@ type CustomStatusPayload struct {
 /*
 https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/#list-custom-ticket-statuses
 
-Does not support cursor pagination
+Does not support cursor pagination.
 */
 func (s CustomStatusService) List(
 	ctx context.Context,
@@ -77,6 +77,7 @@ func (s CustomStatusService) List(
 
 		if target.NextPage != nil {
 			endpoint = *target.NextPage
+
 			continue
 		}
 
