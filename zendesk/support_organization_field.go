@@ -53,19 +53,19 @@ const (
 	OrganizationFieldTypeLookup   OrganizationFieldType = "lookup"   // A field to create a relationship  to another object such as a user, ticket, or organization
 )
 
-type OrganizationFieldsResponse struct {
+type OrganizationFieldsConfigurationResponse struct {
 	OrganizationFields []OrganizationFieldConfiguration `json:"organization_fields"`
 	CursorPaginationResponse
 }
 
-type OrganizationFieldResponse struct {
+type OrganizationFieldConfigurationResponse struct {
 	OrganizationField OrganizationFieldConfiguration `json:"organization_field"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#list-organization-fields
 func (s OrganizationFieldService) List(
 	ctx context.Context,
-	pageHandler func(response OrganizationFieldsResponse) error,
+	pageHandler func(response OrganizationFieldsConfigurationResponse) error,
 ) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
@@ -75,7 +75,7 @@ func (s OrganizationFieldService) List(
 	)
 
 	for {
-		target := OrganizationFieldsResponse{}
+		target := OrganizationFieldsConfigurationResponse{}
 
 		request, err := http.NewRequestWithContext(
 			ctx,
@@ -107,7 +107,7 @@ func (s OrganizationFieldService) List(
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#show-organization-field
 func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationFieldID) (OrganizationFieldConfiguration, error) {
-	target := OrganizationFieldResponse{}
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -127,8 +127,8 @@ func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationField
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#create-organization-field
-func (s OrganizationFieldService) Create(ctx context.Context, payload OrganizationFieldPayload) (OrganizationFieldResponse, error) {
-	target := OrganizationFieldResponse{}
+func (s OrganizationFieldService) Create(ctx context.Context, payload OrganizationFieldPayload) (OrganizationFieldConfigurationResponse, error) {
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -137,11 +137,11 @@ func (s OrganizationFieldService) Create(ctx context.Context, payload Organizati
 		structToReader(payload),
 	)
 	if err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	return target, nil
@@ -152,8 +152,8 @@ func (s OrganizationFieldService) Update(
 	ctx context.Context,
 	id OrganizationFieldID,
 	payload OrganizationFieldPayload,
-) (OrganizationFieldResponse, error) {
-	target := OrganizationFieldResponse{}
+) (OrganizationFieldConfigurationResponse, error) {
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -162,11 +162,11 @@ func (s OrganizationFieldService) Update(
 		structToReader(payload),
 	)
 	if err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	return target, nil

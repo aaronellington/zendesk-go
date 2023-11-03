@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-type UserFieldResponse struct {
+type UserFieldConfigurationResponse struct {
 	UserField UserFieldConfiguration `json:"user_field"`
 }
 
-type UserFieldsResponse struct {
+type UserFieldsConfigurationResponse struct {
 	UserFields []UserFieldConfiguration `json:"user_fields"`
 	CursorPaginationResponse
 }
@@ -70,14 +70,14 @@ type UserFieldService struct {
 // https://developer.zendesk.com/api-reference/ticketing/users/user_fields/#list-user-fields
 func (s UserFieldService) List(
 	ctx context.Context,
-	pageHandler func(response UserFieldsResponse) error,
+	pageHandler func(response UserFieldsConfigurationResponse) error,
 ) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
 	endpoint := fmt.Sprintf("/api/v2/user_fields?%s", query.Encode())
 
 	for {
-		target := UserFieldsResponse{}
+		target := UserFieldsConfigurationResponse{}
 
 		request, err := http.NewRequestWithContext(
 			ctx,
@@ -111,7 +111,7 @@ func (s UserFieldService) Show(
 	ctx context.Context,
 	id UserFieldID,
 ) (UserFieldConfiguration, error) {
-	target := UserFieldResponse{}
+	target := UserFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
