@@ -77,7 +77,7 @@ func (s TicketTagService) List(
 /*
 https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#search-tags
 
-Does not support cursor pagination
+Does not support cursor pagination.
 */
 func (s TicketTagService) Search(
 	ctx context.Context,
@@ -118,6 +118,7 @@ func (s TicketTagService) Search(
 
 		if target.NextPage != nil {
 			endpoint = *target.NextPage
+
 			continue
 		}
 
