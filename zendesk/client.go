@@ -32,6 +32,7 @@ func (c *client) doWithRetry(request *http.Request, target any, waitTime string)
 
 	if waitTime != "" {
 		var err error
+
 		retryAfter, err = strconv.ParseInt(waitTime, 10, 64)
 		if err != nil {
 			return err
@@ -40,6 +41,7 @@ func (c *client) doWithRetry(request *http.Request, target any, waitTime string)
 
 	for attempts < maxAttempts {
 		attempts++
+
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 
 		response, err := c.httpClient.Do(request)
@@ -114,6 +116,7 @@ func (c *client) do(request *http.Request, target any) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
