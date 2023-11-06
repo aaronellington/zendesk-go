@@ -50,8 +50,33 @@ type TestResponse interface {
 }
 
 type TestResponseFile struct {
-	StatusCode int
-	FilePath   string
+	StatusCode        int
+	FilePath          string
+	ResponseModifiers []ResponseModifier
+}
+
+type ResponseModifier interface {
+	ModifyResponse(r *http.Response)
+}
+
+type ResponseModifierFunc func(*http.Response)
+
+func (r ResponseModifierFunc) ModifyResponse(response *http.Response) {
+	r(response)
+}
+
+func WithResponseHeaders(headers map[string][]string) ResponseModifierFunc {
+	return func(r *http.Response) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+
+		for headerName, headerValue := range headers {
+			for _, individualValue := range headerValue {
+				r.Header.Add(headerName, individualValue)
+			}
+		}
+	}
 }
 
 func (f *TestResponseFile) CreateResponse() (*http.Response, error) {
@@ -61,10 +86,16 @@ func (f *TestResponseFile) CreateResponse() (*http.Response, error) {
 	}
 	// defer file.Close()
 
-	return &http.Response{
+	response := &http.Response{
 		StatusCode: f.StatusCode,
 		Body:       io.NopCloser(file),
-	}, nil
+	}
+
+	for _, responseModifier := range f.ResponseModifiers {
+		responseModifier.ModifyResponse(response)
+	}
+
+	return response, nil
 }
 
 type TestResponseNoContent struct {

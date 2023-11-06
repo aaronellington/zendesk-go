@@ -8,8 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type client struct {
@@ -21,6 +23,72 @@ type client struct {
 	subDomain            string
 	userAgent            string
 	requestPreProcessors []RequestPreProcessor
+}
+
+func (c *client) doWithRetry(request *http.Request, target any, waitTime string) error {
+	attempts := 0
+	maxAttempts := 3
+	retryAfter := int64(0)
+
+	if waitTime != "" {
+		var err error
+		retryAfter, err = strconv.ParseInt(waitTime, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	for attempts < maxAttempts {
+		attempts++
+		time.Sleep(time.Duration(retryAfter) * time.Second)
+
+		response, err := c.httpClient.Do(request)
+		if err != nil {
+			return err
+		}
+		defer response.Body.Close()
+
+		bodyBytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+
+		if response.StatusCode >= http.StatusBadRequest {
+			if response.StatusCode == http.StatusTooManyRequests {
+				// Check for a "retry-after" header and then continue
+				retryAfterString := response.Header.Get("retry-after")
+				if retryAfterString != "" {
+					retryAfter, err = strconv.ParseInt(retryAfterString, 10, 64)
+					if err != nil {
+						return err
+					}
+				}
+
+				continue
+			}
+
+			responseErr := &Error{
+				StatusCode: response.StatusCode,
+				Body:       bodyBytes,
+			}
+
+			if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
+				return err
+			}
+
+			return responseErr
+		}
+
+		if target != nil {
+			if err := json.Unmarshal(bodyBytes, target); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("unable to complete request after retries (%d attempts)", maxAttempts)
 }
 
 func (c *client) do(request *http.Request, target any) error {
@@ -47,34 +115,35 @@ func (c *client) do(request *http.Request, target any) error {
 		return err
 	}
 
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
 	if response.StatusCode >= http.StatusBadRequest {
-		defer response.Body.Close()
+		switch response.StatusCode {
+		case http.StatusTooManyRequests:
+			return c.doWithRetry(
+				request,
+				target,
+				response.Header.Get("retry-after"),
+			)
 
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
+		default:
+			responseErr := &Error{
+				StatusCode: response.StatusCode,
+				Body:       bodyBytes,
+			}
+
+			if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
+				return err
+			}
+
+			return responseErr
 		}
-
-		responseErr := &Error{
-			StatusCode: response.StatusCode,
-			Body:       bodyBytes,
-		}
-
-		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
-			return err
-		}
-
-		return responseErr
 	}
 
 	if target != nil {
-		defer response.Body.Close()
-
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-
 		if err := json.Unmarshal(bodyBytes, target); err != nil {
 			return err
 		}
