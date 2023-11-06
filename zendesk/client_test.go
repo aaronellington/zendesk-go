@@ -55,6 +55,50 @@ func Test_Client_429(t *testing.T) {
 		study.ServeAndValidate(
 			t,
 			&study.TestResponseFile{
+				StatusCode: http.StatusTooManyRequests,
+				FilePath:   "test_files/responses/errors/api_rate_limit_exceeded_429.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(
+						map[string][]string{
+							"retry-after": {"1"},
+						},
+					),
+				},
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"250"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusTooManyRequests,
+				FilePath:   "test_files/responses/errors/api_rate_limit_exceeded_429.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(
+						map[string][]string{
+							"retry-after": {"1"},
+						},
+					),
+				},
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"250"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
 				FilePath:   "test_files/responses/support/tickets/incremental_export_page2.json",
 			},
