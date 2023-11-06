@@ -38,7 +38,7 @@ func Test_Client_429(t *testing.T) {
 				ResponseModifiers: []study.ResponseModifier{
 					study.WithResponseHeaders(
 						map[string][]string{
-							"retry-after": {"1"},
+							"retry-after": {"0"},
 						},
 					),
 				},
@@ -60,7 +60,7 @@ func Test_Client_429(t *testing.T) {
 				ResponseModifiers: []study.ResponseModifier{
 					study.WithResponseHeaders(
 						map[string][]string{
-							"retry-after": {"1"},
+							"retry-after": {"0"},
 						},
 					),
 				},
@@ -82,7 +82,7 @@ func Test_Client_429(t *testing.T) {
 				ResponseModifiers: []study.ResponseModifier{
 					study.WithResponseHeaders(
 						map[string][]string{
-							"retry-after": {"1"},
+							"retry-after": {"0"},
 						},
 					),
 				},
