@@ -28,6 +28,15 @@ const (
 	StatusDeleted = "deleted"
 )
 
+type MalwareScanResult string
+
+const (
+	MalwareFound        MalwareScanResult = "malware_found"
+	MalwareNotFound     MalwareScanResult = "malware_not_found"
+	MalwareFailedToScan MalwareScanResult = "failed_to_scan"
+	MalwareNotScanned   MalwareScanResult = "not_scanned"
+)
+
 type AuditLogAction string
 
 const (

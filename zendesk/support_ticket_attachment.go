@@ -13,11 +13,20 @@ import (
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket-attachments/#json-format
 type TicketAttachment struct {
-	ContentType string       `json:"content_type"`
-	ContentURL  string       `json:"content_url"`
-	FileName    string       `json:"file_name"`
-	ID          AttachmentID `json:"id"`
-	Size        uint64       `json:"size"`
+	ContentType           string            `json:"content_type"`
+	ContentURL            string            `json:"content_url"`
+	Deleted               bool              `json:"deleted"`
+	FileName              string            `json:"file_name"`
+	Height                string            `json:"height"`
+	ID                    AttachmentID      `json:"id"`
+	Inline                bool              `json:"inline"`
+	MalwareAccessOverride bool              `json:"malware_access_override"`
+	MalwareScanResult     MalwareScanResult `json:"malware_scan_result"`
+	MappedContentURL      string            `json:"mapped_content_url"`
+	Size                  uint64            `json:"size"`
+	// Thumbnails
+	URL   string `json:"url"`
+	Width string `json:"width"`
 }
 
 type TicketAttachmentResponse struct {
