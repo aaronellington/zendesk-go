@@ -155,8 +155,12 @@ func (c *client) do(request *http.Request, target any) error {
 	return nil
 }
 
-func (c *client) ZendeskRequest(request *http.Request, target any) error {
+func (c *client) ZendeskRequest(request *http.Request, target any, autoRetry bool) error {
 	c.zendeskAuth.AddZendeskAuthentication(request)
+
+	if autoRetry {
+		return c.doWithRetry(request, target)
+	}
 
 	return c.do(request, target)
 }
