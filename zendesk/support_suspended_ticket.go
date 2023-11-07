@@ -52,7 +52,7 @@ func (s SuspendedTicketService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 
@@ -87,7 +87,7 @@ func (s *SuspendedTicketService) RecoverMultiple(ctx context.Context, ids []Susp
 		return err
 	}
 
-	return s.client.ZendeskRequest(request, nil)
+	return s.client.ZendeskRequest(request, nil, false)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#delete-suspended-ticket
@@ -102,5 +102,5 @@ func (s *SuspendedTicketService) Delete(ctx context.Context, id SuspendedTicketI
 		return err
 	}
 
-	return s.client.ZendeskRequest(request, nil)
+	return s.client.ZendeskRequest(request, nil, false)
 }

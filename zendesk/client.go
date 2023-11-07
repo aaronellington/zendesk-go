@@ -25,19 +25,10 @@ type client struct {
 	requestPreProcessors []RequestPreProcessor
 }
 
-func (c *client) doWithRetry(request *http.Request, target any, waitTime string) error {
+func (c *client) doWithRetry(request *http.Request, target any) error {
 	attempts := 0
 	maxAttempts := 3
 	retryAfter := int64(0)
-
-	if waitTime != "" {
-		var err error
-
-		retryAfter, err = strconv.ParseInt(waitTime, 10, 64)
-		if err != nil {
-			return err
-		}
-	}
 
 	for attempts < maxAttempts {
 		attempts++
@@ -124,26 +115,17 @@ func (c *client) do(request *http.Request, target any) error {
 	}
 
 	if response.StatusCode >= http.StatusBadRequest {
-		switch response.StatusCode {
-		case http.StatusTooManyRequests:
-			return c.doWithRetry(
-				request,
-				target,
-				response.Header.Get("retry-after"),
-			)
 
-		default:
-			responseErr := &Error{
-				StatusCode: response.StatusCode,
-				Body:       bodyBytes,
-			}
-
-			if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
-				return err
-			}
-
-			return responseErr
+		responseErr := &Error{
+			StatusCode: response.StatusCode,
+			Body:       bodyBytes,
 		}
+
+		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
+			return err
+		}
+
+		return responseErr
 	}
 
 	if target != nil {

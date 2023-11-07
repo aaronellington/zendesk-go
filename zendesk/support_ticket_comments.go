@@ -53,7 +53,7 @@ func (s TicketCommentService) ListByTicketID(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 

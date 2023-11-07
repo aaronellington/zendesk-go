@@ -86,7 +86,7 @@ func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 		return User{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return User{}, err
 	}
 
@@ -107,7 +107,7 @@ func (s UserService) ShowSelf(ctx context.Context) (User, error) {
 		return User{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return User{}, err
 	}
 
@@ -131,7 +131,7 @@ func (s UserService) Search(ctx context.Context, query string) (UsersResponse, e
 		return UsersResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return UsersResponse{}, err
 	}
 
@@ -160,7 +160,7 @@ func (s UserService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 
@@ -192,7 +192,7 @@ func (s UserService) Create(ctx context.Context, payload UserPayload) (UserRespo
 		return UserResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return UserResponse{}, err
 	}
 
@@ -213,7 +213,7 @@ func (s UserService) Update(ctx context.Context, id UserID, payload UserPayload)
 		return UserResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return UserResponse{}, err
 	}
 

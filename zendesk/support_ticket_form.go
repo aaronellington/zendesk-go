@@ -58,7 +58,7 @@ func (s TicketFormService) List(
 		return nil, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (s TicketFormService) Show(
 		return TicketForm{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return TicketForm{}, err
 	}
 

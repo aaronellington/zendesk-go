@@ -57,7 +57,7 @@ func (s GroupsService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 
@@ -92,7 +92,7 @@ func (s GroupsService) Show(
 		return Group{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return Group{}, err
 	}
 
@@ -113,7 +113,7 @@ func (s GroupsService) Create(ctx context.Context, payload GroupPayload) (GroupR
 		return GroupResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return GroupResponse{}, err
 	}
 

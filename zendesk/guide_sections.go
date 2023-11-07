@@ -44,7 +44,10 @@ type SectionService struct {
 	client *client
 }
 
-func (s SectionService) List(ctx context.Context, pageHandler func(response SectionsResponse) error) error {
+func (s SectionService) List(
+	ctx context.Context,
+	pageHandler func(response SectionsResponse) error,
+) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
 
@@ -61,7 +64,7 @@ func (s SectionService) List(ctx context.Context, pageHandler func(response Sect
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 

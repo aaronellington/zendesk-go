@@ -42,7 +42,7 @@ func (s TicketFieldService) Show(ctx context.Context, id TicketFieldID) (TicketF
 		return TicketField{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return TicketField{}, err
 	}
 
@@ -74,7 +74,7 @@ func (s TicketFieldService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 

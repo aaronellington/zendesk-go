@@ -99,7 +99,7 @@ func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organ
 		return Organization{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return Organization{}, err
 	}
 
@@ -128,7 +128,7 @@ func (s OrganizationService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 
@@ -160,7 +160,7 @@ func (s OrganizationService) Create(ctx context.Context, payload OrganizationPay
 		return OrganizationResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return OrganizationResponse{}, err
 	}
 
@@ -181,7 +181,7 @@ func (s OrganizationService) Update(ctx context.Context, id OrganizationID, payl
 		return OrganizationResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return OrganizationResponse{}, err
 	}
 

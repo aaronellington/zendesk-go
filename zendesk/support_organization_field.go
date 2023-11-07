@@ -57,7 +57,7 @@ func (s OrganizationFieldService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
 			return err
 		}
 
@@ -89,7 +89,7 @@ func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationField
 		return OrganizationField{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return OrganizationField{}, err
 	}
 
@@ -110,7 +110,7 @@ func (s OrganizationFieldService) Create(ctx context.Context, payload Organizati
 		return OrganizationFieldResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return OrganizationFieldResponse{}, err
 	}
 
@@ -135,7 +135,7 @@ func (s OrganizationFieldService) Update(
 		return OrganizationFieldResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return OrganizationFieldResponse{}, err
 	}
 
@@ -154,5 +154,5 @@ func (s OrganizationFieldService) Delete(ctx context.Context, id OrganizationFie
 		return err
 	}
 
-	return s.client.ZendeskRequest(request, nil)
+	return s.client.ZendeskRequest(request, nil, false)
 }

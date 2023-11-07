@@ -54,7 +54,7 @@ func (s TicketAttachmentService) Show(
 		return TicketAttachment{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
 		return TicketAttachment{}, err
 	}
 
@@ -121,6 +121,7 @@ func (s TicketAttachmentService) Upload(
 	if err := s.client.ZendeskRequest(
 		request,
 		&target,
+		false,
 	); err != nil {
 		return TicketAttachmentUploadResponse{}, err
 	}

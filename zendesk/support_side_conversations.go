@@ -48,5 +48,5 @@ func (s *SideConversationService) Create(
 		return err
 	}
 
-	return s.client.ZendeskRequest(request, nil)
+	return s.client.ZendeskRequest(request, nil, false)
 }
