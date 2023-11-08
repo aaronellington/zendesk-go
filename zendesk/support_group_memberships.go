@@ -231,6 +231,5 @@ func (s GroupMembershipService) Delete(
 	return s.client.ZendeskRequest(
 		request,
 		nil,
-		false,
 	)
 }

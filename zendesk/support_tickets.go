@@ -313,7 +313,6 @@ func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags T
 	if err := s.client.ZendeskRequest(
 		request,
 		&target,
-		false,
 	); err != nil {
 		return Tags{}, err
 	}

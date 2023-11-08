@@ -121,7 +121,6 @@ func (s TicketAttachmentService) Upload(
 	if err := s.client.ZendeskRequest(
 		request,
 		&target,
-		false,
 	); err != nil {
 		return TicketAttachmentUploadResponse{}, err
 	}
