@@ -29,6 +29,7 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 	attempts := 0
 	maxAttempts := 3
 	retryAfter := int64(0)
+
 	var latestAttemptError error
 
 	for attempts < maxAttempts {
@@ -54,6 +55,7 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 		retryAfterString := zendeskErr.Response.Header.Get("retry-after")
 		if retryAfterString != "" {
 			var err error
+
 			retryAfter, err = strconv.ParseInt(retryAfterString, 10, 64)
 			if err != nil {
 				return err
@@ -63,7 +65,7 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 		continue
 	}
 
-	return fmt.Errorf("failed request after maximum number of retries - Zendesk Error: %w", latestAttemptError)
+	return latestAttemptError
 }
 
 func (c *client) do(request *http.Request, target any) error {
@@ -97,7 +99,6 @@ func (c *client) do(request *http.Request, target any) error {
 	}
 
 	if response.StatusCode >= http.StatusBadRequest {
-
 		responseErr := &Error{
 			Response: response,
 		}
