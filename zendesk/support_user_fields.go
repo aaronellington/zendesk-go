@@ -29,14 +29,12 @@ type UserFieldConfiguration struct {
 	RawDescription      *string             `json:"raw_description"`
 	RawTitle            *string             `json:"raw_title"`
 	RegexpForValidation *string             `json:"regexp_for_validation"`
-	// RelationshipFilter object `json:"relationship_filter"`
-	// RelationshipTargetType object `json:"relationship_target_type"`
-	System    bool          `json:"system"`
-	Tag       Tag           `json:"tag"`
-	Title     *string       `json:"title"`
-	Type      UserFieldType `json:"type"`
-	UpdatedAt *time.Time    `json:"updated_at"`
-	URL       string        `json:"url"`
+	System              bool                `json:"system"`
+	Tag                 Tag                 `json:"tag"`
+	Title               *string             `json:"title"`
+	Type                UserFieldType       `json:"type"`
+	UpdatedAt           *time.Time          `json:"updated_at"`
+	URL                 string              `json:"url"`
 }
 
 type UserFieldType string

@@ -25,9 +25,8 @@ type TicketAttachment struct {
 	MalwareScanResult     MalwareScanResult `json:"malware_scan_result"`
 	MappedContentURL      string            `json:"mapped_content_url"`
 	Size                  uint64            `json:"size"`
-	// Thumbnails
-	URL   string `json:"url"`
-	Width uint64 `json:"width"`
+	URL                   string            `json:"url"`
+	Width                 uint64            `json:"width"`
 }
 
 type TicketAttachmentResponse struct {

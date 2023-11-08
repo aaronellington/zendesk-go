@@ -29,20 +29,16 @@ type TicketFieldConfiguration struct {
 	RawTitle            string              `json:"raw_title"`
 	RawTitleInPortal    string              `json:"raw_title_in_portal"`
 	RegexpForValidation *string             `json:"regexp_for_validation"`
-	// RelationshipFilter object `json:"relationship_filter"`
-	// RelationshipTargetType object `json:"relationship_target_type"`
-	Removable        bool `json:"removable"`
-	Required         bool `json:"required"`
-	RequiredInPortal bool `json:"required_in_portal"`
-	// SubTypeID uint64 `json:"sub_type_id"`
-	// SystemFieldOptions []string `json:"system_field_options"`
-	Tag             Tag             `json:"tag"`
-	Title           string          `json:"title"`
-	TitleInPortal   string          `json:"title_in_portal"`
-	Type            TicketFieldType `json:"type"`
-	UpdatedAt       time.Time       `json:"updated_at"`
-	URL             string          `json:"url"`
-	VisibleInPortal bool            `json:"visible_in_portal"`
+	Removable           bool                `json:"removable"`
+	Required            bool                `json:"required"`
+	RequiredInPortal    bool                `json:"required_in_portal"`
+	Tag                 Tag                 `json:"tag"`
+	Title               string              `json:"title"`
+	TitleInPortal       string              `json:"title_in_portal"`
+	Type                TicketFieldType     `json:"type"`
+	UpdatedAt           time.Time           `json:"updated_at"`
+	URL                 string              `json:"url"`
+	VisibleInPortal     bool                `json:"visible_in_portal"`
 }
 
 type TicketFieldType string

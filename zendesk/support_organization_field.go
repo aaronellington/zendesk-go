@@ -19,24 +19,22 @@ type OrganizationFieldPayload struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#json-format
 type OrganizationFieldConfiguration struct {
-	Active              bool                `json:"active"`
-	CreatedAt           time.Time           `json:"created_at"`
-	CustomFieldOptions  []CustomFieldOption `json:"custom_field_options"`
-	Description         string              `json:"description"`
-	ID                  OrganizationFieldID `json:"id"`
-	Key                 string              `json:"key"`
-	Position            uint64              `json:"position"`
-	RawDescription      string              `json:"raw_description"`
-	RawTitle            string              `json:"raw_title"`
-	RegexpForValidation *string             `json:"regexp_for_validation"`
-	// RelationshipFilter object `json:"relationship_filter"`
-	// RelationshipTargetType string `json:"relationship_target_type"`
-	System    bool                  `json:"system"`
-	Tag       Tag                   `json:"tag"`
-	Title     string                `json:"title"`
-	Type      OrganizationFieldType `json:"type"`
-	UpdatedAt time.Time             `json:"updated_at"`
-	URL       string                `json:"url"`
+	Active              bool                  `json:"active"`
+	CreatedAt           time.Time             `json:"created_at"`
+	CustomFieldOptions  []CustomFieldOption   `json:"custom_field_options"`
+	Description         string                `json:"description"`
+	ID                  OrganizationFieldID   `json:"id"`
+	Key                 string                `json:"key"`
+	Position            uint64                `json:"position"`
+	RawDescription      string                `json:"raw_description"`
+	RawTitle            string                `json:"raw_title"`
+	RegexpForValidation *string               `json:"regexp_for_validation"`
+	System              bool                  `json:"system"`
+	Tag                 Tag                   `json:"tag"`
+	Title               string                `json:"title"`
+	Type                OrganizationFieldType `json:"type"`
+	UpdatedAt           time.Time             `json:"updated_at"`
+	URL                 string                `json:"url"`
 }
 
 type OrganizationFieldType string
