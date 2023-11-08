@@ -109,8 +109,11 @@ func (s *TicketAttachmentService) DownloadToFile(
 	contentURL string,
 	filePath string,
 ) error {
-	// do download
-	return nil
+	outfile, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	return s.Download(ctx, contentURL, outfile)
 }
 
 // https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/adding-ticket-attachments-with-the-api/
