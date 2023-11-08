@@ -8,8 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type client struct {
@@ -21,6 +23,49 @@ type client struct {
 	subDomain            string
 	userAgent            string
 	requestPreProcessors []RequestPreProcessor
+}
+
+func (c *client) doWithRetry(request *http.Request, target any) error {
+	attempts := 0
+	maxAttempts := 3
+	retryAfter := int64(0)
+
+	var latestAttemptError error
+
+	for attempts < maxAttempts {
+		attempts++
+
+		time.Sleep(time.Duration(retryAfter) * time.Second)
+
+		latestAttemptError = c.do(request, target)
+		if latestAttemptError == nil {
+			return nil
+		}
+
+		zendeskErr, ok := latestAttemptError.(*Error)
+		if !ok {
+			return latestAttemptError
+		}
+
+		if zendeskErr.Response.StatusCode != http.StatusTooManyRequests {
+			return latestAttemptError
+		}
+
+		// Check for a "retry-after" header and then continue
+		retryAfterString := zendeskErr.Response.Header.Get("retry-after")
+		if retryAfterString != "" {
+			var err error
+
+			retryAfter, err = strconv.ParseInt(retryAfterString, 10, 64)
+			if err != nil {
+				return err
+			}
+		}
+
+		continue
+	}
+
+	return latestAttemptError
 }
 
 func (c *client) do(request *http.Request, target any) error {
@@ -46,18 +91,16 @@ func (c *client) do(request *http.Request, target any) error {
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
 
 	if response.StatusCode >= http.StatusBadRequest {
-		defer response.Body.Close()
-
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-
 		responseErr := &Error{
-			StatusCode: response.StatusCode,
-			Body:       bodyBytes,
+			Response: response,
 		}
 
 		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
@@ -68,13 +111,6 @@ func (c *client) do(request *http.Request, target any) error {
 	}
 
 	if target != nil {
-		defer response.Body.Close()
-
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-
 		if err := json.Unmarshal(bodyBytes, target); err != nil {
 			return err
 		}
@@ -85,6 +121,11 @@ func (c *client) do(request *http.Request, target any) error {
 
 func (c *client) ZendeskRequest(request *http.Request, target any) error {
 	c.zendeskAuth.AddZendeskAuthentication(request)
+
+	if request.Method == http.MethodGet {
+		return c.doWithRetry(request, target)
+	}
+
 	return c.do(request, target)
 }
 
@@ -122,7 +163,7 @@ func (c *client) LiveChatRequest(request *http.Request, target any) error {
 
 		if err := c.do(request, target); err != nil {
 			if zdError, ok := err.(*Error); ok {
-				if zdError.StatusCode == http.StatusUnauthorized {
+				if zdError.Response.StatusCode == http.StatusUnauthorized {
 					// Clear out the token
 					c.chatToken = nil
 
