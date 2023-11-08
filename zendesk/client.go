@@ -129,6 +129,17 @@ func (c *client) ZendeskRequest(request *http.Request, target any) error {
 	return c.do(request, target)
 }
 
+func (c *client) ZendeskGetRequest(ctx context.Context, url string) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.zendeskAuth.AddZendeskAuthentication(request)
+
+	return c.httpClient.Do(request)
+}
+
 func (c *client) LiveChatRequest(request *http.Request, target any) error {
 	attempts := 0
 	maxAttempts := 2

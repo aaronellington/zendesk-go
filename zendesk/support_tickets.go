@@ -33,10 +33,11 @@ type MergeRequestPayload struct {
 type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
-	CustomFields       TicketCustomFields       `json:"custom_fields"`
+	CustomFields       []TicketField            `json:"custom_fields"`
 	Description        string                   `json:"description"`
 	DueAt              *time.Time               `json:"due_at"`
 	ExternalID         *string                  `json:"external_id"`
+	Fields             []TicketField            `json:"fields"`
 	GroupID            *GroupID                 `json:"group_id"`
 	HasIncidents       bool                     `json:"has_incidents"`
 	ID                 TicketID                 `json:"id"`
@@ -61,9 +62,9 @@ type TicketVia struct {
 	Channel string `json:"channel"`
 }
 
-type TicketCustomFields []TicketCustomField
+type TicketFields []TicketField
 
-func (fields TicketCustomFields) CreateMap() map[TicketFieldID]any {
+func (fields TicketFields) CreateMap() map[TicketFieldID]any {
 	fieldMap := map[TicketFieldID]any{}
 	for _, field := range fields {
 		fieldMap[field.ID] = field.Value
@@ -72,7 +73,7 @@ func (fields TicketCustomFields) CreateMap() map[TicketFieldID]any {
 	return fieldMap
 }
 
-type TicketCustomField struct {
+type TicketField struct {
 	ID    TicketFieldID `json:"id"`
 	Value any           `json:"value"`
 }

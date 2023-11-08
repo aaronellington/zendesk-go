@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/
@@ -17,25 +18,52 @@ type OrganizationFieldPayload struct {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#json-format
-type OrganizationField struct {
-	Active      bool                `json:"active"`
-	Description string              `json:"description"`
-	ID          OrganizationFieldID `json:"id"`
+type OrganizationFieldConfiguration struct {
+	Active              bool                  `json:"active"`
+	CreatedAt           time.Time             `json:"created_at"`
+	CustomFieldOptions  []CustomFieldOption   `json:"custom_field_options"`
+	Description         string                `json:"description"`
+	ID                  OrganizationFieldID   `json:"id"`
+	Key                 string                `json:"key"`
+	Position            uint64                `json:"position"`
+	RawDescription      string                `json:"raw_description"`
+	RawTitle            string                `json:"raw_title"`
+	RegexpForValidation *string               `json:"regexp_for_validation"`
+	System              bool                  `json:"system"`
+	Tag                 Tag                   `json:"tag"`
+	Title               string                `json:"title"`
+	Type                OrganizationFieldType `json:"type"`
+	UpdatedAt           time.Time             `json:"updated_at"`
+	URL                 string                `json:"url"`
 }
 
-type OrganizationFieldsResponse struct {
-	OrganizationFields []OrganizationField `json:"organization_fields"`
+type OrganizationFieldType string
+
+const (
+	OrganizationFieldTypeText     OrganizationFieldType = "text"     // Default custom field type when type is not specified
+	OrganizationFieldTypeTextArea OrganizationFieldType = "textarea" // For multi-line text
+	OrganizationFieldTypeCheckbox OrganizationFieldType = "checkbox" // To capture a boolean value. Allowed values are true or false
+	OrganizationFieldTypeDate     OrganizationFieldType = "date"     // Example: 2021-04-16
+	OrganizationFieldTypeDropdown OrganizationFieldType = "dropdown" //
+	OrganizationFieldTypeInteger  OrganizationFieldType = "integer"  // String composed of numbers. May contain an optional decimal point
+	OrganizationFieldTypeDecimal  OrganizationFieldType = "decimal"  // For numbers containing decimals
+	OrganizationFieldTypeRegexp   OrganizationFieldType = "regexp"   // Matches the Regex pattern found in the custom field settings
+	OrganizationFieldTypeLookup   OrganizationFieldType = "lookup"   // A field to create a relationship  to another object such as a user, ticket, or organization
+)
+
+type OrganizationFieldsConfigurationResponse struct {
+	OrganizationFields []OrganizationFieldConfiguration `json:"organization_fields"`
 	CursorPaginationResponse
 }
 
-type OrganizationFieldResponse struct {
-	OrganizationField OrganizationField `json:"organization_field"`
+type OrganizationFieldConfigurationResponse struct {
+	OrganizationField OrganizationFieldConfiguration `json:"organization_field"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#list-organization-fields
 func (s OrganizationFieldService) List(
 	ctx context.Context,
-	pageHandler func(response OrganizationFieldsResponse) error,
+	pageHandler func(response OrganizationFieldsConfigurationResponse) error,
 ) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
@@ -45,7 +73,7 @@ func (s OrganizationFieldService) List(
 	)
 
 	for {
-		target := OrganizationFieldsResponse{}
+		target := OrganizationFieldsConfigurationResponse{}
 
 		request, err := http.NewRequestWithContext(
 			ctx,
@@ -76,8 +104,8 @@ func (s OrganizationFieldService) List(
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#show-organization-field
-func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationFieldID) (OrganizationField, error) {
-	target := OrganizationFieldResponse{}
+func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationFieldID) (OrganizationFieldConfiguration, error) {
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -86,19 +114,19 @@ func (s OrganizationFieldService) Show(ctx context.Context, id OrganizationField
 		http.NoBody,
 	)
 	if err != nil {
-		return OrganizationField{}, err
+		return OrganizationFieldConfiguration{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationField{}, err
+		return OrganizationFieldConfiguration{}, err
 	}
 
 	return target.OrganizationField, nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#create-organization-field
-func (s OrganizationFieldService) Create(ctx context.Context, payload OrganizationFieldPayload) (OrganizationFieldResponse, error) {
-	target := OrganizationFieldResponse{}
+func (s OrganizationFieldService) Create(ctx context.Context, payload OrganizationFieldPayload) (OrganizationFieldConfigurationResponse, error) {
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -107,11 +135,11 @@ func (s OrganizationFieldService) Create(ctx context.Context, payload Organizati
 		structToReader(payload),
 	)
 	if err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	return target, nil
@@ -122,8 +150,8 @@ func (s OrganizationFieldService) Update(
 	ctx context.Context,
 	id OrganizationFieldID,
 	payload OrganizationFieldPayload,
-) (OrganizationFieldResponse, error) {
-	target := OrganizationFieldResponse{}
+) (OrganizationFieldConfigurationResponse, error) {
+	target := OrganizationFieldConfigurationResponse{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
@@ -132,11 +160,11 @@ func (s OrganizationFieldService) Update(
 		structToReader(payload),
 	)
 	if err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationFieldResponse{}, err
+		return OrganizationFieldConfigurationResponse{}, err
 	}
 
 	return target, nil

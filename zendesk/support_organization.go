@@ -20,23 +20,8 @@ type OrganizationsResponse struct {
 	Organizations []Organization `json:"organizations"`
 }
 
-type Organization struct {
-	ID                 OrganizationID     `json:"id"`
-	CreatedAt          time.Time          `json:"created_at"`
-	DeletedAt          *time.Time         `json:"deleted_at"`
-	Details            string             `json:"details"`
-	DomainNames        []string           `json:"domain_names"`
-	ExternalID         *string            `json:"external_id"`
-	GroupID            *GroupID           `json:"group_id"`
-	Name               string             `json:"name"`
-	Notes              string             `json:"notes"`
-	SharedComments     bool               `json:"shared_comments"`
-	SharedTickets      bool               `json:"shared_tickets"`
-	Tags               []Tag              `json:"tags"`
-	UpdatedAt          time.Time          `json:"updated_at"`
-	OrganizationFields OrganizationFields `json:"organization_fields"`
-}
-
+// NOTE: Organization Fields are returned as a map[string (name of field)]any (value of field), instead of the
+// way in which Ticket Fields are returned.
 type OrganizationFields map[string]any
 
 func (fields OrganizationFields) GetString(key string) *string {
@@ -65,6 +50,23 @@ func (fields OrganizationFields) GetBool(key string) bool {
 	}
 
 	return value
+}
+
+type Organization struct {
+	ID                 OrganizationID     `json:"id"`
+	CreatedAt          time.Time          `json:"created_at"`
+	DeletedAt          *time.Time         `json:"deleted_at"`
+	Details            string             `json:"details"`
+	DomainNames        []string           `json:"domain_names"`
+	ExternalID         *string            `json:"external_id"`
+	GroupID            *GroupID           `json:"group_id"`
+	Name               string             `json:"name"`
+	Notes              string             `json:"notes"`
+	SharedComments     bool               `json:"shared_comments"`
+	SharedTickets      bool               `json:"shared_tickets"`
+	Tags               []Tag              `json:"tags"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+	OrganizationFields OrganizationFields `json:"organization_fields"`
 }
 
 type OrganizationVia struct {
