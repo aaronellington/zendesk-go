@@ -24,6 +24,34 @@ type OrganizationsResponse struct {
 // way in which Ticket Fields are returned.
 type OrganizationFields map[string]any
 
+func (fields OrganizationFields) GetString(key string) *string {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return nil
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return &value
+}
+
+func (fields OrganizationFields) GetBool(key string) bool {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return false
+	}
+
+	value, ok := rawValue.(bool)
+	if !ok {
+		panic("organization field " + key + " is not a string")
+	}
+
+	return value
+}
+
 type Organization struct {
 	ID                 OrganizationID     `json:"id"`
 	CreatedAt          time.Time          `json:"created_at"`

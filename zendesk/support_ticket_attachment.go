@@ -84,6 +84,7 @@ func (s TicketAttachmentService) Download(
 	writer io.Writer,
 ) error {
 	var response *http.Response
+
 	var err error
 
 	if strings.Contains(contentURL, "zendesk.com") {
@@ -91,15 +92,22 @@ func (s TicketAttachmentService) Download(
 		if err != nil {
 			return err
 		}
+		defer response.Body.Close()
 	} else {
-		response, err = s.client.httpClient.Get(contentURL)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, contentURL, nil)
 		if err != nil {
 			return err
 		}
+
+		response, err = s.client.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer response.Body.Close()
 	}
-	defer response.Body.Close()
 
 	_, err = io.Copy(writer, response.Body)
+
 	return err
 }
 
@@ -112,6 +120,7 @@ func (s *TicketAttachmentService) DownloadToFile(
 	if err != nil {
 		return err
 	}
+
 	return s.Download(ctx, contentURL, outfile)
 }
 
