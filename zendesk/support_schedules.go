@@ -86,7 +86,7 @@ func (s *ScheduleService) List(
 		return SchedulesResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(response, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(response, &target); err != nil {
 		return SchedulesResponse{}, err
 	}
 

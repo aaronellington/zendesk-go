@@ -56,7 +56,7 @@ func (s CategoryService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

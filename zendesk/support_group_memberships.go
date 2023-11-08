@@ -57,7 +57,7 @@ func (s GroupMembershipService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -98,7 +98,7 @@ func (s GroupMembershipService) ListByUser(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -139,7 +139,7 @@ func (s GroupMembershipService) ListByGroup(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -175,7 +175,7 @@ func (s GroupMembershipService) SetDefault(
 		return GroupMembershipsResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return GroupMembershipsResponse{}, err
 	}
 
@@ -205,7 +205,7 @@ func (s GroupMembershipService) Create(
 		return GroupMembershipResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return GroupMembershipResponse{}, err
 	}
 

@@ -80,7 +80,7 @@ func (s CustomRoleService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -114,7 +114,7 @@ func (s CustomRoleService) Show(ctx context.Context, id CustomRoleID) (CustomRol
 		return CustomRole{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return CustomRole{}, err
 	}
 

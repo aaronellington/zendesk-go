@@ -29,59 +29,41 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 	attempts := 0
 	maxAttempts := 3
 	retryAfter := int64(0)
+	var latestAttemptError error
 
 	for attempts < maxAttempts {
 		attempts++
 
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 
-		response, err := c.httpClient.Do(request)
-		if err != nil {
-			return err
-		}
-		defer response.Body.Close()
-
-		bodyBytes, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
+		latestAttemptError = c.do(request, target)
+		if latestAttemptError == nil {
+			return nil
 		}
 
-		if response.StatusCode >= http.StatusBadRequest {
-			if response.StatusCode == http.StatusTooManyRequests {
-				// Check for a "retry-after" header and then continue
-				retryAfterString := response.Header.Get("retry-after")
-				if retryAfterString != "" {
-					retryAfter, err = strconv.ParseInt(retryAfterString, 10, 64)
-					if err != nil {
-						return err
-					}
-				}
-
-				continue
-			}
-
-			responseErr := &Error{
-				StatusCode: response.StatusCode,
-				Body:       bodyBytes,
-			}
-
-			if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
-				return err
-			}
-
-			return responseErr
+		zendeskErr, ok := latestAttemptError.(*Error)
+		if !ok {
+			return latestAttemptError
 		}
 
-		if target != nil {
-			if err := json.Unmarshal(bodyBytes, target); err != nil {
+		if zendeskErr.Response.StatusCode != http.StatusTooManyRequests {
+			return latestAttemptError
+		}
+
+		// Check for a "retry-after" header and then continue
+		retryAfterString := zendeskErr.Response.Header.Get("retry-after")
+		if retryAfterString != "" {
+			var err error
+			retryAfter, err = strconv.ParseInt(retryAfterString, 10, 64)
+			if err != nil {
 				return err
 			}
 		}
 
-		return nil
+		continue
 	}
 
-	return fmt.Errorf("unable to complete request after retries (%d attempts)", maxAttempts)
+	return fmt.Errorf("failed request after maximum number of retries - Zendesk Error: %w", latestAttemptError)
 }
 
 func (c *client) do(request *http.Request, target any) error {
@@ -117,8 +99,7 @@ func (c *client) do(request *http.Request, target any) error {
 	if response.StatusCode >= http.StatusBadRequest {
 
 		responseErr := &Error{
-			StatusCode: response.StatusCode,
-			Body:       bodyBytes,
+			Response: response,
 		}
 
 		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
@@ -137,10 +118,10 @@ func (c *client) do(request *http.Request, target any) error {
 	return nil
 }
 
-func (c *client) ZendeskRequest(request *http.Request, target any, autoRetry bool) error {
+func (c *client) ZendeskRequest(request *http.Request, target any) error {
 	c.zendeskAuth.AddZendeskAuthentication(request)
 
-	if autoRetry {
+	if request.Method == http.MethodGet {
 		return c.doWithRetry(request, target)
 	}
 
@@ -170,7 +151,7 @@ func (c *client) LiveChatRequest(request *http.Request, target any) error {
 
 		if err := c.do(request, target); err != nil {
 			if zdError, ok := err.(*Error); ok {
-				if zdError.StatusCode == http.StatusUnauthorized {
+				if zdError.Response.StatusCode == http.StatusUnauthorized {
 					// Clear out the token
 					c.chatToken = nil
 

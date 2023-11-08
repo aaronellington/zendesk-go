@@ -121,7 +121,7 @@ func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
 		return Ticket{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Ticket{}, err
 	}
 
@@ -142,7 +142,7 @@ func (s TicketService) Create(ctx context.Context, payload TicketPayload) (Ticke
 		return TicketResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return TicketResponse{}, err
 	}
 
@@ -163,7 +163,7 @@ func (s TicketService) Merge(ctx context.Context, destination TicketID, payload 
 		return JobStatusResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return JobStatusResponse{}, err
 	}
 
@@ -184,7 +184,7 @@ func (s TicketService) Update(ctx context.Context, id TicketID, payload TicketPa
 		return TicketResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return TicketResponse{}, err
 	}
 
@@ -215,7 +215,7 @@ func (s TicketService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -254,7 +254,7 @@ func (s TicketService) AddTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Tags{}, err
 	}
 
@@ -282,7 +282,7 @@ func (s TicketService) SetTags(ctx context.Context, ticketID TicketID, tags Tags
 		return Tags{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return Tags{}, err
 	}
 
@@ -350,7 +350,7 @@ func (s TicketService) ListProblemTicketIncidents(
 
 		target := ListProblemTicketIncidentsResponse{}
 
-		if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

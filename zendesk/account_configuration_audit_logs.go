@@ -64,7 +64,7 @@ func (s AuditLogService) List(
 
 		target := AuditLogsResponse{}
 
-		if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 

@@ -67,7 +67,7 @@ func (s CustomStatusService) List(
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target, true); err != nil {
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -101,7 +101,7 @@ func (s CustomStatusService) Show(ctx context.Context, id CustomStatusID) (Custo
 		return CustomStatus{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return CustomStatus{}, err
 	}
 
@@ -122,7 +122,7 @@ func (s CustomStatusService) Create(ctx context.Context, payload CustomStatusPay
 		return CustomStatusResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target, false); err != nil {
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
 		return CustomStatusResponse{}, err
 	}
 
