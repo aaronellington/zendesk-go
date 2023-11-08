@@ -189,3 +189,53 @@ func (s OrganizationService) Update(ctx context.Context, id OrganizationID, payl
 
 	return target, nil
 }
+
+type OrganizationAutocompleteResponse struct {
+	Organizations []Organization `json:"organizations"`
+	OffsetPaginationResponse
+}
+
+/*
+https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#autocomplete-organizations
+
+Does not support cursor pagination.
+*/
+func (s OrganizationService) Autocomplete(
+	ctx context.Context,
+	term string,
+	pageHandler func(response OrganizationAutocompleteResponse) error,
+) error {
+	endpoint := fmt.Sprintf("/api/v2/organizations/autocomplete?name=%s", term)
+
+	for {
+		target := OrganizationAutocompleteResponse{}
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if target.NextPage != nil {
+			endpoint = *target.NextPage
+
+			continue
+		}
+
+		break
+	}
+
+	return nil
+}
