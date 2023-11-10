@@ -20,6 +20,15 @@ type UsersResponse struct {
 	Users []User `json:"users"`
 }
 
+type UserSearchResponse struct {
+	Users           []User            `json:"users"`
+	Identities      []UserIdentity    `json:"identities"`
+	Organizations   []Organization    `json:"organizations"`
+	Groups          []Group           `json:"groups"`
+	OpenTicketCount map[string]uint64 `json:"open_ticket_count"`
+	OffsetPaginationResponse
+}
+
 type UsersIncrementalExportResponse struct {
 	UsersResponse
 	IncrementalExportResponse
@@ -138,6 +147,63 @@ func (s UserService) Search(ctx context.Context, query string) (UsersResponse, e
 	}
 
 	return target, nil
+}
+
+/*
+https://developer.zendesk.com/api-reference/ticketing/users/users/#search-users
+
+Does not support cursor pagination.
+*/
+func (s UserService) SearchWithSideloads(
+	ctx context.Context,
+	query string,
+	sideloads []UserSearchSideload,
+	pageHandler func(response UserSearchResponse) error,
+) error {
+	q := url.Values{}
+	q.Set("query", query)
+
+	if len(sideloads) > 0 {
+		sideload, sideloads := string(sideloads[0]), sideloads[1:]
+		for _, s := range sideloads {
+			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
+		}
+		q.Set("include", sideload)
+	}
+
+	endpoint := fmt.Sprintf("/api/v2/users/search?%s", q.Encode())
+
+	for {
+		target := UserSearchResponse{}
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if target.NextPage != nil {
+			endpoint = *target.NextPage
+
+			continue
+		}
+
+		break
+	}
+
+	return nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-user-export-time-based

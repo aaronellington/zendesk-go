@@ -28,6 +28,17 @@ const (
 	StatusDeleted = "deleted"
 )
 
+type UserSearchSideload string
+
+const (
+	UserSearchSideloadIdentities      UserSearchSideload = "identities"
+	UserSearchSideloadOrganizations   UserSearchSideload = "organizations"
+	UserSearchSideloadRoles           UserSearchSideload = "roles"
+	UserSearchSideloadAbilities       UserSearchSideload = "abilities"
+	UserSearchSideloadGroups          UserSearchSideload = "groups"
+	UserSearchSideloadOpenTicketCount UserSearchSideload = "open_ticket_count"
+)
+
 type MalwareScanResult string
 
 const (
