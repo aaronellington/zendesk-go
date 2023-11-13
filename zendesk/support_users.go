@@ -9,7 +9,9 @@ import (
 )
 
 type UserResponse struct {
-	User User `json:"user"`
+	User          User           `json:"user"`
+	Identities    []UserIdentity `json:"identities"`
+	Organizations []Organization `json:"organizations"`
 }
 
 type UserPayload struct {
@@ -85,23 +87,50 @@ type UserService struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#show-user
 func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
+	userInfo, err := s.ShowWithSideloads(ctx, id, nil)
+	if err != nil {
+		return User{}, err
+	}
+	return userInfo.User, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/users/users/#show-user
+func (s UserService) ShowWithSideloads(
+	ctx context.Context,
+	id UserID,
+	sideloads []UserEndpointSideload,
+) (UserResponse, error) {
 	target := UserResponse{}
+	endpoint := fmt.Sprintf("/api/v2/users/%d", id)
+
+	if len(sideloads) > 0 {
+		q := url.Values{}
+
+		sideload, sideloads := string(sideloads[0]), sideloads[1:]
+		for _, s := range sideloads {
+			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
+		}
+
+		q.Set("include", sideload)
+
+		endpoint = fmt.Sprintf("%s?%s", endpoint, q.Encode())
+	}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("/api/v2/users/%d", id),
+		endpoint,
 		http.NoBody,
 	)
 	if err != nil {
-		return User{}, err
+		return UserResponse{}, err
 	}
 
 	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return User{}, err
+		return UserResponse{}, err
 	}
 
-	return target.User, nil
+	return target, nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#show-self
@@ -157,7 +186,7 @@ Does not support cursor pagination.
 func (s UserService) SearchWithSideloads(
 	ctx context.Context,
 	query string,
-	sideloads []UserSearchSideload,
+	sideloads []UserEndpointSideload,
 	pageHandler func(response UserSearchResponse) error,
 ) error {
 	q := url.Values{}
@@ -212,8 +241,26 @@ func (s UserService) IncrementalExport(
 	startTime int64,
 	pageHandler func(response UsersIncrementalExportResponse) error,
 ) error {
+	return s.IncrementalExportWithSideloads(ctx, startTime, nil, pageHandler)
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-user-export-time-based
+func (s UserService) IncrementalExportWithSideloads(
+	ctx context.Context,
+	startTime int64,
+	sideloads []UserEndpointSideload,
+	pageHandler func(response UsersIncrementalExportResponse) error,
+) error {
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime))
+
+	if len(sideloads) > 0 {
+		sideload, sideloads := string(sideloads[0]), sideloads[1:]
+		for _, s := range sideloads {
+			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
+		}
+		query.Set("include", sideload)
+	}
 
 	for {
 		target := UsersIncrementalExportResponse{}

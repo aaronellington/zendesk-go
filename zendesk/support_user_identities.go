@@ -13,8 +13,15 @@ type UserIdentitiesResponse struct {
 }
 
 type UserIdentity struct {
-	ID    uint64 `json:"id"`
-	Value string `json:"value"`
+	URL                string         `json:"url"`
+	UserID             UserID         `json:"user_id"`
+	ID                 UserIdentityID `json:"id"`
+	Type               string         `json:"type"`
+	Verified           bool           `json:"verified"`
+	Primary            bool           `json:"primary"`
+	UndeliverableCount uint64         `json:"undeliverable_count"`
+	DeliverableState   bool           `json:"deliverable_state"`
+	Value              string         `json:"value"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/user_identities/

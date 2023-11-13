@@ -28,15 +28,15 @@ const (
 	StatusDeleted = "deleted"
 )
 
-type UserSearchSideload string
+type UserEndpointSideload string
 
 const (
-	UserSearchSideloadIdentities      UserSearchSideload = "identities"
-	UserSearchSideloadOrganizations   UserSearchSideload = "organizations"
-	UserSearchSideloadRoles           UserSearchSideload = "roles"
-	UserSearchSideloadAbilities       UserSearchSideload = "abilities"
-	UserSearchSideloadGroups          UserSearchSideload = "groups"
-	UserSearchSideloadOpenTicketCount UserSearchSideload = "open_ticket_count"
+	UserEndpointSideloadIdentities      UserEndpointSideload = "identities"
+	UserEndpointSideloadOrganizations   UserEndpointSideload = "organizations"
+	UserEndpointSideloadRoles           UserEndpointSideload = "roles"
+	UserEndpointSideloadAbilities       UserEndpointSideload = "abilities"
+	UserEndpointSideloadGroups          UserEndpointSideload = "groups"
+	UserEndpointSideloadOpenTicketCount UserEndpointSideload = "open_ticket_count"
 )
 
 type MalwareScanResult string
@@ -89,6 +89,7 @@ type (
 	UploadToken         string
 	UserFieldID         uint64
 	UserID              uint64
+	UserIdentityID      uint64
 	UserSegmentID       uint64
 )
 
