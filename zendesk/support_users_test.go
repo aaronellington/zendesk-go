@@ -66,13 +66,13 @@ func Test_SupportUsersSearchWithSideloads_200(t *testing.T) {
 	if err := z.Support().Users().SearchWithSideloads(
 		ctx,
 		"email:kren@chandrila.com",
-		[]zendesk.UserSearchSideload{
-			zendesk.UserSearchSideloadAbilities,
-			zendesk.UserSearchSideloadIdentities,
-			zendesk.UserSearchSideloadGroups,
-			zendesk.UserSearchSideloadRoles,
-			zendesk.UserSearchSideloadOpenTicketCount,
-			zendesk.UserSearchSideloadOrganizations,
+		[]zendesk.UserEndpointSideload{
+			zendesk.UserEndpointSideloadAbilities,
+			zendesk.UserEndpointSideloadIdentities,
+			zendesk.UserEndpointSideloadGroups,
+			zendesk.UserEndpointSideloadRoles,
+			zendesk.UserEndpointSideloadOpenTicketCount,
+			zendesk.UserEndpointSideloadOrganizations,
 		},
 		func(response zendesk.UserSearchResponse) error {
 			users = append(users, response.Users...)

@@ -89,7 +89,7 @@ type (
 	UploadToken         string
 	UserFieldID         uint64
 	UserID              uint64
-	UserIdentityID      uint64
+	IdentityID          uint64
 	UserSegmentID       uint64
 )
 
