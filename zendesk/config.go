@@ -78,7 +78,7 @@ type sloggerWrapper struct {
 }
 
 func (s *sloggerWrapper) ProcessRequest(r *http.Request) error {
-	s.logger.Info(fmt.Sprintf("Request: %s %s", r.Method, r.URL.String()))
+	s.logger.Debug(fmt.Sprintf("Request: %s %s", r.Method, r.URL.String()))
 
 	return nil
 }
