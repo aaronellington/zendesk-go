@@ -1,7 +1,9 @@
 package zendesk
 
 import (
+	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -61,6 +63,22 @@ type loggerWrapper struct {
 
 func (l *loggerWrapper) ProcessRequest(r *http.Request) error {
 	l.logger.Printf("Request: %s %s", r.Method, r.URL.String())
+
+	return nil
+}
+
+func WithSlogger(logger *slog.Logger) configOption {
+	return WithRequestPreProcessor(&sloggerWrapper{
+		logger: logger,
+	})
+}
+
+type sloggerWrapper struct {
+	logger *slog.Logger
+}
+
+func (s *sloggerWrapper) ProcessRequest(r *http.Request) error {
+	s.logger.Info(fmt.Sprintf("Request: %s %s", r.Method, r.URL.String()))
 
 	return nil
 }
