@@ -18,6 +18,7 @@ type GroupMembership struct {
 	Default   bool              `json:"default"`
 	GroupID   GroupID           `json:"group_id"`
 	UpdatedAt time.Time         `json:"updated_at"`
+	URL       string            `json:"url"`
 	UserID    UserID            `json:"user_id"`
 }
 
@@ -232,4 +233,28 @@ func (s GroupMembershipService) Delete(
 		request,
 		nil,
 	)
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/#show-membership
+func (s GroupMembershipService) Show(
+	ctx context.Context,
+	id GroupMembershipID,
+) (GroupMembership, error) {
+	target := GroupMembershipResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/group_memberships/%d", id),
+		http.NoBody,
+	)
+	if err != nil {
+		return GroupMembership{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return GroupMembership{}, err
+	}
+
+	return target.GroupMembership, nil
 }

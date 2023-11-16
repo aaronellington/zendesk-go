@@ -59,38 +59,39 @@ const (
 )
 
 type (
-	ActorID             int64
-	ArticleID           uint64
-	AttachmentID        uint64
-	AuditID             uint64
-	AuditLogID          uint64
-	CategoryID          uint64
-	ChatAccountID       uint64
-	ChatEngagementID    string
-	ChatID              string
-	CustomFieldOptionID uint64
-	CustomRoleID        uint64
-	CustomStatusID      uint64
-	GroupID             uint64
-	GroupMembershipID   uint64
-	OrganizationID      uint64
-	OrganizationFieldID uint64
-	PermissionGroupID   uint64
-	ScheduleID          uint64
-	SectionID           uint64
-	SourceID            int64
-	SuspendedTicketID   uint64
-	TicketAuditEventID  uint64
-	TicketAuditID       uint64
-	TicketCommentID     uint64
-	TicketFieldID       uint64
-	TicketFormID        uint64
-	TicketID            uint64
-	UploadToken         string
-	UserFieldID         uint64
-	UserID              uint64
-	IdentityID          uint64
-	UserSegmentID       uint64
+	ActorID                  int64
+	ArticleID                uint64
+	AttachmentID             uint64
+	AuditID                  uint64
+	AuditLogID               uint64
+	CategoryID               uint64
+	ChatAccountID            uint64
+	ChatEngagementID         string
+	ChatID                   string
+	CustomFieldOptionID      uint64
+	CustomRoleID             uint64
+	CustomStatusID           uint64
+	GroupID                  uint64
+	GroupMembershipID        uint64
+	OrganizationID           uint64
+	OrganizationFieldID      uint64
+	OrganizationMembershipID uint64
+	PermissionGroupID        uint64
+	ScheduleID               uint64
+	SectionID                uint64
+	SourceID                 int64
+	SuspendedTicketID        uint64
+	TicketAuditEventID       uint64
+	TicketAuditID            uint64
+	TicketCommentID          uint64
+	TicketFieldID            uint64
+	TicketFormID             uint64
+	TicketID                 uint64
+	UploadToken              string
+	UserFieldID              uint64
+	UserID                   uint64
+	IdentityID               uint64
+	UserSegmentID            uint64
 )
 
 func (userID *UserID) UnmarshalJSON(b []byte) error {

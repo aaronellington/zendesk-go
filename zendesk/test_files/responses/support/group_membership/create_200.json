@@ -1,0 +1,11 @@
+{
+    "group_membership": {
+        "url": "https://subdomain.zendesk.com/api/v2/group_memberships/11328997227420.json",
+        "id": 11328997227420,
+        "user_id": 11174914247836,
+        "group_id": 11328996577564,
+        "default": false,
+        "created_at": "2023-11-16T11:54:56Z",
+        "updated_at": "2023-11-16T11:54:56Z"
+    }
+}

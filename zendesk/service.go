@@ -51,9 +51,6 @@ func NewService(
 			organizationService: &OrganizationService{
 				client: c,
 			},
-			userService: &UserService{
-				client: c,
-			},
 			ticketService: &TicketService{
 				client: c,
 			},
@@ -75,6 +72,9 @@ func NewService(
 			organizationFieldService: &OrganizationFieldService{
 				client: c,
 			},
+			organizationMembershipService: &OrganizationMembershipService{
+				client: c,
+			},
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
@@ -94,6 +94,9 @@ func NewService(
 				client: c,
 			},
 			userIdentityService: &UserIdentityService{
+				client: c,
+			},
+			userService: &UserService{
 				client: c,
 			},
 		},
