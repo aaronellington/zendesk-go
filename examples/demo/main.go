@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -29,7 +30,8 @@ func PrintErr(err error) {
 
 	zdErr, ok := err.(*zendesk.Error)
 	if ok {
-		log.Fatalf("Zendesk Error: [%d] %s", zdErr.StatusCode, string(zdErr.Body))
+		errBytes, _ := io.ReadAll(zdErr.Response.Body)
+		log.Fatalf("Zendesk Error: [%d] %s", zdErr.Response.StatusCode, string(errBytes))
 	}
 
 	log.Fatal(err)

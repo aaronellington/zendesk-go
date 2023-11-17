@@ -3,18 +3,18 @@ package zendesk
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
 type Error struct {
-	StatusCode  int    `json:"status_code"`
-	Body        []byte `json:"body"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
+	Response    *http.Response `json:"response"`
+	Message     string         `json:"message"`
+	Description string         `json:"description"`
 }
 
 func (err *Error) Error() string {
 	if err.Message == "" {
-		return fmt.Sprintf("Zendesk API Error, Status Code: %d", err.StatusCode)
+		return fmt.Sprintf("Zendesk API Error, Status Code: %d", err.Response.StatusCode)
 	}
 
 	return err.Message

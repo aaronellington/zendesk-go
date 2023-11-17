@@ -9,15 +9,24 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket-attachments/#json-format
 type TicketAttachment struct {
-	ContentType string       `json:"content_type"`
-	ContentURL  string       `json:"content_url"`
-	FileName    string       `json:"file_name"`
-	ID          AttachmentID `json:"id"`
-	Size        uint64       `json:"size"`
+	ContentType           string            `json:"content_type"`
+	ContentURL            string            `json:"content_url"`
+	Deleted               bool              `json:"deleted"`
+	FileName              string            `json:"file_name"`
+	Height                uint64            `json:"height"`
+	ID                    AttachmentID      `json:"id"`
+	Inline                bool              `json:"inline"`
+	MalwareAccessOverride bool              `json:"malware_access_override"`
+	MalwareScanResult     MalwareScanResult `json:"malware_scan_result"`
+	MappedContentURL      string            `json:"mapped_content_url"`
+	Size                  uint64            `json:"size"`
+	URL                   string            `json:"url"`
+	Width                 uint64            `json:"width"`
 }
 
 type TicketAttachmentResponse struct {
@@ -59,6 +68,60 @@ func (s TicketAttachmentService) Show(
 	}
 
 	return target.Attachment, nil
+}
+
+/*
+When working with attachments, we must ensure that the domain that the content is hosted on
+is *.zendesk.com before sending authentication credentials.
+
+- https://developer.zendesk.com/documentation/ticketing/managing-tickets/working-with-url-properties/
+
+- https://developer.zendesk.com/api-reference/ticketing/tickets/ticket-attachments/#json-format
+*/
+func (s TicketAttachmentService) Download(
+	ctx context.Context,
+	contentURL string,
+	writer io.Writer,
+) error {
+	var response *http.Response
+
+	var err error
+
+	if strings.Contains(contentURL, "zendesk.com") {
+		response, err = s.client.ZendeskGetRequest(ctx, contentURL)
+		if err != nil {
+			return err
+		}
+		defer response.Body.Close()
+	} else {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, contentURL, nil)
+		if err != nil {
+			return err
+		}
+
+		response, err = s.client.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer response.Body.Close()
+	}
+
+	_, err = io.Copy(writer, response.Body)
+
+	return err
+}
+
+func (s *TicketAttachmentService) DownloadToFile(
+	ctx context.Context,
+	contentURL string,
+	filePath string,
+) error {
+	outfile, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+
+	return s.Download(ctx, contentURL, outfile)
 }
 
 // https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/adding-ticket-attachments-with-the-api/

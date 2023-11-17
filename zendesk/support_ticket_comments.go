@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments/
@@ -14,11 +15,32 @@ type TicketCommentService struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments/#json-format
 type TicketComment struct {
-	ID          TicketCommentID    `json:"id"`
-	Attachments []TicketAttachment `json:"attachments"`
-	AuditID     AuditID            `json:"audit_id"`
-	AuthorID    UserID             `json:"author_id"`
-	Body        string             `json:"body"`
+	ID          TicketCommentID       `json:"id"`
+	Attachments []TicketAttachment    `json:"attachments"`
+	AuditID     AuditID               `json:"audit_id"`
+	AuthorID    UserID                `json:"author_id"`
+	Body        string                `json:"body"`
+	CreatedAt   time.Time             `json:"createdAt"`
+	HTMLBody    string                `json:"html_body"`
+	Metadata    TicketCommentMetadata `json:"metadata"`
+	PlainBody   string                `json:"plain_body"`
+	Public      bool                  `json:"public"`
+	Type        string                `json:"type"`
+	Uploads     []UploadToken         `json:"uploads"`
+}
+
+type TicketCommentMetadata struct {
+	System TicketCommentMetadataSystem `json:"system"`
+	Via    TicketVia                   `json:"via"`
+	Flags  []uint                      `json:"flags"` // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments/#comment-flags
+}
+
+type TicketCommentMetadataSystem struct {
+	Client    string  `json:"client"`
+	IPAddress string  `json:"ip_address"`
+	Latitude  float64 `json:"latitude"`
+	Location  string  `json:"location"`
+	Longitude float64 `json:"longitude"`
 }
 
 type TicketCommentResponse struct {
