@@ -43,12 +43,14 @@ type User struct {
 	CreatedAt            time.Time       `json:"created_at"`
 	CustomRoleID         *CustomRoleID   `json:"custom_role_id"`
 	DefaultGroupID       *GroupID        `json:"default_group_id"`
+	Details              *string         `json:"details"`
 	Email                string          `json:"email"`
 	ExternalID           *string         `json:"external_id"`
 	IanaTimeZone         string          `json:"iana_time_zone"`
 	LastLoginAt          *time.Time      `json:"last_login_at"`
 	Locale               string          `json:"locale"`
 	Name                 string          `json:"name"`
+	Notes                *string         `json:"notes"`
 	OrganizationID       *OrganizationID `json:"organization_id"`
 	Phone                *string         `json:"phone"`
 	Role                 UserRole        `json:"role"`
