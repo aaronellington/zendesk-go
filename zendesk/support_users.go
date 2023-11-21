@@ -296,7 +296,10 @@ func (s UserService) IncrementalExportWithSideloads(
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#create-user
-func (s UserService) Create(ctx context.Context, payload UserPayload) (UserResponse, error) {
+func (s UserService) Create(
+	ctx context.Context,
+	payload UserPayload,
+) (UserResponse, error) {
 	target := UserResponse{}
 
 	request, err := http.NewRequestWithContext(
@@ -317,7 +320,11 @@ func (s UserService) Create(ctx context.Context, payload UserPayload) (UserRespo
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#update-user
-func (s UserService) Update(ctx context.Context, id UserID, payload UserPayload) (UserResponse, error) {
+func (s UserService) Update(
+	ctx context.Context,
+	id UserID,
+	payload UserPayload,
+) (UserResponse, error) {
 	target := UserResponse{}
 
 	request, err := http.NewRequestWithContext(
