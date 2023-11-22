@@ -82,7 +82,7 @@ func (s *UserIdentityService) List(
 func (s *UserIdentityService) Create(
 	ctx context.Context,
 	userID UserID,
-	payload any,
+	payload UserIdentityPayload,
 ) (UserIdentityResponse, error) {
 	target := UserIdentityResponse{}
 

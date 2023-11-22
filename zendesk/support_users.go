@@ -38,33 +38,48 @@ type UsersIncrementalExportResponse struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#json-format
 type User struct {
-	ID                   UserID          `json:"id"`
-	Active               bool            `json:"active"`
-	CreatedAt            time.Time       `json:"created_at"`
-	CustomRoleID         *CustomRoleID   `json:"custom_role_id"`
-	DefaultGroupID       *GroupID        `json:"default_group_id"`
-	Details              *string         `json:"details"`
-	Email                string          `json:"email"`
-	ExternalID           *string         `json:"external_id"`
-	IanaTimeZone         string          `json:"iana_time_zone"`
-	LastLoginAt          *time.Time      `json:"last_login_at"`
-	Locale               string          `json:"locale"`
-	Name                 string          `json:"name"`
-	Notes                *string         `json:"notes"`
-	OrganizationID       *OrganizationID `json:"organization_id"`
-	Phone                *string         `json:"phone"`
-	Role                 UserRole        `json:"role"`
-	RoleType             *int            `json:"role_type"`
-	Signature            string          `json:"signature"`
-	Shared               bool            `json:"shared"`
-	Suspended            bool            `json:"suspended"`
-	Tags                 []Tag           `json:"tags"`
-	TwoFactorAuthEnabled bool            `json:"two_factor_auth_enabled"`
-	UpdatedAt            time.Time       `json:"updated_at"`
-	Verified             bool            `json:"verified"`
-	UserFields           UserFields      `json:"user_fields"`
-	Photo                *UserPhoto      `json:"photo"`
+	ID                   UserID                 `json:"id"`
+	Active               bool                   `json:"active"`
+	Alias                *string                `json:"alias"`
+	OnlyPrivateComments  bool                   `json:"only_private_comments"`
+	CreatedAt            time.Time              `json:"created_at"`
+	CustomRoleID         *CustomRoleID          `json:"custom_role_id"`
+	DefaultGroupID       *GroupID               `json:"default_group_id"`
+	Details              *string                `json:"details"`
+	Email                string                 `json:"email"`
+	ExternalID           *string                `json:"external_id"`
+	IanaTimeZone         string                 `json:"iana_time_zone"`
+	TimeZone             string                 `json:"time_zone"`
+	LastLoginAt          *time.Time             `json:"last_login_at"`
+	Locale               string                 `json:"locale"`
+	Name                 string                 `json:"name"`
+	Notes                *string                `json:"notes"`
+	OrganizationID       *OrganizationID        `json:"organization_id"`
+	Phone                *string                `json:"phone"`
+	RestrictedAgent      bool                   `json:"restricted_agent"`
+	Role                 UserRole               `json:"role"`
+	RoleType             *int                   `json:"role_type"`
+	Signature            string                 `json:"signature"`
+	Shared               bool                   `json:"shared"`
+	SharedAgent          bool                   `json:"shared_agent"`
+	Suspended            bool                   `json:"suspended"`
+	Tags                 []Tag                  `json:"tags"`
+	TicketRestriction    *UserTicketRestriction `json:"ticket_restriction"`
+	TwoFactorAuthEnabled bool                   `json:"two_factor_auth_enabled"`
+	UpdatedAt            time.Time              `json:"updated_at"`
+	Verified             bool                   `json:"verified"`
+	UserFields           UserFields             `json:"user_fields"`
+	Photo                *UserPhoto             `json:"photo"`
 }
+
+type UserTicketRestriction string
+
+const (
+	UserTicketRestrictionOrganization UserTicketRestriction = "organization"
+	UserTicketRestrictionGroups       UserTicketRestriction = "groups"
+	UserTicketRestrictionAssigned     UserTicketRestriction = "assigned"
+	UserTicketRestrictionRequested    UserTicketRestriction = "requested"
+)
 
 type UserRole string
 
@@ -100,7 +115,7 @@ func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 func (s UserService) ShowWithSideloads(
 	ctx context.Context,
 	id UserID,
-	sideloads []UserEndpointSideload,
+	sideloads []UserSideload,
 ) (UserResponse, error) {
 	target := UserResponse{}
 	endpoint := fmt.Sprintf("/api/v2/users/%d", id)
@@ -188,7 +203,7 @@ Does not support cursor pagination.
 func (s UserService) SearchWithSideloads(
 	ctx context.Context,
 	query string,
-	sideloads []UserEndpointSideload,
+	sideloads []UserSideload,
 	pageHandler func(response UserSearchResponse) error,
 ) error {
 	q := url.Values{}
@@ -250,7 +265,7 @@ func (s UserService) IncrementalExport(
 func (s UserService) IncrementalExportWithSideloads(
 	ctx context.Context,
 	startTime int64,
-	sideloads []UserEndpointSideload,
+	sideloads []UserSideload,
 	pageHandler func(response UsersIncrementalExportResponse) error,
 ) error {
 	query := url.Values{}
