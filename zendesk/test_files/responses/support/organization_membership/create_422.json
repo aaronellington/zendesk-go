@@ -1,0 +1,12 @@
+{
+    "error": "RecordInvalid",
+    "description": "Record validation errors",
+    "details": {
+        "user_id": [
+            {
+                "description": " This user is already a member of this organization.",
+                "error": "DuplicateValue"
+            }
+        ]
+    }
+}

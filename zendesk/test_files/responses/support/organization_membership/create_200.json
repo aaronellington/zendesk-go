@@ -1,0 +1,13 @@
+{
+    "organization_membership": {
+        "url": "https://subdomain.zendesk.com/api/v2/organization_memberships/11327656696988.json",
+        "id": 11327656696988,
+        "user_id": 11174914247836,
+        "organization_id": 11224050897308,
+        "default": null,
+        "created_at": "2023-11-16T11:00:08Z",
+        "organization_name": "A Test Organization",
+        "updated_at": "2023-11-16T11:00:08Z",
+        "view_tickets": true
+    }
+}

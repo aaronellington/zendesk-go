@@ -45,6 +45,7 @@ type TicketCommentMetadataSystem struct {
 
 type TicketCommentResponse struct {
 	Comments []TicketComment `json:"comments"`
+	Users    []User          `json:"users"`
 	CursorPaginationResponse
 }
 
@@ -54,6 +55,15 @@ func (s TicketCommentService) ListByTicketID(
 	ticketID TicketID,
 	pageHandler func(response TicketCommentResponse) error,
 ) error {
+	return s.ListByTicketIDWithSideload(ctx, ticketID, nil, pageHandler)
+}
+
+func (s TicketCommentService) ListByTicketIDWithSideload(
+	ctx context.Context,
+	ticketID TicketID,
+	sideloads []TicketCommentSideload,
+	pageHandler func(response TicketCommentResponse) error,
+) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
 	endpoint := fmt.Sprintf(
@@ -61,6 +71,16 @@ func (s TicketCommentService) ListByTicketID(
 		ticketID,
 		query.Encode(),
 	)
+
+	if len(sideloads) > 0 {
+		sideload, sideloads := string(sideloads[0]), sideloads[1:]
+
+		for _, s := range sideloads {
+			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
+		}
+
+		query.Set("include", sideload)
+	}
 
 	for {
 		target := TicketCommentResponse{}

@@ -2,24 +2,25 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 type SupportService struct {
-	customStatusService      *CustomStatusService
-	groupMembershipService   *GroupMembershipService
-	groupService             *GroupsService
-	organizationFieldService *OrganizationFieldService
-	organizationService      *OrganizationService
-	scheduleService          *ScheduleService
-	suspendedTicketService   *SuspendedTicketService
-	ticketAttachmentService  *TicketAttachmentService
-	ticketAuditService       *TicketAuditService
-	ticketCommentService     *TicketCommentService
-	ticketFieldService       *TicketFieldService
-	ticketFormService        *TicketFormService
-	ticketService            *TicketService
-	ticketTagService         *TicketTagService
-	userFieldsService        *UserFieldService
-	userService              *UserService
-	userIdentityService      *UserIdentityService
-	sideConversationService  *SideConversationService
+	customStatusService           *CustomStatusService
+	groupMembershipService        *GroupMembershipService
+	groupService                  *GroupsService
+	organizationFieldService      *OrganizationFieldService
+	organizationMembershipService *OrganizationMembershipService
+	organizationService           *OrganizationService
+	scheduleService               *ScheduleService
+	suspendedTicketService        *SuspendedTicketService
+	ticketAttachmentService       *TicketAttachmentService
+	ticketAuditService            *TicketAuditService
+	ticketCommentService          *TicketCommentService
+	ticketFieldService            *TicketFieldService
+	ticketFormService             *TicketFormService
+	ticketService                 *TicketService
+	ticketTagService              *TicketTagService
+	userFieldsService             *UserFieldService
+	userService                   *UserService
+	userIdentityService           *UserIdentityService
+	sideConversationService       *SideConversationService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -30,6 +31,11 @@ func (s *SupportService) CustomStatuses() *CustomStatusService {
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
 func (s *SupportService) OrganizationFields() *OrganizationFieldService {
 	return s.organizationFieldService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+func (s *SupportService) OrganizationMemberships() *OrganizationMembershipService {
+	return s.organizationMembershipService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/

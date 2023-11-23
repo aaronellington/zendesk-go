@@ -66,6 +66,12 @@ type error1 struct {
 }
 
 type errorResponse2 struct {
-	Error       string `json:"error"`
+	Error       string                 `json:"error"`
+	Description string                 `json:"description"`
+	Details     map[string]ErrorDetail `json:"details"`
+}
+
+type ErrorDetail struct {
 	Description string `json:"description"`
+	Error       string `json:"error"`
 }
