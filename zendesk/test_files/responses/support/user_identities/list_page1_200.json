@@ -1,0 +1,37 @@
+{
+	"identities": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/users/1000/identities/8000.json",
+			"id": 8000,
+			"user_id": 1000,
+			"type": "google",
+			"value": "kren@chandrila.com",
+			"verified": true,
+			"primary": true,
+			"created_at": "2022-08-11T18:42:31Z",
+			"updated_at": "2022-08-17T14:11:19Z",
+			"undeliverable_count": 0,
+			"deliverable_state": "deliverable"
+		},
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/users/1000/identities/9999.json",
+			"id": 9999,
+			"user_id": 1000,
+			"type": "phone_number",
+			"value": "213-326-3827",
+			"verified": true,
+			"primary": true,
+			"created_at": "2023-03-01T10:55:35Z",
+			"updated_at": "2023-03-01T10:55:35Z"
+		}
+	],
+	"meta": {
+		"has_more": true,
+		"after_cursor": "aCursor=",
+		"before_cursor": "bCursor="
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/users/1000/identities.json?page%5Bbefore%5D=bCursor%3D&page%5Bsize%5D=100",
+		"next": "https://subdomain.zendesk.com/api/v2/users/1000/identities.json?page%5Bafter%5D=aCursor%3D&page%5Bsize%5D=100"
+	}
+}

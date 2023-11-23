@@ -1,0 +1,15 @@
+{
+	"identity": {
+		"url": "https://subdomain.zendesk.com/api/v2/users/1000/identities/9898.json",
+		"id": 9898,
+		"user_id": 1000,
+		"type": "email",
+		"value": "kren+newEmail@chandrila.com",
+		"verified": false,
+		"primary": false,
+		"created_at": "2023-11-23T11:11:19Z",
+		"updated_at": "2023-11-23T11:11:19Z",
+		"undeliverable_count": 0,
+		"deliverable_state": "deliverable"
+	}
+}
