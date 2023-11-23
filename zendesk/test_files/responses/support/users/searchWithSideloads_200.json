@@ -2,7 +2,7 @@
 	"users": [
 		{
 			"id": 1000,
-			"url": "https://example.zendesk.com/api/v2/users/1000.json",
+			"url": "https://subdomain.zendesk.com/api/v2/users/1000.json",
 			"name": "Kylo Ren",
 			"email": "kren@chandrila.com",
 			"created_at": "2022-12-15T11:03:22Z",
@@ -12,11 +12,11 @@
 			"phone": null,
 			"shared_phone_number": null,
 			"photo": {
-				"url": "https://example.zendesk.com/api/v2/attachments/1234.json",
+				"url": "https://subdomain.zendesk.com/api/v2/attachments/1234.json",
 				"id": 1234,
 				"file_name": "123_456_n.jpg",
-				"content_url": "https://example.zendesk.com/system/photos/12827307893905/123_456_n.jpg",
-				"mapped_content_url": "https://helpdesk.example.com/system/photos/1234/123_456_n.jpg",
+				"content_url": "https://subdomain.zendesk.com/system/photos/12827307893905/123_456_n.jpg",
+				"mapped_content_url": "https://helpdesk.subdomain.com/system/photos/1234/123_456_n.jpg",
 				"content_type": "image/jpeg",
 				"size": 3821,
 				"width": 80,
@@ -25,10 +25,10 @@
 				"deleted": false,
 				"thumbnails": [
 					{
-						"url": "https://example.zendesk.com/api/v2/attachments/123456789.json",
+						"url": "https://subdomain.zendesk.com/api/v2/attachments/123456789.json",
 						"id": 123456789,
 						"file_name": "123_456_n_thumb.jpg",
-						"content_url": "https://example.zendesk.com/system/photos/1234/123_456_n_thumb.jpg",
+						"content_url": "https://subdomain.zendesk.com/system/photos/1234/123_456_n_thumb.jpg",
 						"mapped_content_url": "https://helpdesk.com/system/photos/1234/123_456_n_thumb.jpg",
 						"content_type": "image/jpeg",
 						"size": 899,
@@ -69,7 +69,7 @@
 	],
 	"identities": [
 		{
-			"url": "https://example.zendesk.com/api/v2/users/1000/identities/2000.json",
+			"url": "https://subdomain.zendesk.com/api/v2/users/1000/identities/2000.json",
 			"id": 2000,
 			"user_id": 1000,
 			"type": "email",
@@ -82,7 +82,7 @@
 			"deliverable_state": "deliverable"
 		},
 		{
-			"url": "https://example.zendesk.com/api/v2/users/1000/identities/2001.json",
+			"url": "https://subdomain.zendesk.com/api/v2/users/1000/identities/2001.json",
 			"id": 2001,
 			"user_id": 1000,
 			"type": "phone_number",
@@ -95,7 +95,7 @@
 	],
 	"organizations": [
 		{
-			"url": "https://example.zendesk.com/api/v2/organizations/123456.json",
+			"url": "https://subdomain.zendesk.com/api/v2/organizations/123456.json",
 			"id": 123456,
 			"name": "Bevel Lemelisk Ind.",
 			"shared_tickets": false,
@@ -103,7 +103,7 @@
 			"external_id": null,
 			"created_at": "2023-11-07T12:42:50Z",
 			"updated_at": "2023-11-07T12:42:50Z",
-			"domain_names": ["superweapons.example.com"],
+			"domain_names": ["superweapons.subdomain.com"],
 			"details": null,
 			"notes": null,
 			"group_id": null,
@@ -177,7 +177,7 @@
 	],
 	"groups": [
 		{
-			"url": "https://example.zendesk.com/api/v2/groups/87654321.json",
+			"url": "https://subdomain.zendesk.com/api/v2/groups/87654321.json",
 			"id": 87654321,
 			"is_public": true,
 			"name": "Example Group",
