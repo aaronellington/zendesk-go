@@ -13,6 +13,7 @@ import (
 
 func Test_SupportUserIdentitiesList_200(t *testing.T) {
 	ctx := context.Background()
+
 	var userID zendesk.UserID = 1000
 
 	z := createTestService(t, []study.RoundTripFunc{
@@ -70,7 +71,9 @@ func Test_SupportUserIdentitiesList_200(t *testing.T) {
 
 func Test_SupportTicketFormsCreate_201(t *testing.T) {
 	ctx := context.Background()
+
 	var userID zendesk.UserID = 1000
+
 	userEmail := "kren+newEmail@chandrila.com"
 
 	z := createTestService(t, []study.RoundTripFunc{

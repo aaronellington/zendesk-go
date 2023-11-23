@@ -74,9 +74,11 @@ func (s TicketCommentService) ListByTicketIDWithSideload(
 
 	if len(sideloads) > 0 {
 		sideload, sideloads := string(sideloads[0]), sideloads[1:]
+
 		for _, s := range sideloads {
 			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
 		}
+
 		query.Set("include", sideload)
 	}
 

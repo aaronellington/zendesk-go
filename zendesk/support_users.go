@@ -108,6 +108,7 @@ func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
+
 	return userInfo.User, nil
 }
 
@@ -214,6 +215,7 @@ func (s UserService) SearchWithSideloads(
 		for _, s := range sideloads {
 			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
 		}
+
 		q.Set("include", sideload)
 	}
 
@@ -276,6 +278,7 @@ func (s UserService) IncrementalExportWithSideloads(
 		for _, s := range sideloads {
 			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
 		}
+
 		query.Set("include", sideload)
 	}
 
