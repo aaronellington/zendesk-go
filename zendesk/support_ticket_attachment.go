@@ -130,6 +130,20 @@ func (s TicketAttachmentService) Upload(
 	localFilePath string,
 	uploadToken UploadToken,
 ) (TicketAttachmentUploadResponse, error) {
+	return s.UploadWithFilename(
+		ctx,
+		localFilePath,
+		filepath.Base(localFilePath),
+		uploadToken,
+	)
+}
+
+func (s TicketAttachmentService) UploadWithFilename(
+	ctx context.Context,
+	localFilePath string,
+	filename string,
+	uploadToken UploadToken,
+) (TicketAttachmentUploadResponse, error) {
 	file, err := os.Open(localFilePath)
 	if err != nil {
 		return TicketAttachmentUploadResponse{}, err
@@ -170,7 +184,7 @@ func (s TicketAttachmentService) Upload(
 
 	// Set the URL Parameters filename (required) and token (optional)
 	queryParams := request.URL.Query()
-	queryParams.Set("filename", filepath.Base(localFilePath))
+	queryParams.Set("filename", filepath.Base(filename))
 
 	if uploadToken != "" {
 		queryParams.Set("token", string(uploadToken))

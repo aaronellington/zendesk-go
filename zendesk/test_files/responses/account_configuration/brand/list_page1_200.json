@@ -1,0 +1,76 @@
+{
+	"brands": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/brands/987654321.json",
+			"id": 987654321,
+			"name": "An Example Brand",
+			"brand_url": "https://subdomain.zendesk.com",
+			"subdomain": "subdomain",
+			"host_mapping": null,
+			"has_help_center": false,
+			"help_center_state": "disabled",
+			"active": true,
+			"default": true,
+			"is_deleted": false,
+			"logo": null,
+			"ticket_form_ids": [11174899041180],
+			"signature_template": "{{agent.signature}}",
+			"created_at": "2023-11-07T12:42:49Z",
+			"updated_at": "2023-11-07T12:45:15Z"
+		},
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/brands/900004.json",
+			"id": 900004,
+			"name": "IT Glue",
+			"brand_url": "https://support.subdomain-two.com",
+			"subdomain": "subdomain-two",
+			"host_mapping": "support.subdomain-two.com",
+			"has_help_center": true,
+			"help_center_state": "restricted",
+			"active": true,
+			"default": false,
+			"is_deleted": false,
+			"logo": {
+				"url": "https://subdomain.zendesk.com/api/v2/attachments/360000173111.json",
+				"id": 360000173111,
+				"file_name": "theLogo.png",
+				"content_url": "https://subdomain.zendesk.com/system/brands/360000173111/theLogo.png",
+				"mapped_content_url": "https://helpdesk.subdomain.com/system/brands/360000173111/theLogo.png",
+				"content_type": "image/png",
+				"size": 543,
+				"width": 26,
+				"height": 26,
+				"inline": false,
+				"deleted": false,
+				"thumbnails": [
+					{
+						"url": "https://subdomain.zendesk.com/api/v2/attachments/360000173131.json",
+						"id": 360000173131,
+						"file_name": "theLogo_thumb.png",
+						"content_url": "https://subdomain.zendesk.com/system/brands/360000173111/theLogo_thumb.png",
+						"mapped_content_url": "https://helpdesk.subdomain.com/system/brands/360000173111/theLogo_thumb.png",
+						"content_type": "image/png",
+						"size": 876,
+						"width": 32,
+						"height": 32,
+						"inline": false,
+						"deleted": false
+					}
+				]
+			},
+			"ticket_form_ids": [1001001, 2001001, 3001001, 4004400],
+			"signature_template": "{{agent.name}} | {{agent.signature}}\r\nMain Phone Number: Call us!\r\nSubdomain Two\r\nWe ♥ Zendesk™\r\n\r\n[Knowledge Base](https://helpdesk.subdomain.com/hc/en-gb)",
+			"created_at": "2019-08-01T22:05:29Z",
+			"updated_at": "2022-08-19T15:17:17Z"
+		}
+	],
+	"meta": {
+		"has_more": true,
+		"after_cursor": "aCursor=",
+		"before_cursor": "bCursor="
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/brands.json?page%5Bbefore%5D=bCursor%3D&page%5Bsize%5D=100",
+		"next": "https://subdomain.zendesk.com/api/v2/brands.json?page%5Bafter%5D=aCursor%3D&page%5Bsize%5D=100"
+	}
+}
