@@ -1,6 +1,7 @@
 package zendesk
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -150,13 +152,30 @@ func (s TicketAttachmentService) UploadWithFilename(
 	}
 	defer file.Close()
 
+	// fileBytes := []byte{}
+	// contentLength, err := file.Read(fileBytes)
+	// if err != nil {
+	// 	return TicketAttachmentUploadResponse{}, err
+	// }
+
+	buf := bytes.Buffer{}
+	_, err = buf.ReadFrom(file)
+	if err != nil {
+		return TicketAttachmentUploadResponse{}, err
+	}
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return TicketAttachmentUploadResponse{}, err
+	}
+
 	// The content-type header has to be overridden, specify .json to account for this
 	// https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/adding-ticket-attachments-with-the-api/
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		"/api/v2/uploads.json",
-		file,
+		&buf,
 	)
 	if err != nil {
 		return TicketAttachmentUploadResponse{}, err
@@ -182,6 +201,9 @@ func (s TicketAttachmentService) UploadWithFilename(
 	// Set the content-type header
 	request.Header.Set("Content-Type", contentType)
 
+	// Set the content-length header
+	request.Header.Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
+
 	// Set the URL Parameters filename (required) and token (optional)
 	queryParams := request.URL.Query()
 	queryParams.Set("filename", filepath.Base(filename))
@@ -194,7 +216,6 @@ func (s TicketAttachmentService) UploadWithFilename(
 
 	target := TicketAttachmentUploadResponse{}
 
-	// Set a single request override for the content type
 	if err := s.client.ZendeskRequest(
 		request,
 		&target,
