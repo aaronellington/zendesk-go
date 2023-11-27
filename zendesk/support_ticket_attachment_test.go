@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
@@ -148,7 +149,18 @@ func Test_SupportTicketAttachmentUpload_noFileExt_200(t *testing.T) {
 				Validator: func(r *http.Request) error {
 					actualContentType := r.Header.Get("Content-Type")
 
-					return study.Assert(expectedContentType, actualContentType)
+					if err := study.Assert(expectedContentType, actualContentType); err != nil {
+						t.Fatal(err)
+					}
+
+					uploadFile, _ := os.Stat("test_files/responses/support/ticket_attachment/attachments/gopherNoFileExt")
+					expectedLength := uploadFile.Size()
+					actualLength := r.Header.Get("Content-Length")
+					if err := study.Assert(fmt.Sprintf("%d", expectedLength), actualLength); err != nil {
+						t.Fatal(err)
+					}
+
+					return nil
 				},
 			},
 		),

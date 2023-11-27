@@ -45,6 +45,12 @@ const (
 	TicketCommentSideloadUsers TicketCommentSideload = "users"
 )
 
+type TicketSideload string
+
+const (
+	TicketSideloadDates TicketSideload = "dates"
+)
+
 type MalwareScanResult string
 
 const (

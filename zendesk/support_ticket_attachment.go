@@ -3,14 +3,12 @@ package zendesk
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -152,19 +150,8 @@ func (s TicketAttachmentService) UploadWithFilename(
 	}
 	defer file.Close()
 
-	// fileBytes := []byte{}
-	// contentLength, err := file.Read(fileBytes)
-	// if err != nil {
-	// 	return TicketAttachmentUploadResponse{}, err
-	// }
-
-	buf := bytes.Buffer{}
+	buf := &bytes.Buffer{}
 	_, err = buf.ReadFrom(file)
-	if err != nil {
-		return TicketAttachmentUploadResponse{}, err
-	}
-
-	fileInfo, err := file.Stat()
 	if err != nil {
 		return TicketAttachmentUploadResponse{}, err
 	}
@@ -175,34 +162,25 @@ func (s TicketAttachmentService) UploadWithFilename(
 		ctx,
 		http.MethodPost,
 		"/api/v2/uploads.json",
-		&buf,
+		buf,
 	)
 	if err != nil {
 		return TicketAttachmentUploadResponse{}, err
 	}
 
+	// Set the content-length header
+	request.Header.Set("Content-Length", fmt.Sprintf("%d", buf.Len()))
+
 	// Attempt to identify filetype by extension. If that fails, read the first 512 bytes of the file.
 	contentType := mime.TypeByExtension(filepath.Ext(localFilePath))
 	if contentType == "" {
-		fileHeadBuffer := make([]byte, 512)
-
-		byteCount, err := file.Read(fileHeadBuffer)
-		if err != nil {
-			if !errors.Is(err, io.EOF) {
-				return TicketAttachmentUploadResponse{}, err
-			}
-
-			fileHeadBuffer = fileHeadBuffer[:byteCount]
-		}
-
-		contentType = http.DetectContentType(fileHeadBuffer)
+		fileHeaderBytes := *buf
+		fHeader, _ := io.ReadAll(&fileHeaderBytes)
+		contentType = http.DetectContentType(fHeader)
 	}
 
 	// Set the content-type header
 	request.Header.Set("Content-Type", contentType)
-
-	// Set the content-length header
-	request.Header.Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 
 	// Set the URL Parameters filename (required) and token (optional)
 	queryParams := request.URL.Query()
