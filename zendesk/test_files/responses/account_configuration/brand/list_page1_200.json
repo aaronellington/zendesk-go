@@ -21,7 +21,7 @@
 		{
 			"url": "https://subdomain.zendesk.com/api/v2/brands/900004.json",
 			"id": 900004,
-			"name": "IT Glue",
+			"name": "Subdomain Two",
 			"brand_url": "https://support.subdomain-two.com",
 			"subdomain": "subdomain-two",
 			"host_mapping": "support.subdomain-two.com",
@@ -59,7 +59,7 @@
 				]
 			},
 			"ticket_form_ids": [1001001, 2001001, 3001001, 4004400],
-			"signature_template": "{{agent.name}} | {{agent.signature}}\r\nMain Phone Number: Call us!\r\nSubdomain Two\r\nWe ♥ Zendesk™\r\n\r\n[Knowledge Base](https://helpdesk.subdomain.com/hc/en-gb)",
+			"signature_template": "{{agent.name}} | {{agent.signature}}\r\nMain Phone Number: Call us!\r\nSubdomain Two\r\nWe ♥ Zendesk™\r\n\r\n[Knowledge Base](https://helpdesk.subdomain-two.com/hc/en-gb)",
 			"created_at": "2019-08-01T22:05:29Z",
 			"updated_at": "2022-08-19T15:17:17Z"
 		}
