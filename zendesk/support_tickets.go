@@ -56,8 +56,8 @@ type Ticket struct {
 	UpdatedAt          time.Time                `json:"updated_at"`
 	URL                string                   `json:"url"`
 	Via                TicketVia                `json:"via"`
-	// Sideloads
-	Dates *TicketDates `json:"dates"`
+
+	Dates TicketDates `json:"dates"`
 }
 
 type TicketDates struct {
