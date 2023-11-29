@@ -45,6 +45,12 @@ const (
 	TicketCommentSideloadUsers TicketCommentSideload = "users"
 )
 
+type TicketSideload string
+
+const (
+	TicketSideloadDates TicketSideload = "dates"
+)
+
 type MalwareScanResult string
 
 const (
@@ -70,6 +76,7 @@ type (
 	AttachmentID             uint64
 	AuditID                  uint64
 	AuditLogID               uint64
+	BrandID                  uint64
 	CategoryID               uint64
 	ChatAccountID            uint64
 	ChatEngagementID         string

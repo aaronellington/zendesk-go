@@ -20,7 +20,7 @@ type TicketComment struct {
 	AuditID     AuditID               `json:"audit_id"`
 	AuthorID    UserID                `json:"author_id"`
 	Body        string                `json:"body"`
-	CreatedAt   time.Time             `json:"createdAt"`
+	CreatedAt   time.Time             `json:"created_at"`
 	HTMLBody    string                `json:"html_body"`
 	Metadata    TicketCommentMetadata `json:"metadata"`
 	PlainBody   string                `json:"plain_body"`
@@ -66,11 +66,6 @@ func (s TicketCommentService) ListByTicketIDWithSideload(
 ) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf(
-		"/api/v2/tickets/%d/comments?%s",
-		ticketID,
-		query.Encode(),
-	)
 
 	if len(sideloads) > 0 {
 		sideload, sideloads := string(sideloads[0]), sideloads[1:]
@@ -81,6 +76,12 @@ func (s TicketCommentService) ListByTicketIDWithSideload(
 
 		query.Set("include", sideload)
 	}
+
+	endpoint := fmt.Sprintf(
+		"/api/v2/tickets/%d/comments?%s",
+		ticketID,
+		query.Encode(),
+	)
 
 	for {
 		target := TicketCommentResponse{}

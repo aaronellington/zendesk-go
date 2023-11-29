@@ -40,6 +40,9 @@ func NewService(
 			auditLogService: &AuditLogService{
 				client: c,
 			},
+			brandService: &BrandService{
+				client: c,
+			},
 			customRoleService: &CustomRoleService{
 				client: c,
 			},

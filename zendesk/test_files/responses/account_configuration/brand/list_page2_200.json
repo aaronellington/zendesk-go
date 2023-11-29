@@ -1,0 +1,31 @@
+{
+	"brands": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/brands/888000888.json",
+			"id": 888000888,
+			"name": "A Final Example",
+			"brand_url": "https://subdomain-final.zendesk.com",
+			"subdomain": "subdomain-final",
+			"host_mapping": null,
+			"has_help_center": false,
+			"help_center_state": "disabled",
+			"active": true,
+			"default": true,
+			"is_deleted": false,
+			"logo": null,
+			"ticket_form_ids": [11174899041180],
+			"signature_template": "{{agent.signature}}",
+			"created_at": "2023-11-07T12:42:49Z",
+			"updated_at": "2023-11-07T12:45:15Z"
+		}
+	],
+	"meta": {
+		"has_more": false,
+		"after_cursor": "cCursor=",
+		"before_cursor": "dCursor="
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/brands.json?page%5Bbefore%5D=dCursor%3D&page%5Bsize%5D=100",
+		"next": "https://subdomain.zendesk.com/api/v2/brands.json?page%5Bafter%5D=cCursor%3D&page%5Bsize%5D=100"
+	}
+}

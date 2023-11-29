@@ -56,6 +56,7 @@ type User struct {
 	Notes                *string                `json:"notes"`
 	OrganizationID       *OrganizationID        `json:"organization_id"`
 	Phone                *string                `json:"phone"`
+	RemotePhotoURL       *string                `json:"remote_photo_url"`
 	RestrictedAgent      bool                   `json:"restricted_agent"`
 	Role                 UserRole               `json:"role"`
 	RoleType             *int                   `json:"role_type"`
