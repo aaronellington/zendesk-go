@@ -151,6 +151,7 @@ func (s TicketAttachmentService) UploadWithFilename(
 	defer file.Close()
 
 	buf := &bytes.Buffer{}
+
 	_, err = buf.ReadFrom(file)
 	if err != nil {
 		return TicketAttachmentUploadResponse{}, err
