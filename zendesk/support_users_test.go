@@ -146,5 +146,4 @@ func Test_SupportUsersShowWithSideloads_429Retry(t *testing.T) {
 	if err := study.Assert(actual.User.ID, userID); err != nil {
 		t.Fatal(err)
 	}
-
 }

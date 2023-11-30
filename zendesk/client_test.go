@@ -90,6 +90,7 @@ func Test_Client_429(t *testing.T) {
 				},
 				Validator: func(r *http.Request) error {
 					allRequestsMade = true
+
 					return nil
 				},
 			},
