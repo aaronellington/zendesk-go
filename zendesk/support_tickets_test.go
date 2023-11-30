@@ -50,6 +50,11 @@ func Test_SupportTicketsShow_401(t *testing.T) {
 			&study.TestResponseFile{
 				StatusCode: http.StatusUnauthorized,
 				FilePath:   "test_files/responses/support/tickets/show_401.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(map[string][]string{
+						"Content-Type": {"application/json; charset=utf-8"},
+					}),
+				},
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -81,6 +86,11 @@ func Test_SupportTicketsShow_404(t *testing.T) {
 			&study.TestResponseFile{
 				StatusCode: http.StatusNotFound,
 				FilePath:   "test_files/responses/support/tickets/show_404.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(map[string][]string{
+						"Content-Type": {"application/json; charset=utf-8"},
+					}),
+				},
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -112,6 +122,11 @@ func Test_SupportTicketsShow_404_Wrong_SubDomain(t *testing.T) {
 			&study.TestResponseFile{
 				StatusCode: http.StatusNotFound,
 				FilePath:   "test_files/responses/support/tickets/show_404_wrong_subdomain.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(map[string][]string{
+						"Content-Type": {"application/json; charset=utf-8"},
+					}),
+				},
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -235,6 +250,11 @@ func Test_Support_Tickets_Merge_TicketID_Closed(t *testing.T) {
 			&study.TestResponseFile{
 				StatusCode: http.StatusBadRequest,
 				FilePath:   "test_files/responses/support/tickets/merge_source_invalid.json",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(map[string][]string{
+						"Content-Type": {"application/json; charset=utf-8"},
+					}),
+				},
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodPost,

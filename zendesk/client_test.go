@@ -13,6 +13,7 @@ import (
 
 func Test_Client_429(t *testing.T) {
 	ctx := context.Background()
+	allRequestsMade := false
 
 	z := createTestService(t, []study.RoundTripFunc{
 		study.ServeAndValidate(
@@ -87,6 +88,10 @@ func Test_Client_429(t *testing.T) {
 					"per_page":   []string{"2"},
 					"start_time": []string{"250"},
 				},
+				Validator: func(r *http.Request) error {
+					allRequestsMade = true
+					return nil
+				},
 			},
 		),
 	})
@@ -105,6 +110,10 @@ func Test_Client_429(t *testing.T) {
 
 	if err := study.Assert(expectedTicketCount, len(tickets)); err != nil {
 		t.Fatal(err)
+	}
+
+	if !allRequestsMade {
+		t.Fatal("not all requests were made")
 	}
 }
 

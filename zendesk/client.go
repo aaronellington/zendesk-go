@@ -103,6 +103,16 @@ func (c *client) do(request *http.Request, target any) error {
 			Response: response,
 		}
 
+		// There are times where Zendesk will report an error, but not provide a json encoded body response - handle these by
+		// providing the body bytes directly along with what the content type header is
+		contentType := response.Header.Get("Content-Type")
+		if !strings.Contains(contentType, "application/json") {
+			responseErr.Description = fmt.Sprintf("encountered error - response content is '%s', not JSON", contentType)
+			responseErr.Message = string(bodyBytes)
+
+			return responseErr
+		}
+
 		if err := json.Unmarshal(bodyBytes, responseErr); err != nil {
 			return err
 		}
