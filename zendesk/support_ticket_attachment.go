@@ -175,8 +175,18 @@ func (s TicketAttachmentService) UploadWithFilename(
 	// Attempt to identify filetype by extension. If that fails, read the first 512 bytes of the file.
 	contentType := mime.TypeByExtension(filepath.Ext(localFilePath))
 	if contentType == "" {
-		fileHeaderBytes := *buf
-		fHeader, _ := io.ReadAll(&fileHeaderBytes)
+		fileHeaderBytes := &bytes.Buffer{}
+
+		_, err := io.CopyN(fileHeaderBytes, buf, 512)
+		if err != nil {
+			return TicketAttachmentUploadResponse{}, err
+		}
+
+		fHeader, err := io.ReadAll(fileHeaderBytes)
+		if err != nil {
+			return TicketAttachmentUploadResponse{}, err
+		}
+
 		contentType = http.DetectContentType(fHeader)
 	}
 

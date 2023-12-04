@@ -13,6 +13,7 @@ import (
 
 func Test_Client_429(t *testing.T) {
 	ctx := context.Background()
+	allRequestsMade := false
 
 	z := createTestService(t, []study.RoundTripFunc{
 		study.ServeAndValidate(
@@ -87,6 +88,11 @@ func Test_Client_429(t *testing.T) {
 					"per_page":   []string{"2"},
 					"start_time": []string{"250"},
 				},
+				Validator: func(r *http.Request) error {
+					allRequestsMade = true
+
+					return nil
+				},
 			},
 		),
 	})
@@ -105,6 +111,10 @@ func Test_Client_429(t *testing.T) {
 
 	if err := study.Assert(expectedTicketCount, len(tickets)); err != nil {
 		t.Fatal(err)
+	}
+
+	if !allRequestsMade {
+		t.Fatal("not all requests were made")
 	}
 }
 
@@ -213,5 +223,47 @@ func Test_Client_429_Retries_Exceeded(t *testing.T) {
 
 	if zdErr.Response.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("expected to get HTTP 429, got: %d", zdErr.Response.StatusCode)
+	}
+}
+
+func Test_Client_HTML_Error_Received(t *testing.T) {
+	ctx := context.Background()
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusInternalServerError,
+				FilePath:   "test_files/responses/errors/html_error_response.html",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"0"},
+				},
+			},
+		),
+	})
+
+	tickets := []zendesk.Ticket{}
+
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+		tickets = append(tickets, response.Tickets...)
+
+		return nil
+	})
+	if err == nil {
+		t.Fatalf("expected to get error")
+	}
+
+	zdErr, ok := err.(*zendesk.Error)
+	if !ok {
+		t.Fatalf("expected to get error of type zendesk.Error, received: %T", err)
+	}
+
+	if zdErr.Response.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("expected to get 500 error with HTML response body, got: %d", zdErr.Response.StatusCode)
 	}
 }
