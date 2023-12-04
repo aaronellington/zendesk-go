@@ -109,9 +109,9 @@ type (
 
 func (userID *UserID) UnmarshalJSON(b []byte) error {
 	// Try it as a uint64 first
-	var targetUint64 uint64
-	if err := json.Unmarshal(b, &targetUint64); err == nil {
-		*userID = UserID(targetUint64)
+	var targetInt64 int64
+	if err := json.Unmarshal(b, &targetInt64); err == nil {
+		*userID = UserID(targetInt64)
 
 		return nil
 	}
@@ -122,8 +122,8 @@ func (userID *UserID) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	typeUint64, _ := strconv.ParseUint(targetString, 0, 64)
-	*userID = UserID(typeUint64)
+	typeInt64, _ := strconv.ParseInt(targetString, 10, 64)
+	*userID = UserID(typeInt64)
 
 	return nil
 }
