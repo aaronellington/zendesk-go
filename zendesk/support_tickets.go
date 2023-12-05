@@ -33,11 +33,13 @@ type MergeRequestPayload struct {
 type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
+	CollaboratorIDs    []UserID                 `json:"collaborator_ids"`
 	CustomFields       []TicketField            `json:"custom_fields"`
 	Description        string                   `json:"description"`
 	DueAt              *time.Time               `json:"due_at"`
 	ExternalID         *string                  `json:"external_id"`
 	Fields             []TicketField            `json:"fields"`
+	FollowerIDs        []UserID                 `json:"follower_ids"`
 	GroupID            *GroupID                 `json:"group_id"`
 	HasIncidents       bool                     `json:"has_incidents"`
 	ID                 TicketID                 `json:"id"`
