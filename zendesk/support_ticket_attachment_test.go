@@ -168,8 +168,8 @@ func Test_SupportTicketAttachmentUpload_noFileExt_200(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					headerActualLength := r.Header.Get("Content-Length")
-					if err := study.Assert(fmt.Sprintf("%d", expectedLength), headerActualLength); err != nil {
+					headerContentLength := r.Header.Get("Content-Length")
+					if err := study.Assert(fmt.Sprintf("%d", expectedLength), headerContentLength); err != nil {
 						t.Fatal(err)
 					}
 
