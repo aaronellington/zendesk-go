@@ -3,6 +3,7 @@ package zendesk_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -155,8 +156,20 @@ func Test_SupportTicketAttachmentUpload_noFileExt_200(t *testing.T) {
 
 					uploadFile, _ := os.Stat("test_files/responses/support/ticket_attachment/attachments/gopherNoFileExt")
 					expectedLength := uploadFile.Size()
-					actualLength := r.Header.Get("Content-Length")
-					if err := study.Assert(fmt.Sprintf("%d", expectedLength), actualLength); err != nil {
+
+					requestBody, err := io.ReadAll(r.Body)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					actualLength := len(requestBody)
+
+					if err := study.Assert(expectedLength, int64(actualLength)); err != nil {
+						t.Fatal(err)
+					}
+
+					headerContentLength := r.Header.Get("Content-Length")
+					if err := study.Assert(fmt.Sprintf("%d", expectedLength), headerContentLength); err != nil {
 						t.Fatal(err)
 					}
 
