@@ -52,6 +52,7 @@ func (err *Error) UnmarshalJSON(b []byte) error {
 
 			if len(err2.Details) > 0 {
 				details := []string{}
+
 				for errorKey, errorDetails := range err2.Details {
 					for _, errorDetail := range errorDetails {
 						details = append(
@@ -64,7 +65,6 @@ func (err *Error) UnmarshalJSON(b []byte) error {
 							),
 						)
 					}
-
 				}
 
 				err.Description = fmt.Sprintf(
@@ -73,7 +73,6 @@ func (err *Error) UnmarshalJSON(b []byte) error {
 					strings.Join(details, ", "),
 				)
 			}
-
 		}
 
 		return nil
