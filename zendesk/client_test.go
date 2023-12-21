@@ -235,6 +235,13 @@ func Test_Client_HTML_Error_Received(t *testing.T) {
 			&study.TestResponseFile{
 				StatusCode: http.StatusInternalServerError,
 				FilePath:   "test_files/responses/errors/html_error_response.html",
+				ResponseModifiers: []study.ResponseModifier{
+					study.WithResponseHeaders(
+						map[string][]string{
+							"Content-Type": {""},
+						},
+					),
+				},
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,

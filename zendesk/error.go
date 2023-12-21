@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Error struct {
@@ -45,9 +46,34 @@ func (err *Error) UnmarshalJSON(b []byte) error {
 
 	err2 := errorResponse2{}
 	if err2err := json.Unmarshal(b, &err2); err2err == nil {
-		if err2.Error != "0" {
+		if err2.Error != "" {
 			err.Message = err2.Error
 			err.Description = err2.Description
+
+			if len(err2.Details) > 0 {
+				details := []string{}
+				for errorKey, errorDetails := range err2.Details {
+					for _, errorDetail := range errorDetails {
+						details = append(
+							details,
+							fmt.Sprintf(
+								"[%s: %s - %s]",
+								errorKey,
+								errorDetail.Error,
+								errorDetail.Description,
+							),
+						)
+					}
+
+				}
+
+				err.Description = fmt.Sprintf(
+					"%s. Error details: %s",
+					err.Description,
+					strings.Join(details, ", "),
+				)
+			}
+
 		}
 
 		return nil
@@ -66,9 +92,9 @@ type error1 struct {
 }
 
 type errorResponse2 struct {
-	Error       string                 `json:"error"`
-	Description string                 `json:"description"`
-	Details     map[string]ErrorDetail `json:"details"`
+	Error       string                   `json:"error"`
+	Description string                   `json:"description"`
+	Details     map[string][]ErrorDetail `json:"details"`
 }
 
 type ErrorDetail struct {
