@@ -1,0 +1,12 @@
+{
+	"error": "RecordInvalid",
+	"description": "Record validation errors",
+	"details": {
+		"name": [
+			{
+				"description": "Name: is too short (minimum one character)",
+				"error": "ValueTooShort"
+			}
+		]
+	}
+}

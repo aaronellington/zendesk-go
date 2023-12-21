@@ -89,10 +89,18 @@ func (f *TestResponseFile) CreateResponse() (*http.Response, error) {
 	response := &http.Response{
 		StatusCode: f.StatusCode,
 		Body:       io.NopCloser(file),
+		Header:     make(http.Header),
 	}
 
 	for _, responseModifier := range f.ResponseModifiers {
 		responseModifier.ModifyResponse(response)
+	}
+
+	headers := response.Header
+
+	// Check if the Content-Type header has been set in the Header map. If not - default to application/json
+	if _, ok := headers["Content-Type"]; !ok {
+		response.Header.Set("Content-Type", "application/json")
 	}
 
 	return response, nil
