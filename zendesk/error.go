@@ -67,9 +67,9 @@ func (err *Error) UnmarshalJSON(b []byte) error {
 					}
 				}
 
-				err.Description = fmt.Sprintf(
+				err.Message = fmt.Sprintf(
 					"%s. Error details: %s",
-					err.Description,
+					err.Message,
 					strings.Join(details, ", "),
 				)
 			}

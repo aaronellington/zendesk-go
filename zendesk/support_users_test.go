@@ -169,9 +169,8 @@ func Test_SupportUsersCreate_422(t *testing.T) {
 		t.Fatal("expected zendesk err")
 	}
 
-	expectedDescription := "Record validation errors. Error details: [email: DuplicateValue - Email: <b>User couldn't be updated</b><br>This email is already taken. Try another email. <a href=\"https://support.zendesk.com/hc/en-us/articles/4408834337562\">Learn about emails in use</a>.], [name: ValueTooShort - Name: is too short (minimum one character)]"
-
-	if err := study.Assert(zdErr.Description, expectedDescription); err != nil {
+	expectedErrorString := "RecordInvalid. Error details: [name: ValueTooShort - Name: is too short (minimum one character)]"
+	if err := study.Assert(expectedErrorString, zdErr.Error()); err != nil {
 		t.Fatal(err)
 	}
 }

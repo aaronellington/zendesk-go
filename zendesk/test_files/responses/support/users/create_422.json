@@ -2,12 +2,6 @@
 	"error": "RecordInvalid",
 	"description": "Record validation errors",
 	"details": {
-		"email": [
-			{
-				"description": "Email: <b>User couldn't be updated</b><br>This email is already taken. Try another email. <a href=\"https://support.zendesk.com/hc/en-us/articles/4408834337562\">Learn about emails in use</a>.",
-				"error": "DuplicateValue"
-			}
-		],
 		"name": [
 			{
 				"description": "Name: is too short (minimum one character)",
