@@ -9,7 +9,7 @@ import (
 	"unicode/utf8"
 )
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags
 type TicketTagService struct {
 	client *client
 }

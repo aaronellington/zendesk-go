@@ -1,0 +1,14 @@
+{
+    "satisfaction_rating": {
+        "url": "https://company.zendesk.com/api/v2/satisfaction_ratings/1000.json",
+        "id": 1000,
+        "assignee_id": 9000,
+        "group_id": 10000,
+        "requester_id": 9001,
+        "ticket_id": 99999,
+        "score": "good",
+        "created_at": "2024-01-22T15:28:32Z",
+        "updated_at": null,
+        "comment": "This is a comment!"
+    }
+}

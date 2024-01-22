@@ -8,6 +8,7 @@ type SupportService struct {
 	organizationFieldService      *OrganizationFieldService
 	organizationMembershipService *OrganizationMembershipService
 	organizationService           *OrganizationService
+	satisfactionRatingService     *SatisfactionRatingService
 	scheduleService               *ScheduleService
 	suspendedTicketService        *SuspendedTicketService
 	ticketAttachmentService       *TicketAttachmentService
@@ -68,6 +69,11 @@ func (s *SupportService) UserFields() *UserFieldService {
 	return s.userFieldsService
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings
+func (s *SupportService) SatisfactionRatings() *SatisfactionRatingService {
+	return s.satisfactionRatingService
+}
+
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
 func (s *SupportService) TicketForms() *TicketFormService {
 	return s.ticketFormService
@@ -99,7 +105,7 @@ func (s *SupportService) TicketFields() *TicketFieldService {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags
-func (s *SupportService) TicketTagService() *TicketTagService {
+func (s *SupportService) TicketTags() *TicketTagService {
 	return s.ticketTagService
 }
 

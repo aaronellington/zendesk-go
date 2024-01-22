@@ -81,6 +81,9 @@ func NewService(
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
 			},
+			satisfactionRatingService: &SatisfactionRatingService{
+				client: c,
+			},
 			ticketAttachmentService: &TicketAttachmentService{
 				client: c,
 			},
