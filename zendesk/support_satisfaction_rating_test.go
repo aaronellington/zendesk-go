@@ -105,7 +105,6 @@ func Test_Support_Satisfaction_Ratings_Show_200(t *testing.T) {
 		ctx,
 		expectedSatisfactionRating.ID,
 	)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,5 +112,4 @@ func Test_Support_Satisfaction_Ratings_Show_200(t *testing.T) {
 	if err := study.Assert(expectedSatisfactionRating, actual); err != nil {
 		t.Fatal(err)
 	}
-
 }
