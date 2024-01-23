@@ -63,10 +63,17 @@ const (
 type SatisfactionRatingScore string
 
 const (
-	SatisfactionRatingScoreOffered   SatisfactionRatingScore = "offered"
-	SatisfactionRatingScoreUnOffered SatisfactionRatingScore = "unoffered"
-	SatisfactionRatingScoreGood      SatisfactionRatingScore = "good"
-	SatisfactionRatingScoreBad       SatisfactionRatingScore = "bad"
+	SatisfactionRatingScoreOffered                SatisfactionRatingScore = "offered"
+	SatisfactionRatingScoreUnOffered              SatisfactionRatingScore = "unoffered"
+	SatisfactionRatingScoreReceived               SatisfactionRatingScore = "received"
+	SatisfactionRatingScoreReceivedWithComment    SatisfactionRatingScore = "received_with_comment"
+	SatisfactionRatingScoreReceivedWithoutComment SatisfactionRatingScore = "received_without_comment"
+	SatisfactionRatingScoreGood                   SatisfactionRatingScore = "good"
+	SatisfactionRatingScoreGoodWithComment        SatisfactionRatingScore = "good_with_comment"
+	SatisfactionRatingScoreGoodWithoutComment     SatisfactionRatingScore = "good_without_comment"
+	SatisfactionRatingScoreBad                    SatisfactionRatingScore = "bad"
+	SatisfactionRatingScoreBadWithComment         SatisfactionRatingScore = "bad_with_comment"
+	SatisfactionRatingScoreBadWithoutComment      SatisfactionRatingScore = "bad_without_comment"
 )
 
 type AuditLogAction string
