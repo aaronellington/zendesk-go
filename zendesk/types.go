@@ -60,6 +60,15 @@ const (
 	MalwareNotScanned   MalwareScanResult = "not_scanned"
 )
 
+type SatisfactionRatingScore string
+
+const (
+	SatisfactionRatingScoreOffered   SatisfactionRatingScore = "offered"
+	SatisfactionRatingScoreUnOffered SatisfactionRatingScore = "unoffered"
+	SatisfactionRatingScoreGood      SatisfactionRatingScore = "good"
+	SatisfactionRatingScoreBad       SatisfactionRatingScore = "bad"
+)
+
 type AuditLogAction string
 
 const (
@@ -90,6 +99,9 @@ type (
 	OrganizationFieldID      uint64
 	OrganizationMembershipID uint64
 	PermissionGroupID        uint64
+	ReasonCode               uint64
+	ReasonID                 uint64
+	SatisfactionRatingID     uint64
 	ScheduleID               uint64
 	SectionID                uint64
 	SourceID                 int64
