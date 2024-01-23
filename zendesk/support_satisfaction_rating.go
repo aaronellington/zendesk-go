@@ -39,13 +39,48 @@ type SatisfactionRatingsResponse struct {
 	CursorPaginationResponse
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/#show-satisfaction-rating
+func (s SatisfactionRatingService) Show(ctx context.Context, id SatisfactionRatingID) (SatisfactionRating, error) {
+	target := SatisfactionRatingResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/satisfaction_ratings/%d", id),
+		http.NoBody,
+	)
+	if err != nil {
+		return SatisfactionRating{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return SatisfactionRating{}, err
+	}
+
+	return target.SatisfactionRating, nil
+}
+
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/#list-satisfaction-ratings
 func (s SatisfactionRatingService) List(
 	ctx context.Context,
 	pageHandler func(response SatisfactionRatingsResponse) error,
 ) error {
+	return s.ListWithModifiers(ctx, pageHandler)
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/#filters
+func (s SatisfactionRatingService) ListWithModifiers(
+	ctx context.Context,
+	pageHandler func(response SatisfactionRatingsResponse) error,
+	modifiers ...ListTicketSatisfactionRatingModifier,
+) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
+
+	for _, modifier := range modifiers {
+		modifier.ModifyListTicketSatisfactionRatingRequest(&query)
+	}
+
 	endpoint := fmt.Sprintf(
 		"/api/v2/satisfaction_ratings?%s",
 		query.Encode(),
@@ -82,23 +117,30 @@ func (s SatisfactionRatingService) List(
 	return nil
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/#show-satisfaction-rating
-func (s SatisfactionRatingService) Show(ctx context.Context, id SatisfactionRatingID) (SatisfactionRating, error) {
-	target := SatisfactionRatingResponse{}
+type ListTicketSatisfactionRatingModifier interface {
+	ModifyListTicketSatisfactionRatingRequest(queryParameters *url.Values)
+}
 
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/satisfaction_ratings/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return SatisfactionRating{}, err
-	}
+type listTicketSatisfactionRatingModifier func(queryParameters *url.Values)
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return SatisfactionRating{}, err
-	}
+func (l listTicketSatisfactionRatingModifier) ModifyListTicketSatisfactionRatingRequest(queryParameters *url.Values) {
+	l(queryParameters)
+}
 
-	return target.SatisfactionRating, nil
+func WithFilterForStartTime(startTime time.Time) listTicketSatisfactionRatingModifier {
+	return listTicketSatisfactionRatingModifier(func(queryParameters *url.Values) {
+		queryParameters.Add("start_time", fmt.Sprintf("%d", startTime.Unix()))
+	})
+}
+
+func WithFilterForEndTime(endTime time.Time) listTicketSatisfactionRatingModifier {
+	return listTicketSatisfactionRatingModifier(func(queryParameters *url.Values) {
+		queryParameters.Add("end_time", fmt.Sprintf("%d", endTime.Unix()))
+	})
+}
+
+func WithFilterForScore(score SatisfactionRatingScore) listTicketSatisfactionRatingModifier {
+	return listTicketSatisfactionRatingModifier(func(queryParameters *url.Values) {
+		queryParameters.Add("score", string(score))
+	})
 }
