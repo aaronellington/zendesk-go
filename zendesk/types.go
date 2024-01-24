@@ -87,6 +87,7 @@ const (
 )
 
 type (
+	AccountID                uint64
 	ActorID                  int64
 	ArticleID                uint64
 	AttachmentID             uint64
@@ -106,6 +107,8 @@ type (
 	OrganizationFieldID      uint64
 	OrganizationMembershipID uint64
 	PermissionGroupID        uint64
+	PostID                   string
+	TopicID                  string
 	ReasonCode               uint64
 	ReasonID                 uint64
 	SatisfactionRatingID     uint64
@@ -124,6 +127,7 @@ type (
 	UserID                   int64
 	IdentityID               uint64
 	UserSegmentID            uint64
+	WebhookEventID           string
 )
 
 func (userID *UserID) UnmarshalJSON(b []byte) error {
