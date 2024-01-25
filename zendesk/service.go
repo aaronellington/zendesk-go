@@ -10,6 +10,7 @@ func NewService(
 	subDomain string,
 	zendeskAuth authentication,
 	chatCredentials ChatCredentials,
+	webhookSecret string,
 	opts ...configOption,
 ) *Service {
 	config := &internalConfig{

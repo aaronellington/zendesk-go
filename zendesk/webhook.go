@@ -19,67 +19,93 @@ type WebhookService struct {
 }
 
 type WebhookEventHandlers struct {
-	UserEventHandler                     func(e WebhookEventUser) error
-	ArticleEventHandler                  func(e WebhookEventArticle) error
-	OrganizationEventHandler             func(e WebhookEventOrganization) error
-	CommunityPostEventHandler            func(e WebhookEventCommunityPost) error
-	AgentAvailabilityEventHandler        func(e WebhookEventAgentAvailability) error
-	OmnichannelRoutingConfigEventHandler func(e WebhookEventOmnichannelRoutingConfig) error
+	DefaultUserEventHandler func(e WebhookEventUser, webhookSecret string) error
+	UserEventHandlers       map[WebhookEventTypePrefix]func(e WebhookEventUser, webhookSecret string) error
+	// UserEventHandler                     func(e WebhookEventUser) error
+	// ArticleEventHandler                  func(e WebhookEventArticle) error
+	// OrganizationEventHandler             func(e WebhookEventOrganization) error
+	// CommunityPostEventHandler            func(e WebhookEventCommunityPost) error
+	// AgentAvailabilityEventHandler        func(e WebhookEventAgentAvailability) error
+	// OmnichannelRoutingConfigEventHandler func(e WebhookEventOmnichannelRoutingConfig) error
+
 }
 
-func (s WebhookService) HandleWebhookUserEvent(
-	webhookSecret string,
-	userEventProcessor func(e WebhookEventUser) error,
-) http.Handler {
-	return s.VerifyZendeskWebhook(
-		webhookSecret,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			bodyBytes, err := readWebhookBody(r)
-			if err != nil {
-				respondJSON(
-					w,
-					http.StatusInternalServerError,
-					"Could not read Webhook Request body",
-				)
+type WebhookEventType string
 
-				return
-			}
+const (
+	WebhookEventTrigger                  WebhookEventType = "trigger_or_automation"
+	WebhookEventUserActive               WebhookEventType = "zen:event-type:user.active_changed"
+	WebhookEventOmnichannelConfigFeature WebhookEventType = "zen:event-type:omnichannel_config.omnichannel_routing_feature_changed"
+	// Other webhook events...
+)
 
-			eventType, err := validateWebhookEvent(bodyBytes, WebhookEventUserPrefix)
-			if err != nil {
-				respondJSON(
-					w,
-					http.StatusInternalServerError,
-					"Could not read Webhook Request body",
-				)
+// https://support.zendesk.com/hc/en-us/articles/4408839108378-Creating-webhooks-to-interact-with-third-party-systems#ariaid-title4
+// NOTE: For Webhookss connected to Triggers or Automations, any structure can be defined by a Zendesk Administrator for the payload
+type WebhookTriggerEvent any
 
-				return
-			}
+type WebhookEventTypePrefix string
 
-			// Get the userevent struct
-			e := WebhookEventUser{}
+const (
+	WebhookEventTypePrefixUser WebhookEventTypePrefix = "zen:event-type:user"
+)
 
-			if err := userEventProcessor(e); err != nil {
-				respondJSON(
-					w,
-					http.StatusInternalServerError,
-					"Unsuccessful handling of Webhook Request",
-				)
+func (s WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) http.Handler {
 
-				return
-			}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			respondJSON(
-				w,
-				http.StatusOK,
-				"Successfully handled Webhook Request",
-			)
-		}),
-	)
+	})
 }
+
+// func (s WebhookService) HandleWebhookUserEvent() http.Handler {
+// 	return s.VerifyZendeskWebhook(
+// 		webhookSecret,
+// 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 			bodyBytes, err := readWebhookBody(r)
+// 			if err != nil {
+// 				respondJSON(
+// 					w,
+// 					http.StatusInternalServerError,
+// 					"Could not read Webhook Request body",
+// 				)
+
+// 				return
+// 			}
+
+// 			eventType, err := validateWebhookEvent(bodyBytes, WebhookEventUserPrefix)
+// 			if err != nil {
+// 				respondJSON(
+// 					w,
+// 					http.StatusInternalServerError,
+// 					"Could not read Webhook Request body",
+// 				)
+
+// 				return
+// 			}
+
+// 			// Get the userevent struct
+// 			e := WebhookEventUser{}
+
+// 			if err := userEventProcessor(e); err != nil {
+// 				respondJSON(
+// 					w,
+// 					http.StatusInternalServerError,
+// 					"Unsuccessful handling of Webhook Request",
+// 				)
+
+// 				return
+// 			}
+
+// 			respondJSON(
+// 				w,
+// 				http.StatusOK,
+// 				"Successfully handled Webhook Request",
+// 			)
+// 		}),
+// 	)
+// }
 
 // https://developer.zendesk.com/documentation/webhooks/verifying/
-func (s WebhookService) VerifyZendeskWebhook(webhookSecret string, next http.Handler) http.Handler {
+func (s WebhookService) VerifyZendeskWebhook(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -156,37 +182,6 @@ func readWebhookBody(r *http.Request) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func validateWebhookEvent(webhookPayload []byte) bool {
-	target := WebhookEvent{}
-	if err := json.Unmarshal(webhookPayload, &target); err != nil {
-		return "", err
-	}
-
-	if target.Type != "" {
-		return target.Type, nil
-	}
-
-	return WebhookEventTrigger, nil
-}
-
-type WebhookEventType string
-
-const (
-	WebhookEventTrigger                  WebhookEventType = "trigger_or_automation"
-	WebhookEventUserActive               WebhookEventType = "zen:event-type:user.active_changed"
-	WebhookEventOmnichannelConfigFeature WebhookEventType = "zen:event-type:omnichannel_config.omnichannel_routing_feature_changed"
-	// Other webhook events...
-)
-
-const (
-	WebhookEventUserPrefix              string = "zen:event-type:user"
-	WebhookEventOmnichannelConfigPrefix string = "zen:event-type:omnichannel_config"
-)
-
-// https://support.zendesk.com/hc/en-us/articles/4408839108378-Creating-webhooks-to-interact-with-third-party-systems#ariaid-title4
-// NOTE: For Webhookss connected to Triggers or Automations, any structure can be defined by a Zendesk Administrator for the payload
-type WebhookTriggerEvent any
-
 // https://developer.zendesk.com/api-reference/webhooks/event-types/webhook-event-types/
 type WebhookEvent struct {
 	Type                WebhookEventType `json:"type"`
@@ -229,25 +224,28 @@ type WebhookEventDetailUser struct {
 	UpdatedAt      time.Time    `json:"updated_at"`
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/community-events/
 type WebhookEventCommunityPost struct {
 	Detail WebhookEventDetailCommunityPost `json:"detail"`
 	Event  any                             `json:"event"`
 	WebhookEvent
 }
 
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
+// https://developer.zendesk.com/api-reference/webhooks/event-types/community-events/#detail-object-properties
 type WebhookEventDetailCommunityPost struct {
 	BrandID BrandID `json:"brand_id"`
 	PostID  PostID  `json:"post_id"`
 	TopicID TopicID `json:"topic_id"`
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/organization-events/
 type WebhookEventOrganization struct {
 	Detail WebhookEventDetailOrganization `json:"detail"`
 	Event  any                            `json:"event"`
 	WebhookEvent
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/organization-events/#detail-object-properties
 type WebhookEventDetailOrganization struct {
 	CreatedAt      time.Time `json:"created_at"`
 	ExternalID     *string   `json:"external_id"`
@@ -259,26 +257,28 @@ type WebhookEventDetailOrganization struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/omnichannel-routing-configuration-events/
 type WebhookEventOmnichannelRoutingConfig struct {
 	Detail WebhookEventDetailOmnichannelRoutingConfig `json:"detail"`
 	Event  any                                        `json:"event"`
 	WebhookEvent
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/omnichannel-routing-configuration-events/#detail-object-properties
+type WebhookEventDetailOmnichannelRoutingConfig struct {
+	AccountID AccountID `json:"account_id"`
+}
+
+// https://developer.zendesk.com/api-reference/webhooks/event-types/agent-availability-events/
 type WebhookEventAgentAvailability struct {
 	Detail WebhookEventDetailAgentAvailability `json:"detail"`
 	Event  any                                 `json:"event"`
 	WebhookEvent
 }
 
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
+// https://developer.zendesk.com/api-reference/webhooks/event-types/agent-availability-events/#detail-object-properties
 type WebhookEventDetailAgentAvailability struct {
 	AccountID AccountID `json:"account_id"`
 	AgentID   string    `json:"agent_id"`
 	Version   string    `json:"version"`
-}
-
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
-type WebhookEventDetailOmnichannelRoutingConfig struct {
-	AccountID AccountID `json:"account_id"`
 }
