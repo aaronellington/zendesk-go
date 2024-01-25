@@ -1,17 +1,190 @@
 package zendesk
 
-import "time"
+import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"io"
+	"net/http"
+
+	"time"
+)
+
+// https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
+type WebhookService struct {
+	client               *client
+	webhookEventHandlers WebhookEventHandlers
+}
+
+type WebhookEventHandlers struct {
+	UserEventHandler                     func(e WebhookEventUser) error
+	ArticleEventHandler                  func(e WebhookEventArticle) error
+	OrganizationEventHandler             func(e WebhookEventOrganization) error
+	CommunityPostEventHandler            func(e WebhookEventCommunityPost) error
+	AgentAvailabilityEventHandler        func(e WebhookEventAgentAvailability) error
+	OmnichannelRoutingConfigEventHandler func(e WebhookEventOmnichannelRoutingConfig) error
+}
+
+func (s WebhookService) HandleWebhookUserEvent(
+	webhookSecret string,
+	userEventProcessor func(e WebhookEventUser) error,
+) http.Handler {
+	return s.VerifyZendeskWebhook(
+		webhookSecret,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			bodyBytes, err := readWebhookBody(r)
+			if err != nil {
+				respondJSON(
+					w,
+					http.StatusInternalServerError,
+					"Could not read Webhook Request body",
+				)
+
+				return
+			}
+
+			eventType, err := validateWebhookEvent(bodyBytes, WebhookEventUserPrefix)
+			if err != nil {
+				respondJSON(
+					w,
+					http.StatusInternalServerError,
+					"Could not read Webhook Request body",
+				)
+
+				return
+			}
+
+			// Get the userevent struct
+			e := WebhookEventUser{}
+
+			if err := userEventProcessor(e); err != nil {
+				respondJSON(
+					w,
+					http.StatusInternalServerError,
+					"Unsuccessful handling of Webhook Request",
+				)
+
+				return
+			}
+
+			respondJSON(
+				w,
+				http.StatusOK,
+				"Successfully handled Webhook Request",
+			)
+		}),
+	)
+}
+
+// https://developer.zendesk.com/documentation/webhooks/verifying/
+func (s WebhookService) VerifyZendeskWebhook(webhookSecret string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			respondJSON(
+				w,
+				http.StatusBadRequest,
+				"Bad Request",
+			)
+		}
+		r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+		expectedZendeskSignature := r.Header.Get("X-Zendesk-Webhook-Signature")
+		zendeskSignatureTimestamp := r.Header.Get("X-Zendesk-Webhook-Signature-Timestamp")
+		if expectedZendeskSignature == "" || zendeskSignatureTimestamp == "" {
+			respondJSON(
+				w,
+				http.StatusBadRequest,
+				"Bad Request",
+			)
+
+			return
+		}
+
+		actualZendeskSignature := buildZendeskSignature(zendeskSignatureTimestamp, bodyBytes, webhookSecret)
+		if expectedZendeskSignature != actualZendeskSignature {
+			respondJSON(
+				w,
+				http.StatusBadRequest,
+				"Bad Request",
+			)
+
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func buildZendeskSignature(
+	timestamp string,
+	bodyBytes []byte,
+	secret string,
+) string {
+	content := []byte(timestamp)
+	content = append(content, bodyBytes...)
+
+	hash := hmac.New(sha256.New, []byte(secret))
+	hash.Write(content)
+
+	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
+}
+
+func respondJSON(w http.ResponseWriter, status int, message string) {
+	encoder := json.NewEncoder(w)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	if err := encoder.Encode(message); err != nil {
+		return
+	}
+}
+
+func readWebhookBody(r *http.Request) ([]byte, error) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	return bodyBytes, nil
+}
+
+func validateWebhookEvent(webhookPayload []byte) bool {
+	target := WebhookEvent{}
+	if err := json.Unmarshal(webhookPayload, &target); err != nil {
+		return "", err
+	}
+
+	if target.Type != "" {
+		return target.Type, nil
+	}
+
+	return WebhookEventTrigger, nil
+}
 
 type WebhookEventType string
 
 const (
-	WebhookEventUserActive         WebhookEventType = "zen:event-type:user.active_changed"
-	WebhookEventOmnichannelRouting WebhookEventType = "zen:event-type:omnichannel_config.omnichannel_routing_feature_changed"
+	WebhookEventTrigger                  WebhookEventType = "trigger_or_automation"
+	WebhookEventUserActive               WebhookEventType = "zen:event-type:user.active_changed"
+	WebhookEventOmnichannelConfigFeature WebhookEventType = "zen:event-type:omnichannel_config.omnichannel_routing_feature_changed"
 	// Other webhook events...
 )
 
+const (
+	WebhookEventUserPrefix              string = "zen:event-type:user"
+	WebhookEventOmnichannelConfigPrefix string = "zen:event-type:omnichannel_config"
+)
+
 // https://support.zendesk.com/hc/en-us/articles/4408839108378-Creating-webhooks-to-interact-with-third-party-systems#ariaid-title4
-// NOTE: For Webhook Trigger or Automation Payloads, any structure can be defined by a Zendesk Administrator
+// NOTE: For Webhookss connected to Triggers or Automations, any structure can be defined by a Zendesk Administrator for the payload
 type WebhookTriggerEvent any
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/webhook-event-types/
@@ -22,13 +195,12 @@ type WebhookEvent struct {
 	Time                time.Time        `json:"time"`
 	ZendeskEventVersion string           `json:"zendesk_event_version"`
 	Subject             string           `json:"subject"`
-	// Detail              any              `json:"detail"`
-	// Event               any              `json:"event"`
 }
 
+// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/
 type WebhookEventArticle struct {
 	Detail WebhookEventDetailArticle `json:"detail"`
-
+	Event  any                       `json:"event"`
 	WebhookEvent
 }
 
@@ -38,26 +210,14 @@ type WebhookEventDetailArticle struct {
 	ID      ArticleID `json:"id"`
 }
 
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
-type WebhookEventDetailCommunityPost struct {
-	BrandID BrandID `json:"brand_id"`
-	PostID  PostID  `json:"post_id"`
-	TopicID TopicID `json:"topic_id"`
+// https://developer.zendesk.com/api-reference/webhooks/event-types/user-events/
+type WebhookEventUser struct {
+	Detail WebhookEventDetailUser `json:"detail"`
+	Event  any                    `json:"event"`
+	WebhookEvent
 }
 
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
-type WebhookEventDetailOrganization struct {
-	CreatedAt      time.Time `json:"created_at"`
-	ExternalID     *string   `json:"external_id"`
-	GroupID        *string   `json:"group_id"`
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	SharedComments bool      `json:"shared_comments"`
-	SharedTickets  bool      `json:"shared_tickets"`
-	UpdatedAt      time.Time `json:"updated_at"`
-}
-
-// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
+// https://developer.zendesk.com/api-reference/webhooks/event-types/user-events/#detail-object-properties
 type WebhookEventDetailUser struct {
 	CreatedAt      time.Time    `json:"created_at"`
 	Email          string       `json:"email"`
@@ -69,6 +229,48 @@ type WebhookEventDetailUser struct {
 	UpdatedAt      time.Time    `json:"updated_at"`
 }
 
+type WebhookEventCommunityPost struct {
+	Detail WebhookEventDetailCommunityPost `json:"detail"`
+	Event  any                             `json:"event"`
+	WebhookEvent
+}
+
+// https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
+type WebhookEventDetailCommunityPost struct {
+	BrandID BrandID `json:"brand_id"`
+	PostID  PostID  `json:"post_id"`
+	TopicID TopicID `json:"topic_id"`
+}
+
+type WebhookEventOrganization struct {
+	Detail WebhookEventDetailOrganization `json:"detail"`
+	Event  any                            `json:"event"`
+	WebhookEvent
+}
+
+type WebhookEventDetailOrganization struct {
+	CreatedAt      time.Time `json:"created_at"`
+	ExternalID     *string   `json:"external_id"`
+	GroupID        *string   `json:"group_id"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	SharedComments bool      `json:"shared_comments"`
+	SharedTickets  bool      `json:"shared_tickets"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type WebhookEventOmnichannelRoutingConfig struct {
+	Detail WebhookEventDetailOmnichannelRoutingConfig `json:"detail"`
+	Event  any                                        `json:"event"`
+	WebhookEvent
+}
+
+type WebhookEventAgentAvailability struct {
+	Detail WebhookEventDetailAgentAvailability `json:"detail"`
+	Event  any                                 `json:"event"`
+	WebhookEvent
+}
+
 // https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
 type WebhookEventDetailAgentAvailability struct {
 	AccountID AccountID `json:"account_id"`
@@ -77,9 +279,6 @@ type WebhookEventDetailAgentAvailability struct {
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/#detail-object-properties
-type WebhookEventDetailOmnichannelRoutingConfiguration struct {
+type WebhookEventDetailOmnichannelRoutingConfig struct {
 	AccountID AccountID `json:"account_id"`
-}
-
-type WebhookEventEvent struct {
 }

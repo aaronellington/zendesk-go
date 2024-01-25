@@ -127,6 +127,9 @@ func NewService(
 				agentStates:      AgentStates{},
 			},
 		},
+		webhookService: &WebhookService{
+			client: c,
+		},
 	}
 }
 
@@ -136,6 +139,7 @@ type Service struct {
 	supportService              *SupportService
 	guideService                *GuideService
 	liveChatService             *LiveChatService
+	webhookService              *WebhookService
 }
 
 func (s *Service) SubDomain() string {
@@ -160,4 +164,9 @@ func (s *Service) Guide() *GuideService {
 // https://developer.zendesk.com/api-reference/live-chat/introduction/
 func (s *Service) LiveChat() *LiveChatService {
 	return s.liveChatService
+}
+
+// https://developer.zendesk.com/api-reference/webhooks/introduction/
+func (s *Service) Webhook() *WebhookService {
+	return s.webhookService
 }
