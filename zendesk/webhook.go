@@ -30,9 +30,26 @@ const (
 	// Other webhook events...
 )
 
-// https://support.zendesk.com/hc/en-us/articles/4408839108378-Creating-webhooks-to-interact-with-third-party-systems#ariaid-title4
-// NOTE: For Webhookss connected to Triggers or Automations, any structure can be defined by a Zendesk Administrator for the payload
-type WebhookTriggerEvent any
+type WebhookEventHandlers struct {
+	WebhookEventArticleAuthorChanged func(event WebhookEventArticleAuthorChanged)
+}
+
+func (s WebhookService) WebhookEvent(handlers WebhookEventHandlers, secret string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO: auth and unmarshal - hand wavy part
+
+		if subject && handlers.EventTypeArticleAuthorChanged != nil {
+			handlers.UserEvent(Event[User]{})
+			return
+		}
+	})
+}
+
+func (s WebhookService) WebhookTrigger(handler func(b []byte), secret string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	})
+}
 
 func (s WebhookService) HandleWebhook(
 	processor func(requestBody []byte) error,
@@ -156,15 +173,15 @@ func readWebhookBody(r *http.Request) ([]byte, error) {
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/webhook-event-types/
-type WebhookEvent[Detail any, Event any] struct {
-	Type                WebhookEventType `json:"type"`
-	AccountID           AccountID        `json:"account_id"`
-	ID                  WebhookEventID   `json:"id"`
-	Time                time.Time        `json:"time"`
-	ZendeskEventVersion string           `json:"zendesk_event_version"`
-	Subject             string           `json:"subject"`
-	Event               Event            `json:"event"`
-	Detail              Detail           `json:"detail"`
+type WebhookEventArticle[Event any] struct {
+	Type                WebhookEventType          `json:"type"`
+	AccountID           AccountID                 `json:"account_id"`
+	ID                  WebhookEventID            `json:"id"`
+	Time                time.Time                 `json:"time"`
+	ZendeskEventVersion string                    `json:"zendesk_event_version"`
+	Subject             string                    `json:"subject"`
+	Event               Event                     `json:"event"`
+	Detail              WebhookEventArticleDetail `json:"detail"`
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/article-events/
@@ -173,17 +190,22 @@ type WebhookEventArticleDetail struct {
 	ID      ArticleID `json:"id"`
 }
 
-type WebhookEventArticleAuthorChanged WebhookEvent[EventTypeArticleAuthorChangedEvent, EventTypeArticleAuthorChangedDetail]
-type EventTypeArticleAuthorChangedEvent struct{}
-type EventTypeArticleAuthorChangedDetail struct{}
-
-type WebhookEventUser[EventData WebhookUserEventData] struct {
-	WebhookEvent
-	Event  EventData              `json:"event"`
-	Detail WebhookEventDetailUser `json:"detail"`
+type WebhookEventArticleAuthorChanged WebhookEventArticle[EventTypeArticleAuthorChangedEvent]
+type EventTypeArticleAuthorChangedEvent struct {
 }
 
-type WebhookEventDetailUser struct {
+type WebhookEventUser[Event any] struct {
+	Type                WebhookEventType       `json:"type"`
+	AccountID           AccountID              `json:"account_id"`
+	ID                  WebhookEventID         `json:"id"`
+	Time                time.Time              `json:"time"`
+	ZendeskEventVersion string                 `json:"zendesk_event_version"`
+	Subject             string                 `json:"subject"`
+	Event               Event                  `json:"event"`
+	Detail              WebhookEventUserDetail `json:"detail"`
+}
+
+type WebhookEventUserDetail struct {
 	CreatedAt      time.Time    `json:"created_at"`
 	Email          string       `json:"email"`
 	ExternalID     string       `json:"external_id"`
@@ -192,27 +214,6 @@ type WebhookEventDetailUser struct {
 	OrganizationID string       `json:"organization_id"`
 	Role           CustomRoleID `json:"role"`
 	UpdatedAt      time.Time    `json:"updated_at"`
-}
-
-type WebhookEventHandlers struct {
-	EventTypeArticleAuthorChanged func(event EventTypeArticleAuthorChanged)
-}
-
-func (s WebhookService) WebhookEvent(handlers WebhookEventHandlers, secret string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: auth and unmarshal - hand wavy part
-
-		if subject && handlers.EventTypeArticleAuthorChanged != nil {
-			handlers.UserEvent(Event[User]{})
-			return
-		}
-	})
-}
-
-func (s WebhookService) WebhookTrigger(handler func(b []byte), secret string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	})
 }
 
 // type WebhookEventUser[Event WebhookUserEventData] struct {
