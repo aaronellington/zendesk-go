@@ -126,6 +126,9 @@ func NewService(
 				agentStatesMutex: &sync.Mutex{},
 				agentStates:      AgentStates{},
 			},
+			chatStreamService: &ChatStreamService{
+				client: c,
+			},
 		},
 	}
 }
