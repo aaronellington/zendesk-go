@@ -12,28 +12,21 @@ import (
 	"time"
 )
 
+const (
+	WebhookHeaderSignature          string = "X-Zendesk-Webhook-Signature"
+	WebhookHeaderSignatureTimestamp string = "X-Zendesk-Webhook-Signature-Timestamp"
+)
+
 // https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
 type WebhookService struct {
-	client               *client
-	webhookEventHandlers WebhookEventHandlers
+	client *client
 }
 
-type WebhookEventHandlers struct {
-	DefaultUserEventHandler func(e WebhookEventUser, webhookSecret string) error
-	UserEventHandlers       map[WebhookEventTypePrefix]func(e WebhookEventUser, webhookSecret string) error
-	// UserEventHandler                     func(e WebhookEventUser) error
-	// ArticleEventHandler                  func(e WebhookEventArticle) error
-	// OrganizationEventHandler             func(e WebhookEventOrganization) error
-	// CommunityPostEventHandler            func(e WebhookEventCommunityPost) error
-	// AgentAvailabilityEventHandler        func(e WebhookEventAgentAvailability) error
-	// OmnichannelRoutingConfigEventHandler func(e WebhookEventOmnichannelRoutingConfig) error
-
-}
+// type UserEventHandler[K WebhookUserEventData] func(e WebhookEventUser[K]) error
 
 type WebhookEventType string
 
 const (
-	WebhookEventTrigger                  WebhookEventType = "trigger_or_automation"
 	WebhookEventUserActive               WebhookEventType = "zen:event-type:user.active_changed"
 	WebhookEventOmnichannelConfigFeature WebhookEventType = "zen:event-type:omnichannel_config.omnichannel_routing_feature_changed"
 	// Other webhook events...
@@ -43,123 +36,105 @@ const (
 // NOTE: For Webhookss connected to Triggers or Automations, any structure can be defined by a Zendesk Administrator for the payload
 type WebhookTriggerEvent any
 
-type WebhookEventTypePrefix string
+func (s WebhookService) HandleWebhook(
+	processor func(requestBody []byte) error,
+	webhookSigningSecret string,
+) http.Handler {
+	return http.HandlerFunc(
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			// Verifying webhook requests is optional
+			if webhookSigningSecret != "" {
+				s.verifyZendeskWebhookSignature(w, r, webhookSigningSecret)
+			}
 
-const (
-	WebhookEventTypePrefixUser WebhookEventTypePrefix = "zen:event-type:user"
-)
+			// TODO: Include authentication methods
+			// https://developer.zendesk.com/documentation/webhooks/webhook-security-and-authentication/#webhook-authentication
 
-func (s WebhookService) HandleWebhook(w http.ResponseWriter, r *http.Request) http.Handler {
+			body, err := readWebhookBody(r)
+			if err != nil {
+				respondToWebhookRequest(
+					w,
+					http.StatusInternalServerError,
+					"Could not read Webhook Request body",
+				)
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				return
+			}
 
-	})
+			if err := processor(body); err != nil {
+				respondToWebhookRequest(
+					w,
+					http.StatusInternalServerError,
+					"Error occurred while processing webhook request",
+				)
+
+				return
+			}
+
+			respondToWebhookRequest(
+				w,
+				http.StatusOK,
+				"Successfully handled Webhook Request",
+			)
+		},
+	)
 }
 
-// func (s WebhookService) HandleWebhookUserEvent() http.Handler {
-// 	return s.VerifyZendeskWebhook(
-// 		webhookSecret,
-// 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 			bodyBytes, err := readWebhookBody(r)
-// 			if err != nil {
-// 				respondJSON(
-// 					w,
-// 					http.StatusInternalServerError,
-// 					"Could not read Webhook Request body",
-// 				)
-
-// 				return
-// 			}
-
-// 			eventType, err := validateWebhookEvent(bodyBytes, WebhookEventUserPrefix)
-// 			if err != nil {
-// 				respondJSON(
-// 					w,
-// 					http.StatusInternalServerError,
-// 					"Could not read Webhook Request body",
-// 				)
-
-// 				return
-// 			}
-
-// 			// Get the userevent struct
-// 			e := WebhookEventUser{}
-
-// 			if err := userEventProcessor(e); err != nil {
-// 				respondJSON(
-// 					w,
-// 					http.StatusInternalServerError,
-// 					"Unsuccessful handling of Webhook Request",
-// 				)
-
-// 				return
-// 			}
-
-// 			respondJSON(
-// 				w,
-// 				http.StatusOK,
-// 				"Successfully handled Webhook Request",
-// 			)
-// 		}),
-// 	)
-// }
-
 // https://developer.zendesk.com/documentation/webhooks/verifying/
-func (s WebhookService) VerifyZendeskWebhook(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
-			respondJSON(
-				w,
-				http.StatusBadRequest,
-				"Bad Request",
-			)
-		}
-		r.Body.Close()
-		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+func (s WebhookService) verifyZendeskWebhookSignature(w http.ResponseWriter, r *http.Request, webhookSigningSecret string) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		respondToWebhookRequest(
+			w,
+			http.StatusBadRequest,
+			"Bad Request",
+		)
+	}
+	r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-		expectedZendeskSignature := r.Header.Get("X-Zendesk-Webhook-Signature")
-		zendeskSignatureTimestamp := r.Header.Get("X-Zendesk-Webhook-Signature-Timestamp")
-		if expectedZendeskSignature == "" || zendeskSignatureTimestamp == "" {
-			respondJSON(
-				w,
-				http.StatusBadRequest,
-				"Bad Request",
-			)
+	expectedZendeskSignature := r.Header.Get(WebhookHeaderSignature)
+	zendeskSignatureTimestamp := r.Header.Get(WebhookHeaderSignatureTimestamp)
+	if expectedZendeskSignature == "" || zendeskSignatureTimestamp == "" {
+		respondToWebhookRequest(
+			w,
+			http.StatusBadRequest,
+			"Bad Request",
+		)
 
-			return
-		}
+		return
+	}
 
-		actualZendeskSignature := buildZendeskSignature(zendeskSignatureTimestamp, bodyBytes, webhookSecret)
-		if expectedZendeskSignature != actualZendeskSignature {
-			respondJSON(
-				w,
-				http.StatusBadRequest,
-				"Bad Request",
-			)
+	actualZendeskSignature := buildZendeskSignature(zendeskSignatureTimestamp, bodyBytes, webhookSigningSecret)
+	if expectedZendeskSignature != actualZendeskSignature {
+		respondToWebhookRequest(
+			w,
+			http.StatusBadRequest,
+			"Bad Request",
+		)
 
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+		return
+	}
 }
 
 func buildZendeskSignature(
 	timestamp string,
 	bodyBytes []byte,
-	secret string,
+	webhookSigningSecret string,
 ) string {
 	content := []byte(timestamp)
 	content = append(content, bodyBytes...)
 
-	hash := hmac.New(sha256.New, []byte(secret))
+	hash := hmac.New(sha256.New, []byte(webhookSigningSecret))
 	hash.Write(content)
 
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
 
-func respondJSON(w http.ResponseWriter, status int, message string) {
+func respondToWebhookRequest(w http.ResponseWriter, status int, message string) {
 	encoder := json.NewEncoder(w)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -207,12 +182,11 @@ type WebhookEventDetailArticle struct {
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/user-events/
 type WebhookEventUser struct {
-	Detail WebhookEventDetailUser `json:"detail"`
-	Event  any                    `json:"event"`
 	WebhookEvent
+	Event  any                    `json:"event"`
+	Detail WebhookEventDetailUser `json:"detail"`
 }
 
-// https://developer.zendesk.com/api-reference/webhooks/event-types/user-events/#detail-object-properties
 type WebhookEventDetailUser struct {
 	CreatedAt      time.Time    `json:"created_at"`
 	Email          string       `json:"email"`
@@ -223,6 +197,28 @@ type WebhookEventDetailUser struct {
 	Role           CustomRoleID `json:"role"`
 	UpdatedAt      time.Time    `json:"updated_at"`
 }
+
+// type WebhookEventUser[Event WebhookUserEventData] struct {
+// 	WebhookEvent
+// 	Event  Event                  `json:"event"`
+// 	Detail WebhookEventDetailUser `json:"detail"`
+// }
+
+// type WebhookUserEventData interface {
+// 	WebhookEventUserActiveStatusChanged | WebhookEventUserDetailsChanged
+// }
+
+// // https://developer.zendesk.com/api-reference/webhooks/event-types/user-events/#detail-object-properties
+
+// type WebhookEventUserActiveStatusChanged struct {
+// 	Current  bool `json:"current"`
+// 	Previous bool `json:"previous"`
+// }
+
+// type WebhookEventUserDetailsChanged struct {
+// 	Current  string `json:"current"`
+// 	Previous string `json:"previous"`
+// }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/community-events/
 type WebhookEventCommunityPost struct {
