@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -41,23 +40,22 @@ func main() {
 	ctx := context.Background()
 
 	z := zendesk.NewService(
-		os.Getenv("ZENDESK_DEMO_SUBDOMAIN"),
+		"kaseya1523304719",
 		zendesk.AuthenticationToken{
-			Email: os.Getenv("ZENDESK_DEMO_EMAIL"),
-			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
+			Email: "zendesk_integrations@kaseya.com",
+			Token: "xQ6FrYWjSVyeQHCM3u1vpjhooyqhncXeRrbhM8lb",
 		},
 		zendesk.ChatCredentials{
-			ClientID:     os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_ID"),
-			ClientSecret: os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_SECRET"),
+			ClientID:     "RLc1Ddddmtq88haQ64rm9ewGj8qgWuFSSSdaKTewllBwURq8N7",
+			ClientSecret: "EGfWIklds8kVXV1riZGpanb7W3w9hpkMsN5GOHvMauZtHOGb5KJfxEVtRVJcEl7b",
 		},
-		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
+		zendesk.WithLogger(log.New(os.Stdout, "Zendesk Chat API - ", log.LstdFlags)),
 	)
 
-	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now().Add(time.Minute*-8), func(response zendesk.AgentEventExportResponse) error {
-		_ = prettyPrint(response)
-		return nil
-	})
-	if err != nil {
-		PrintErr(err)
-	}
+	// err := z.LiveChat().ChatStream().List(ctx, "13388700431505", func(response zendesk.ChatsStreamResponse) error {
+	// 	_ = prettyPrint(response)
+	// 	return nil
+	// })
+	state := z.LiveChat().AgentEvent().GetAgentStates(ctx)
+	prettyPrint(state)
 }
