@@ -19,9 +19,7 @@ const (
 
 // https://developer.zendesk.com/api-reference/webhooks/webhooks-api/webhooks/
 type WebhookService struct {
-	client            *client
-	eventHandlers     *WebhookEventHandlers
-	eventHandlerCache map[WebhookEventType]int
+	client *client
 }
 
 type WebhookEventType string
@@ -135,10 +133,12 @@ type WebhookEventHandlers struct {
 	WebhookEventOrganizationNameChanged        func(eventData WebhookEventOrganizationNameChangedPayload) error        ``
 	WebhookEventOrganizationTagsChanged        func(eventData WebhookEventOrganizationTagsChangedPayload) error        ``
 
+	WebhookEventUserAliasChanged                  func(eventData WebhookEventUserAliasChangedPayload) error                  ``
 	WebhookEventUserCreated                       func(eventData WebhookEventUserCreatedPayload) error                       `zenevent:"zen:event-type:user.created"`
 	WebhookEventUserCustomFieldChanged            func(eventData WebhookEventUserCustomFieldChangedPayload) error            `zenevent:"zen:event-type:user.custom_field_changed"`
 	WebhookEventUserCustomRoleChanged             func(eventData WebhookEventUserCustomRoleChangedPayload) error             ``
 	WebhookEventUserDefaultGroupChanged           func(eventData WebhookEventUserDefaultGroupChangedPayload) error           ``
+	WebhookEventUserDetailsChanged                func(eventData WebhookEventUserDetailsChangedPayload) error                ``
 	WebhookEventUserExternalIDChanged             func(eventData WebhookEventUserExternalIDChangedPayload) error             ``
 	WebhookEventUserGroupMembershipCreated        func(eventData WebhookEventUserGroupMembershipCreatedPayload) error        ``
 	WebhookEventUserGroupMembershipDeleted        func(eventData WebhookEventUserGroupMembershipDeletedPayload) error        ``
@@ -199,7 +199,7 @@ type WebhookEvent struct {
 	Detail              any              `json:"detail"`
 }
 
-func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Handler {
+func (s *WebhookService) HandleWebhookEvent(eventHandlers WebhookEventHandlers, webhookSigningSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		webhookBody, err := readWebhookBody(r)
 		if err != nil {
@@ -230,8 +230,9 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 		}
 
 		switch baseTarget.Type {
+		// Article Events
 		case WebhookEventArticlePublished:
-			if s.eventHandlers.WebhookEventArticlePublished != nil {
+			if eventHandlers.WebhookEventArticlePublished != nil {
 				target := WebhookEventArticlePublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -239,7 +240,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticlePublished(target); err != nil {
+				if err := eventHandlers.WebhookEventArticlePublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -250,7 +251,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleSubscriptionCreated:
-			if s.eventHandlers.WebhookEventArticleSubscriptionCreated != nil {
+			if eventHandlers.WebhookEventArticleSubscriptionCreated != nil {
 				target := WebhookEventArticleSubscriptionCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -258,7 +259,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleSubscriptionCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleSubscriptionCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -269,7 +270,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleUnpublished:
-			if s.eventHandlers.WebhookEventArticleUnpublished != nil {
+			if eventHandlers.WebhookEventArticleUnpublished != nil {
 				target := WebhookEventArticleUnpublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -277,7 +278,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleUnpublished(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleUnpublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -288,7 +289,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleVoteCreated:
-			if s.eventHandlers.WebhookEventArticleVoteCreated != nil {
+			if eventHandlers.WebhookEventArticleVoteCreated != nil {
 				target := WebhookEventArticleVoteCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -296,7 +297,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleVoteCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleVoteCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -307,7 +308,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleVoteChanged:
-			if s.eventHandlers.WebhookEventArticleVoteChanged != nil {
+			if eventHandlers.WebhookEventArticleVoteChanged != nil {
 				target := WebhookEventArticleVoteChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -315,7 +316,26 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleVoteChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleVoteChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventArticleVoteRemoved:
+			if eventHandlers.WebhookEventArticleVoteRemoved != nil {
+				target := WebhookEventArticleVoteRemovedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventArticleVoteRemoved(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -326,7 +346,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleCommentCreated:
-			if s.eventHandlers.WebhookEventArticleCommentCreated != nil {
+			if eventHandlers.WebhookEventArticleCommentCreated != nil {
 				target := WebhookEventArticleCommentCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -334,7 +354,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleCommentCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleCommentCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -345,7 +365,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleCommentChanged:
-			if s.eventHandlers.WebhookEventArticleCommentChanged != nil {
+			if eventHandlers.WebhookEventArticleCommentChanged != nil {
 				target := WebhookEventArticleCommentChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -353,7 +373,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleCommentChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleCommentChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -364,7 +384,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleCommentPublished:
-			if s.eventHandlers.WebhookEventArticleCommentPublished != nil {
+			if eventHandlers.WebhookEventArticleCommentPublished != nil {
 				target := WebhookEventArticleCommentPublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -372,7 +392,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleCommentPublished(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleCommentPublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -383,7 +403,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventArticleCommentUnpublished:
-			if s.eventHandlers.WebhookEventArticleCommentUnpublished != nil {
+			if eventHandlers.WebhookEventArticleCommentUnpublished != nil {
 				target := WebhookEventArticleCommentUnpublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -391,7 +411,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventArticleCommentUnpublished(target); err != nil {
+				if err := eventHandlers.WebhookEventArticleCommentUnpublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -401,8 +421,10 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
+
+		// Organization Events
 		case WebhookEventOrganizationCreated:
-			if s.eventHandlers.WebhookEventOrganizationCreated != nil {
+			if eventHandlers.WebhookEventOrganizationCreated != nil {
 				target := WebhookEventOrganizationCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -410,7 +432,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventOrganizationCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -421,7 +443,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventOrganizationCustomFieldChanged:
-			if s.eventHandlers.WebhookEventOrganizationCustomFieldChanged != nil {
+			if eventHandlers.WebhookEventOrganizationCustomFieldChanged != nil {
 				target := WebhookEventOrganizationCustomFieldChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -429,7 +451,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventOrganizationCustomFieldChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationCustomFieldChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -440,7 +462,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventOrganizationDeleted:
-			if s.eventHandlers.WebhookEventOrganizationDeleted != nil {
+			if eventHandlers.WebhookEventOrganizationDeleted != nil {
 				target := WebhookEventOrganizationDeletedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -448,7 +470,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventOrganizationDeleted(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationDeleted(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -458,16 +480,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserLastLoginChanged:
-			if s.eventHandlers.WebhookEventUserLastLoginChanged != nil {
-				target := WebhookEventUserLastLoginChangedPayload{}
+		case WebhookEventOrganizationExternalIDChanged:
+			if eventHandlers.WebhookEventOrganizationExternalIDChanged != nil {
+				target := WebhookEventOrganizationExternalIDChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserLastLoginChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationExternalIDChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -477,16 +499,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserMerged:
-			if s.eventHandlers.WebhookEventUserMerged != nil {
-				target := WebhookEventUserMergedPayload{}
+		case WebhookEventOrganizationNameChanged:
+			if eventHandlers.WebhookEventOrganizationNameChanged != nil {
+				target := WebhookEventOrganizationNameChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserMerged(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationNameChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -496,16 +518,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserNameChanged:
-			if s.eventHandlers.WebhookEventUserNameChanged != nil {
-				target := WebhookEventUserNameChangedPayload{}
+		case WebhookEventOrganizationTagsChanged:
+			if eventHandlers.WebhookEventOrganizationTagsChanged != nil {
+				target := WebhookEventOrganizationTagsChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserNameChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventOrganizationTagsChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -515,16 +537,18 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserNotesChanged:
-			if s.eventHandlers.WebhookEventUserNotesChanged != nil {
-				target := WebhookEventUserNotesChangedPayload{}
+
+		// User Events
+		case WebhookEventUserAliasChanged:
+			if eventHandlers.WebhookEventUserAliasChanged != nil {
+				target := WebhookEventUserAliasChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserNotesChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserAliasChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -534,16 +558,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserOnlyPrivateCommentsChanged:
-			if s.eventHandlers.WebhookEventUserOnlyPrivateCommentsChanged != nil {
-				target := WebhookEventUserOnlyPrivateCommentsChangedPayload{}
+		case WebhookEventUserCreated:
+			if eventHandlers.WebhookEventUserCreated != nil {
+				target := WebhookEventUserCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserOnlyPrivateCommentsChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -553,16 +577,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserOrganizationMembershipCreated:
-			if s.eventHandlers.WebhookEventUserOrganizationMembershipCreated != nil {
-				target := WebhookEventUserOrganizationMembershipCreatedPayload{}
+		case WebhookEventUserCustomFieldChanged:
+			if eventHandlers.WebhookEventUserCustomFieldChanged != nil {
+				target := WebhookEventUserCustomFieldChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserOrganizationMembershipCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventUserCustomFieldChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -572,16 +596,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserOrganizationMembershipDeleted:
-			if s.eventHandlers.WebhookEventUserOrganizationMembershipDeleted != nil {
-				target := WebhookEventUserOrganizationMembershipDeletedPayload{}
+		case WebhookEventUserCustomRoleChanged:
+			if eventHandlers.WebhookEventUserCustomRoleChanged != nil {
+				target := WebhookEventUserCustomRoleChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserOrganizationMembershipDeleted(target); err != nil {
+				if err := eventHandlers.WebhookEventUserCustomRoleChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -591,16 +615,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserPasswordChanged:
-			if s.eventHandlers.WebhookEventUserPasswordChanged != nil {
-				target := WebhookEventUserPasswordChangedPayload{}
+		case WebhookEventUserDefaultGroupChanged:
+			if eventHandlers.WebhookEventUserDefaultGroupChanged != nil {
+				target := WebhookEventUserDefaultGroupChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserPasswordChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserDefaultGroupChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -610,16 +634,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserPhotoChanged:
-			if s.eventHandlers.WebhookEventUserPhotoChanged != nil {
-				target := WebhookEventUserPhotoChangedPayload{}
+		case WebhookEventUserDetailsChanged:
+			if eventHandlers.WebhookEventUserDetailsChanged != nil {
+				target := WebhookEventUserDetailsChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserPhotoChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserDetailsChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -629,16 +653,16 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserRoleChanged:
-			if s.eventHandlers.WebhookEventUserRoleChanged != nil {
-				target := WebhookEventUserRoleChangedPayload{}
+		case WebhookEventUserExternalIDChanged:
+			if eventHandlers.WebhookEventUserExternalIDChanged != nil {
+				target := WebhookEventUserExternalIDChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserRoleChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserExternalIDChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -648,16 +672,92 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
-		case WebhookEventUserDeleted:
-			if s.eventHandlers.WebhookEventUserDeleted != nil {
-				target := WebhookEventUserDeletedPayload{}
+		case WebhookEventUserGroupMembershipCreated:
+			if eventHandlers.WebhookEventUserGroupMembershipCreated != nil {
+				target := WebhookEventUserGroupMembershipCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserDeleted(target); err != nil {
+				if err := eventHandlers.WebhookEventUserGroupMembershipCreated(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserGroupMembershipDeleted:
+			if eventHandlers.WebhookEventUserGroupMembershipDeleted != nil {
+				target := WebhookEventUserGroupMembershipDeletedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserGroupMembershipDeleted(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserIdentityChanged:
+			if eventHandlers.WebhookEventUserIdentityChanged != nil {
+				target := WebhookEventUserIdentityChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserIdentityChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserIdentityCreated:
+			if eventHandlers.WebhookEventUserIdentityCreated != nil {
+				target := WebhookEventUserIdentityCreatedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserIdentityCreated(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserIdentityDeleted:
+			if eventHandlers.WebhookEventUserIdentityDeleted != nil {
+				target := WebhookEventUserIdentityDeletedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserIdentityDeleted(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -668,7 +768,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventUserActiveChanged:
-			if s.eventHandlers.WebhookEventUserActiveChanged != nil {
+			if eventHandlers.WebhookEventUserActiveChanged != nil {
 				target := WebhookEventUserActiveChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -676,7 +776,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserActiveChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserActiveChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -686,8 +786,218 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
+		case WebhookEventUserLastLoginChanged:
+			if eventHandlers.WebhookEventUserLastLoginChanged != nil {
+				target := WebhookEventUserLastLoginChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserLastLoginChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserMerged:
+			if eventHandlers.WebhookEventUserMerged != nil {
+				target := WebhookEventUserMergedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserMerged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserNameChanged:
+			if eventHandlers.WebhookEventUserNameChanged != nil {
+				target := WebhookEventUserNameChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserNameChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserNotesChanged:
+			if eventHandlers.WebhookEventUserNotesChanged != nil {
+				target := WebhookEventUserNotesChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserNotesChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserOnlyPrivateCommentsChanged:
+			if eventHandlers.WebhookEventUserOnlyPrivateCommentsChanged != nil {
+				target := WebhookEventUserOnlyPrivateCommentsChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserOnlyPrivateCommentsChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserOrganizationMembershipCreated:
+			if eventHandlers.WebhookEventUserOrganizationMembershipCreated != nil {
+				target := WebhookEventUserOrganizationMembershipCreatedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserOrganizationMembershipCreated(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserOrganizationMembershipDeleted:
+			if eventHandlers.WebhookEventUserOrganizationMembershipDeleted != nil {
+				target := WebhookEventUserOrganizationMembershipDeletedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserOrganizationMembershipDeleted(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserPasswordChanged:
+			if eventHandlers.WebhookEventUserPasswordChanged != nil {
+				target := WebhookEventUserPasswordChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserPasswordChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserPhotoChanged:
+			if eventHandlers.WebhookEventUserPhotoChanged != nil {
+				target := WebhookEventUserPhotoChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserPhotoChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserRoleChanged:
+			if eventHandlers.WebhookEventUserRoleChanged != nil {
+				target := WebhookEventUserRoleChangedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserRoleChanged(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+		case WebhookEventUserDeleted:
+			if eventHandlers.WebhookEventUserDeleted != nil {
+				target := WebhookEventUserDeletedPayload{}
+				if err := json.Unmarshal(webhookBody, &target); err != nil {
+					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
+
+					return
+				}
+
+				if err := eventHandlers.WebhookEventUserDeleted(target); err != nil {
+					respondToWebhookRequest(
+						w,
+						http.StatusInternalServerError,
+						err.Error(),
+					)
+
+					return
+				}
+			}
+
 		case WebhookEventUserSuspendedChanged:
-			if s.eventHandlers.WebhookEventUserSuspendedChanged != nil {
+			if eventHandlers.WebhookEventUserSuspendedChanged != nil {
 				target := WebhookEventUserSuspendedChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -695,7 +1005,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserSuspendedChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserSuspendedChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -706,7 +1016,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventUserTagsChanged:
-			if s.eventHandlers.WebhookEventUserTagsChanged != nil {
+			if eventHandlers.WebhookEventUserTagsChanged != nil {
 				target := WebhookEventUserTagsChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -714,7 +1024,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserTagsChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserTagsChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -725,7 +1035,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventUserTimeZoneChanged:
-			if s.eventHandlers.WebhookEventUserTimeZoneChanged != nil {
+			if eventHandlers.WebhookEventUserTimeZoneChanged != nil {
 				target := WebhookEventUserTimeZoneChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -733,7 +1043,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventUserTimeZoneChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventUserTimeZoneChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -743,8 +1053,10 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
+
+		// Community Post Events
 		case WebhookEventCommunityPostCreated:
-			if s.eventHandlers.WebhookEventCommunityPostCreated != nil {
+			if eventHandlers.WebhookEventCommunityPostCreated != nil {
 				target := WebhookEventCommunityPostCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -752,7 +1064,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -763,7 +1075,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostChanged:
-			if s.eventHandlers.WebhookEventCommunityPostChanged != nil {
+			if eventHandlers.WebhookEventCommunityPostChanged != nil {
 				target := WebhookEventCommunityPostChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -771,7 +1083,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -782,7 +1094,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostPublished:
-			if s.eventHandlers.WebhookEventCommunityPostPublished != nil {
+			if eventHandlers.WebhookEventCommunityPostPublished != nil {
 				target := WebhookEventCommunityPostPublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -790,7 +1102,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostPublished(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostPublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -801,7 +1113,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostUnpublished:
-			if s.eventHandlers.WebhookEventCommunityPostUnpublished != nil {
+			if eventHandlers.WebhookEventCommunityPostUnpublished != nil {
 				target := WebhookEventCommunityPostUnpublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -809,7 +1121,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostUnpublished(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostUnpublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -820,7 +1132,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostSubscriptionCreated:
-			if s.eventHandlers.WebhookEventCommunityPostSubscriptionCreated != nil {
+			if eventHandlers.WebhookEventCommunityPostSubscriptionCreated != nil {
 				target := WebhookEventCommunityPostSubscriptionCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -828,7 +1140,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostSubscriptionCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostSubscriptionCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -839,7 +1151,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostVoteCreated:
-			if s.eventHandlers.WebhookEventCommunityPostVoteCreated != nil {
+			if eventHandlers.WebhookEventCommunityPostVoteCreated != nil {
 				target := WebhookEventCommunityPostVoteCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -847,7 +1159,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostVoteCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostVoteCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -858,7 +1170,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostVoteChanged:
-			if s.eventHandlers.WebhookEventCommunityPostVoteChanged != nil {
+			if eventHandlers.WebhookEventCommunityPostVoteChanged != nil {
 				target := WebhookEventCommunityPostVoteChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -866,7 +1178,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostVoteChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostVoteChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -877,7 +1189,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostVoteRemoved:
-			if s.eventHandlers.WebhookEventCommunityPostVoteRemoved != nil {
+			if eventHandlers.WebhookEventCommunityPostVoteRemoved != nil {
 				target := WebhookEventCommunityPostVoteRemovedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -885,7 +1197,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostVoteRemoved(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostVoteRemoved(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -896,7 +1208,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentCreated:
-			if s.eventHandlers.WebhookEventCommunityPostCommentCreated != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentCreated != nil {
 				target := WebhookEventCommunityPostCommentCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -904,7 +1216,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -915,7 +1227,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentChanged:
-			if s.eventHandlers.WebhookEventCommunityPostCommentChanged != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentChanged != nil {
 				target := WebhookEventCommunityPostCommentChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -923,7 +1235,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -934,7 +1246,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentPublished:
-			if s.eventHandlers.WebhookEventCommunityPostCommentPublished != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentPublished != nil {
 				target := WebhookEventCommunityPostCommentPublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -942,7 +1254,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentPublished(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentPublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -953,7 +1265,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentUnpublished:
-			if s.eventHandlers.WebhookEventCommunityPostCommentUnpublished != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentUnpublished != nil {
 				target := WebhookEventCommunityPostCommentUnpublishedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -961,7 +1273,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentUnpublished(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentUnpublished(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -972,7 +1284,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentVoteCreated:
-			if s.eventHandlers.WebhookEventCommunityPostCommentVoteCreated != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentVoteCreated != nil {
 				target := WebhookEventCommunityPostCommentVoteCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -980,7 +1292,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentVoteCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentVoteCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -991,7 +1303,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventCommunityPostCommentVoteChanged:
-			if s.eventHandlers.WebhookEventCommunityPostCommentVoteChanged != nil {
+			if eventHandlers.WebhookEventCommunityPostCommentVoteChanged != nil {
 				target := WebhookEventCommunityPostCommentVoteChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -999,7 +1311,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventCommunityPostCommentVoteChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventCommunityPostCommentVoteChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1009,8 +1321,10 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
+
+		// Agent State Events
 		case WebhookEventAgentStateChanged:
-			if s.eventHandlers.WebhookEventAgentStateChanged != nil {
+			if eventHandlers.WebhookEventAgentStateChanged != nil {
 				target := WebhookEventAgentStateChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1018,7 +1332,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentStateChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentStateChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1029,7 +1343,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentWorkItemAdded:
-			if s.eventHandlers.WebhookEventAgentWorkItemAdded != nil {
+			if eventHandlers.WebhookEventAgentWorkItemAdded != nil {
 				target := WebhookEventAgentWorkItemAddedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1037,7 +1351,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentWorkItemAdded(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentWorkItemAdded(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1048,7 +1362,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentWorkItemRemoved:
-			if s.eventHandlers.WebhookEventAgentWorkItemRemoved != nil {
+			if eventHandlers.WebhookEventAgentWorkItemRemoved != nil {
 				target := WebhookEventAgentWorkItemRemovedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1056,7 +1370,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentWorkItemRemoved(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentWorkItemRemoved(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1067,7 +1381,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentMaxCapacityChanged:
-			if s.eventHandlers.WebhookEventAgentMaxCapacityChanged != nil {
+			if eventHandlers.WebhookEventAgentMaxCapacityChanged != nil {
 				target := WebhookEventAgentMaxCapacityChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1075,7 +1389,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentMaxCapacityChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentMaxCapacityChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1086,7 +1400,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentUnifiedStateChanged:
-			if s.eventHandlers.WebhookEventAgentUnifiedStateChanged != nil {
+			if eventHandlers.WebhookEventAgentUnifiedStateChanged != nil {
 				target := WebhookEventAgentUnifiedStateChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1094,7 +1408,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentUnifiedStateChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentUnifiedStateChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1105,7 +1419,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentChannelCreated:
-			if s.eventHandlers.WebhookEventAgentChannelCreated != nil {
+			if eventHandlers.WebhookEventAgentChannelCreated != nil {
 				target := WebhookEventAgentChannelCreatedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1113,7 +1427,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentChannelCreated(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentChannelCreated(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1124,7 +1438,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 				}
 			}
 		case WebhookEventAgentChannelDeleted:
-			if s.eventHandlers.WebhookEventAgentChannelDeleted != nil {
+			if eventHandlers.WebhookEventAgentChannelDeleted != nil {
 				target := WebhookEventAgentChannelDeletedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1132,7 +1446,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventAgentChannelDeleted(target); err != nil {
+				if err := eventHandlers.WebhookEventAgentChannelDeleted(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1142,8 +1456,10 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 			}
+
+		// Omnichannel Routing Configuration Events
 		case WebhookEventOmnichannelRoutingConfigFeatureChanged:
-			if s.eventHandlers.WebhookEventOmnichannelRoutingConfigFeatureChanged != nil {
+			if eventHandlers.WebhookEventOmnichannelRoutingConfigFeatureChanged != nil {
 				target := WebhookEventOmnichannelRoutingConfigFeatureChangedPayload{}
 				if err := json.Unmarshal(webhookBody, &target); err != nil {
 					respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
@@ -1151,7 +1467,7 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 					return
 				}
 
-				if err := s.eventHandlers.WebhookEventOmnichannelRoutingConfigFeatureChanged(target); err != nil {
+				if err := eventHandlers.WebhookEventOmnichannelRoutingConfigFeatureChanged(target); err != nil {
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
@@ -1176,9 +1492,32 @@ func (s *WebhookService) HandleWebhookEvent(webhookSigningSecret string) http.Ha
 	)
 }
 
-func (s *WebhookService) WebhookTriggerHandler(handler func(b []byte), secret string) http.Handler {
+func (s *WebhookService) HandleWebhookTrigger(handler func(b []byte) error, webhookSigningSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		webhookBody, err := readWebhookBody(r)
+		if err != nil {
+			respondToWebhookRequest(w, http.StatusBadRequest, err.Error())
 
+			return
+		}
+
+		if webhookSigningSecret != "" {
+			if !s.verifyZendeskWebhookSignatureIsValid(r, webhookBody, webhookSigningSecret) {
+				respondToWebhookRequest(w, http.StatusBadRequest, "Bad Request")
+
+				return
+			}
+		}
+
+		if handler != nil {
+			if err := handler(webhookBody); err != nil {
+				respondToWebhookRequest(w, http.StatusInternalServerError, err.Error())
+
+				return
+			}
+		}
+
+		respondToWebhookRequest(w, http.StatusOK, "Success")
 	})
 }
 
@@ -1264,8 +1603,6 @@ type WebhookCommunityPostEventData interface {
 	any
 }
 
-type WebhookEventArticleAuthorChangedPayload WebhookEventArticle[EventTypeArticleAuthorChangedEvent]
-
 type EventTypeArticleAuthorChangedEvent struct {
 }
 
@@ -1281,14 +1618,14 @@ type WebhookEventUser[EventData WebhookUserEventData] struct {
 }
 
 type WebhookEventUserDetail struct {
-	CreatedAt      time.Time    `json:"created_at"`
-	Email          string       `json:"email"`
-	ExternalID     string       `json:"external_id"`
-	DefaultGroupID string       `json:"default_group_id"`
-	ID             string       `json:"id"`
-	OrganizationID string       `json:"organization_id"`
-	Role           CustomRoleID `json:"role"`
-	UpdatedAt      time.Time    `json:"updated_at"`
+	CreatedAt      time.Time `json:"created_at"`
+	Email          string    `json:"email"`
+	ExternalID     string    `json:"external_id"`
+	DefaultGroupID string    `json:"default_group_id"`
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	Role           string    `json:"role"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type WebhookUserEventData interface {
@@ -1301,11 +1638,6 @@ type WebhookUserEventData interface {
 type WebhookEventUserActiveStatusChangedPayload struct {
 	Current  bool `json:"current"`
 	Previous bool `json:"previous"`
-}
-
-type WebhookEventUserDetailsChangedPayload struct {
-	Current  string `json:"current"`
-	Previous string `json:"previous"`
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/community-events/#detail-object-properties
@@ -1340,7 +1672,7 @@ func (s WebhookService) verifyZendeskWebhookSignatureIsValid(
 	}
 
 	actualZendeskSignature := buildZendeskSignature(zendeskSignatureTimestamp, bodyBytes, webhookSigningSecret)
-	return expectedZendeskSignature != actualZendeskSignature
+	return expectedZendeskSignature == actualZendeskSignature
 }
 
 func buildZendeskSignature(
@@ -1380,39 +1712,107 @@ func readWebhookBody(r *http.Request) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-type WebhookEventUserAliasChangedPayload WebhookEventUser[any]
-type WebhookEventUserCreatedPayload WebhookEventUser[any]
-type WebhookEventUserCustomFieldChangedPayload WebhookEventUser[any]
-type WebhookEventUserCustomRoleChangedPayload WebhookEventUser[any]
-type WebhookEventUserDefaultGroupChangedPayload WebhookEventUser[any]
-type WebhookEventUserExternalIDChangedPayload WebhookEventUser[any]
-type WebhookEventUserGroupMembershipCreatedPayload WebhookEventUser[any]
-type WebhookEventUserGroupMembershipDeletedPayload WebhookEventUser[any]
-type WebhookEventUserIdentityChangedPayload WebhookEventUser[any]
-type WebhookEventUserIdentityCreatedPayload WebhookEventUser[any]
-type WebhookEventUserIdentityDeletedPayload WebhookEventUser[any]
-type WebhookEventUserActiveChangedPayload WebhookEventUser[any]
-type WebhookEventUserLastLoginChangedPayload WebhookEventUser[any]
-type WebhookEventUserMergedPayload WebhookEventUser[any]
-type WebhookEventUserNameChangedPayload WebhookEventUser[any]
-type WebhookEventUserNotesChangedPayload WebhookEventUser[any]
-type WebhookEventUserOnlyPrivateCommentsChangedPayload WebhookEventUser[any]
-type WebhookEventUserOrganizationMembershipCreatedPayload WebhookEventUser[any]
-type WebhookEventUserOrganizationMembershipDeletedPayload WebhookEventUser[any]
-type WebhookEventUserPasswordChangedPayload WebhookEventUser[any]
-type WebhookEventUserPhotoChangedPayload WebhookEventUser[any]
-type WebhookEventUserRoleChangedPayload WebhookEventUser[any]
-type WebhookEventUserDeletedPayload WebhookEventUser[any]
-type WebhookEventUserSuspendedChangedPayload WebhookEventUser[any]
-type WebhookEventUserTagsChangedPayload WebhookEventUser[any]
-type WebhookEventUserTimeZoneChangedPayload WebhookEventUser[any]
+type WebhookEventDataUserIdentitySchema struct {
+	ID      string `json:"id"`
+	Primary bool   `json:"primary"`
+	Type    string `json:"type"`
+	Value   string `json:"value"`
+}
 
-type WebhookEventOrganizationCreatedPayload WebhookEventOrganization[any]
-type WebhookEventOrganizationCustomFieldChangedPayload WebhookEventOrganization[any]
-type WebhookEventOrganizationDeletedPayload WebhookEventOrganization[any]
-type WebhookEventOrganizationExternalIDChangedPayload WebhookEventOrganization[any]
-type WebhookEventOrganizationNameChangedPayload WebhookEventOrganization[any]
-type WebhookEventOrganizationTagsChangedPayload WebhookEventOrganization[any]
+type WebhookEventDataSimpleStringUpdate struct {
+	Current  string `json:"current"`
+	Previous string `json:"previous"`
+}
+
+type WebhookEventDataSimpleBoolUpdate struct {
+	Current  bool `json:"current"`
+	Previous bool `json:"previous"`
+}
+
+type WebhookEventDataEmpty struct{}
+
+type WebhookEventDataCustomFieldUpdate struct {
+	Current  any `json:"current"`
+	Previous any `json:"previous"`
+	Field    struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+		Type  string `json:"type"`
+	} `json:"field"`
+}
+
+type WebhookEventDataUserGroupMembershipChanged struct {
+	Group WebhookEventDataIDField `json:"group"`
+}
+
+type WebhookEventDataIDField struct {
+	ID string `json:"id"`
+}
+
+type WebhookEventDataUserIdentityChanged struct {
+	Current  WebhookEventDataUserIdentitySchema `json:"current"`
+	Previous WebhookEventDataUserIdentitySchema `json:"previous"`
+}
+
+type WebhookEventDataUserIdentity struct {
+	Identity WebhookEventDataUserIdentitySchema `json:"current"`
+}
+
+type WebhookEventDataUserMerged struct {
+	User struct {
+		ID string `json:"id"`
+	} `json:"user"`
+}
+
+type WebhookEventDataUserOrganizationMembershipChanged struct {
+	Organization struct {
+		ID string `json:"id"`
+	} `json:"organization"`
+}
+
+type WebhookEventDataTagsChanged struct {
+	Added struct {
+		Tags []string `json:"tags"`
+	} `json:"added"`
+	Removed struct {
+		Tags []string `json:"tags"`
+	} `json:"removed"`
+}
+
+type WebhookEventUserAliasChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserCreatedPayload WebhookEventUser[WebhookEventDataEmpty]
+type WebhookEventUserCustomFieldChangedPayload WebhookEventUser[WebhookEventDataCustomFieldUpdate]
+type WebhookEventUserCustomRoleChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserDefaultGroupChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserDetailsChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserExternalIDChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserGroupMembershipCreatedPayload WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
+type WebhookEventUserGroupMembershipDeletedPayload WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
+type WebhookEventUserIdentityChangedPayload WebhookEventUser[WebhookEventDataUserIdentityChanged]
+type WebhookEventUserIdentityCreatedPayload WebhookEventUser[WebhookEventDataUserIdentity]
+type WebhookEventUserIdentityDeletedPayload WebhookEventUser[WebhookEventDataUserIdentity]
+type WebhookEventUserActiveChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+type WebhookEventUserLastLoginChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserMergedPayload WebhookEventUser[WebhookEventDataUserMerged]
+type WebhookEventUserNameChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserNotesChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserOnlyPrivateCommentsChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+type WebhookEventUserOrganizationMembershipCreatedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
+type WebhookEventUserOrganizationMembershipDeletedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
+type WebhookEventUserPasswordChangedPayload WebhookEventUser[WebhookEventDataEmpty]
+type WebhookEventUserPhotoChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserRoleChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type WebhookEventUserDeletedPayload WebhookEventUser[WebhookEventDataEmpty]
+type WebhookEventUserSuspendedChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+type WebhookEventUserTagsChangedPayload WebhookEventUser[WebhookEventDataTagsChanged]
+type WebhookEventUserTimeZoneChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+
+type WebhookEventOrganizationCreatedPayload WebhookEventOrganization[WebhookEventDataEmpty]
+type WebhookEventOrganizationCustomFieldChangedPayload WebhookEventOrganization[WebhookEventDataCustomFieldUpdate]
+type WebhookEventOrganizationDeletedPayload WebhookEventOrganization[WebhookEventDataEmpty]
+type WebhookEventOrganizationExternalIDChangedPayload WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
+type WebhookEventOrganizationNameChangedPayload WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
+type WebhookEventOrganizationTagsChangedPayload WebhookEventOrganization[WebhookEventDataTagsChanged]
 
 type WebhookEventArticlePublishedPayload WebhookEventArticle[any]
 type WebhookEventArticleSubscriptionCreatedPayload WebhookEventArticle[any]
@@ -1424,6 +1824,7 @@ type WebhookEventArticleCommentCreatedPayload WebhookEventArticle[any]
 type WebhookEventArticleCommentChangedPayload WebhookEventArticle[any]
 type WebhookEventArticleCommentPublishedPayload WebhookEventArticle[any]
 type WebhookEventArticleCommentUnpublishedPayload WebhookEventArticle[any]
+type WebhookEventArticleAuthorChangedPayload WebhookEventArticle[any]
 
 type WebhookEventCommunityPostCreatedPayload WebhookEventCommunityPost[any]
 type WebhookEventCommunityPostChangedPayload WebhookEventCommunityPost[any]
