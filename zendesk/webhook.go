@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-
 	"time"
 )
 
@@ -89,7 +88,7 @@ const (
 	WebhookEventUserOnlyPrivateCommentsChanged    WebhookEventType = "zen:event-type:user.only_private_comments_changed"
 	WebhookEventUserOrganizationMembershipCreated WebhookEventType = "zen:event-type:user.organization_membership_created"
 	WebhookEventUserOrganizationMembershipDeleted WebhookEventType = "zen:event-type:user.organization_membership_deleted"
-	WebhookEventUserPasswordChanged               WebhookEventType = "zen:event-type:user.password_changed"
+	WebhookEventUserPasswordChanged               WebhookEventType = "zen:event-type:user.password_changed" // #nosec G101 -- This is a false positive
 	WebhookEventUserPhotoChanged                  WebhookEventType = "zen:event-type:user.photo_changed"
 	WebhookEventUserRoleChanged                   WebhookEventType = "zen:event-type:user.role_changed"
 	WebhookEventUserDeleted                       WebhookEventType = "zen:event-type:user.deleted"
@@ -187,7 +186,7 @@ type WebhookEventHandlers struct {
 	WebhookEventOmnichannelRoutingConfigFeatureChanged func(eventData WebhookEventOmnichannelRoutingConfigFeatureChangedPayload) error ``
 }
 
-// Base webhookevent for Event Based webhooks
+// Base webhookevent for Event Based webhooks.
 type WebhookEvent struct {
 	Type                WebhookEventType `json:"type"`
 	AccountID           AccountID        `json:"account_id"`
@@ -199,6 +198,7 @@ type WebhookEvent struct {
 	Detail              any              `json:"detail"`
 }
 
+//gocyclo:ignore
 func (s *WebhookService) HandleWebhookEvent(eventHandlers WebhookEventHandlers, webhookSigningSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		webhookBody, err := readWebhookBody(r)
@@ -1603,8 +1603,7 @@ type WebhookCommunityPostEventData interface {
 	any
 }
 
-type EventTypeArticleAuthorChangedEvent struct {
-}
+type EventTypeArticleAuthorChangedEvent struct{}
 
 type WebhookEventUser[EventData WebhookUserEventData] struct {
 	Type                WebhookEventType       `json:"type"`
@@ -1667,11 +1666,13 @@ func (s WebhookService) verifyZendeskWebhookSignatureIsValid(
 ) bool {
 	expectedZendeskSignature := r.Header.Get(WebhookHeaderSignature)
 	zendeskSignatureTimestamp := r.Header.Get(WebhookHeaderSignatureTimestamp)
+
 	if expectedZendeskSignature == "" || zendeskSignatureTimestamp == "" {
 		return false
 	}
 
 	actualZendeskSignature := buildZendeskSignature(zendeskSignatureTimestamp, bodyBytes, webhookSigningSecret)
+
 	return expectedZendeskSignature == actualZendeskSignature
 }
 
@@ -1779,74 +1780,84 @@ type WebhookEventDataTagsChanged struct {
 	} `json:"removed"`
 }
 
-type WebhookEventUserAliasChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserCreatedPayload WebhookEventUser[WebhookEventDataEmpty]
-type WebhookEventUserCustomFieldChangedPayload WebhookEventUser[WebhookEventDataCustomFieldUpdate]
-type WebhookEventUserCustomRoleChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserDefaultGroupChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserDetailsChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserExternalIDChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserGroupMembershipCreatedPayload WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
-type WebhookEventUserGroupMembershipDeletedPayload WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
-type WebhookEventUserIdentityChangedPayload WebhookEventUser[WebhookEventDataUserIdentityChanged]
-type WebhookEventUserIdentityCreatedPayload WebhookEventUser[WebhookEventDataUserIdentity]
-type WebhookEventUserIdentityDeletedPayload WebhookEventUser[WebhookEventDataUserIdentity]
-type WebhookEventUserActiveChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
-type WebhookEventUserLastLoginChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserMergedPayload WebhookEventUser[WebhookEventDataUserMerged]
-type WebhookEventUserNameChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserNotesChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserOnlyPrivateCommentsChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
-type WebhookEventUserOrganizationMembershipCreatedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
-type WebhookEventUserOrganizationMembershipDeletedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
-type WebhookEventUserPasswordChangedPayload WebhookEventUser[WebhookEventDataEmpty]
-type WebhookEventUserPhotoChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserRoleChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
-type WebhookEventUserDeletedPayload WebhookEventUser[WebhookEventDataEmpty]
-type WebhookEventUserSuspendedChangedPayload WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
-type WebhookEventUserTagsChangedPayload WebhookEventUser[WebhookEventDataTagsChanged]
-type WebhookEventUserTimeZoneChangedPayload WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+type (
+	WebhookEventUserAliasChangedPayload                  WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserCreatedPayload                       WebhookEventUser[WebhookEventDataEmpty]
+	WebhookEventUserCustomFieldChangedPayload            WebhookEventUser[WebhookEventDataCustomFieldUpdate]
+	WebhookEventUserCustomRoleChangedPayload             WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserDefaultGroupChangedPayload           WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserDetailsChangedPayload                WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserExternalIDChangedPayload             WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserGroupMembershipCreatedPayload        WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
+	WebhookEventUserGroupMembershipDeletedPayload        WebhookEventUser[WebhookEventDataUserGroupMembershipChanged]
+	WebhookEventUserIdentityChangedPayload               WebhookEventUser[WebhookEventDataUserIdentityChanged]
+	WebhookEventUserIdentityCreatedPayload               WebhookEventUser[WebhookEventDataUserIdentity]
+	WebhookEventUserIdentityDeletedPayload               WebhookEventUser[WebhookEventDataUserIdentity]
+	WebhookEventUserActiveChangedPayload                 WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+	WebhookEventUserLastLoginChangedPayload              WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserMergedPayload                        WebhookEventUser[WebhookEventDataUserMerged]
+	WebhookEventUserNameChangedPayload                   WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserNotesChangedPayload                  WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserOnlyPrivateCommentsChangedPayload    WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+	WebhookEventUserOrganizationMembershipCreatedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
+	WebhookEventUserOrganizationMembershipDeletedPayload WebhookEventUser[WebhookEventDataUserOrganizationMembershipChanged]
+	WebhookEventUserPasswordChangedPayload               WebhookEventUser[WebhookEventDataEmpty]
+	WebhookEventUserPhotoChangedPayload                  WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserRoleChangedPayload                   WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+	WebhookEventUserDeletedPayload                       WebhookEventUser[WebhookEventDataEmpty]
+	WebhookEventUserSuspendedChangedPayload              WebhookEventUser[WebhookEventDataSimpleBoolUpdate]
+	WebhookEventUserTagsChangedPayload                   WebhookEventUser[WebhookEventDataTagsChanged]
+	WebhookEventUserTimeZoneChangedPayload               WebhookEventUser[WebhookEventDataSimpleStringUpdate]
+)
 
-type WebhookEventOrganizationCreatedPayload WebhookEventOrganization[WebhookEventDataEmpty]
-type WebhookEventOrganizationCustomFieldChangedPayload WebhookEventOrganization[WebhookEventDataCustomFieldUpdate]
-type WebhookEventOrganizationDeletedPayload WebhookEventOrganization[WebhookEventDataEmpty]
-type WebhookEventOrganizationExternalIDChangedPayload WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
-type WebhookEventOrganizationNameChangedPayload WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
-type WebhookEventOrganizationTagsChangedPayload WebhookEventOrganization[WebhookEventDataTagsChanged]
+type (
+	WebhookEventOrganizationCreatedPayload            WebhookEventOrganization[WebhookEventDataEmpty]
+	WebhookEventOrganizationCustomFieldChangedPayload WebhookEventOrganization[WebhookEventDataCustomFieldUpdate]
+	WebhookEventOrganizationDeletedPayload            WebhookEventOrganization[WebhookEventDataEmpty]
+	WebhookEventOrganizationExternalIDChangedPayload  WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
+	WebhookEventOrganizationNameChangedPayload        WebhookEventOrganization[WebhookEventDataSimpleStringUpdate]
+	WebhookEventOrganizationTagsChangedPayload        WebhookEventOrganization[WebhookEventDataTagsChanged]
+)
 
-type WebhookEventArticlePublishedPayload WebhookEventArticle[any]
-type WebhookEventArticleSubscriptionCreatedPayload WebhookEventArticle[any]
-type WebhookEventArticleUnpublishedPayload WebhookEventArticle[any]
-type WebhookEventArticleVoteCreatedPayload WebhookEventArticle[any]
-type WebhookEventArticleVoteChangedPayload WebhookEventArticle[any]
-type WebhookEventArticleVoteRemovedPayload WebhookEventArticle[any]
-type WebhookEventArticleCommentCreatedPayload WebhookEventArticle[any]
-type WebhookEventArticleCommentChangedPayload WebhookEventArticle[any]
-type WebhookEventArticleCommentPublishedPayload WebhookEventArticle[any]
-type WebhookEventArticleCommentUnpublishedPayload WebhookEventArticle[any]
-type WebhookEventArticleAuthorChangedPayload WebhookEventArticle[any]
+type (
+	WebhookEventArticlePublishedPayload           WebhookEventArticle[any]
+	WebhookEventArticleSubscriptionCreatedPayload WebhookEventArticle[any]
+	WebhookEventArticleUnpublishedPayload         WebhookEventArticle[any]
+	WebhookEventArticleVoteCreatedPayload         WebhookEventArticle[any]
+	WebhookEventArticleVoteChangedPayload         WebhookEventArticle[any]
+	WebhookEventArticleVoteRemovedPayload         WebhookEventArticle[any]
+	WebhookEventArticleCommentCreatedPayload      WebhookEventArticle[any]
+	WebhookEventArticleCommentChangedPayload      WebhookEventArticle[any]
+	WebhookEventArticleCommentPublishedPayload    WebhookEventArticle[any]
+	WebhookEventArticleCommentUnpublishedPayload  WebhookEventArticle[any]
+	WebhookEventArticleAuthorChangedPayload       WebhookEventArticle[any]
+)
 
-type WebhookEventCommunityPostCreatedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostChangedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostPublishedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostUnpublishedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostSubscriptionCreatedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostVoteCreatedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostVoteChangedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostVoteRemovedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentCreatedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentChangedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentPublishedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentUnpublishedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentVoteCreatedPayload WebhookEventCommunityPost[any]
-type WebhookEventCommunityPostCommentVoteChangedPayload WebhookEventCommunityPost[any]
+type (
+	WebhookEventCommunityPostCreatedPayload             WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostChangedPayload             WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostPublishedPayload           WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostUnpublishedPayload         WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostSubscriptionCreatedPayload WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostVoteCreatedPayload         WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostVoteChangedPayload         WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostVoteRemovedPayload         WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentCreatedPayload      WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentChangedPayload      WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentPublishedPayload    WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentUnpublishedPayload  WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentVoteCreatedPayload  WebhookEventCommunityPost[any]
+	WebhookEventCommunityPostCommentVoteChangedPayload  WebhookEventCommunityPost[any]
+)
 
-type WebhookEventAgentStateChangedPayload WebhookEventAgentState[any]
-type WebhookEventAgentWorkItemAddedPayload WebhookEventAgentState[any]
-type WebhookEventAgentWorkItemRemovedPayload WebhookEventAgentState[any]
-type WebhookEventAgentMaxCapacityChangedPayload WebhookEventAgentState[any]
-type WebhookEventAgentUnifiedStateChangedPayload WebhookEventAgentState[any]
-type WebhookEventAgentChannelCreatedPayload WebhookEventAgentState[any]
-type WebhookEventAgentChannelDeletedPayload WebhookEventAgentState[any]
+type (
+	WebhookEventAgentStateChangedPayload        WebhookEventAgentState[any]
+	WebhookEventAgentWorkItemAddedPayload       WebhookEventAgentState[any]
+	WebhookEventAgentWorkItemRemovedPayload     WebhookEventAgentState[any]
+	WebhookEventAgentMaxCapacityChangedPayload  WebhookEventAgentState[any]
+	WebhookEventAgentUnifiedStateChangedPayload WebhookEventAgentState[any]
+	WebhookEventAgentChannelCreatedPayload      WebhookEventAgentState[any]
+	WebhookEventAgentChannelDeletedPayload      WebhookEventAgentState[any]
+)
 
 type WebhookEventOmnichannelRoutingConfigFeatureChangedPayload WebhookEventOmnichannelRoutingConfig[any]
