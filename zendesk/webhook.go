@@ -198,8 +198,37 @@ type WebhookEvent struct {
 	Detail              any              `json:"detail"`
 }
 
+type WebhookHandlerOptions struct {
+	webhookSigningSecret string
+}
+
+type WebhookHandlerModifier interface {
+	ModifyWebhookRequest(webhookHandlerOptions *WebhookHandlerOptions)
+}
+
+type webhookRequestModifier func(webhookHandlerOptions *WebhookHandlerOptions)
+
+func (w webhookRequestModifier) ModifyWebhookRequest(webhookHandlerOptions *WebhookHandlerOptions) {
+	w(webhookHandlerOptions)
+}
+
+func WithSigningSecret(webhookSigningSecret string) webhookRequestModifier {
+	return webhookRequestModifier(func(webhookHandlerOptions *WebhookHandlerOptions) {
+		webhookHandlerOptions.webhookSigningSecret = webhookSigningSecret
+	})
+}
+
 //gocyclo:ignore
-func (s *WebhookService) HandleWebhookEvent(eventHandlers WebhookEventHandlers, webhookSigningSecret string) http.Handler {
+func (s *WebhookService) HandleWebhookEvent(
+	eventHandlers WebhookEventHandlers,
+	modifiers ...WebhookHandlerModifier,
+) http.Handler {
+	// Handle adding Authentication Methods and Verification Signature Secret
+	webhookHandlerOptions := WebhookHandlerOptions{}
+	for _, modifier := range modifiers {
+		modifier.ModifyWebhookRequest(&webhookHandlerOptions)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		webhookBody, err := readWebhookBody(r)
 		if err != nil {
@@ -221,8 +250,8 @@ func (s *WebhookService) HandleWebhookEvent(eventHandlers WebhookEventHandlers, 
 			return
 		}
 
-		if webhookSigningSecret != "" {
-			if !s.verifyZendeskWebhookSignatureIsValid(r, webhookBody, webhookSigningSecret) {
+		if webhookHandlerOptions.webhookSigningSecret != "" {
+			if !s.verifyZendeskWebhookSignatureIsValid(r, webhookBody, webhookHandlerOptions.webhookSigningSecret) {
 				respondToWebhookRequest(w, http.StatusBadRequest, "Bad Request")
 
 				return
@@ -1522,51 +1551,30 @@ func (s *WebhookService) HandleWebhookTrigger(handler func(b []byte) error, webh
 }
 
 type WebhookEventOrganization[EventData WebhookOrganizationEventData] struct {
-	Type                WebhookEventType          `json:"type"`
-	AccountID           AccountID                 `json:"account_id"`
-	ID                  WebhookEventID            `json:"id"`
-	Time                time.Time                 `json:"time"`
-	ZendeskEventVersion string                    `json:"zendesk_event_version"`
-	Subject             string                    `json:"subject"`
-	Event               EventData                 `json:"event"`
-	Detail              WebhookEventArticleDetail `json:"detail"`
+	Type                WebhookEventType               `json:"type"`
+	AccountID           AccountID                      `json:"account_id"`
+	ID                  WebhookEventID                 `json:"id"`
+	Time                time.Time                      `json:"time"`
+	ZendeskEventVersion string                         `json:"zendesk_event_version"`
+	Subject             string                         `json:"subject"`
+	Event               EventData                      `json:"event"`
+	Detail              WebhookEventOrganizationDetail `json:"detail"`
+}
+
+type WebhookEventOrganizationDetail struct {
+	CreatedAt      time.Time `json:"created_at"`
+	ExternalID     string    `json:"external_id"`
+	GroupID        string    `json:"group_id"`
+	Email          string    `json:"email"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	SharedComments bool      `json:"shared_comments"`
+	SharedTickets  bool      `json:"shared_tickets"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/event-types/webhook-event-types/
 type WebhookEventArticle[EventData WebhookArticleEventData] struct {
-	Type                WebhookEventType          `json:"type"`
-	AccountID           AccountID                 `json:"account_id"`
-	ID                  WebhookEventID            `json:"id"`
-	Time                time.Time                 `json:"time"`
-	ZendeskEventVersion string                    `json:"zendesk_event_version"`
-	Subject             string                    `json:"subject"`
-	Event               EventData                 `json:"event"`
-	Detail              WebhookEventArticleDetail `json:"detail"`
-}
-
-type WebhookEventCommunityPost[EventData WebhookCommunityPostEventData] struct {
-	Type                WebhookEventType          `json:"type"`
-	AccountID           AccountID                 `json:"account_id"`
-	ID                  WebhookEventID            `json:"id"`
-	Time                time.Time                 `json:"time"`
-	ZendeskEventVersion string                    `json:"zendesk_event_version"`
-	Subject             string                    `json:"subject"`
-	Event               EventData                 `json:"event"`
-	Detail              WebhookEventArticleDetail `json:"detail"`
-}
-
-type WebhookEventAgentState[EventData WebhookAgentStateEventData] struct {
-	Type                WebhookEventType          `json:"type"`
-	AccountID           AccountID                 `json:"account_id"`
-	ID                  WebhookEventID            `json:"id"`
-	Time                time.Time                 `json:"time"`
-	ZendeskEventVersion string                    `json:"zendesk_event_version"`
-	Subject             string                    `json:"subject"`
-	Event               EventData                 `json:"event"`
-	Detail              WebhookEventArticleDetail `json:"detail"`
-}
-
-type WebhookEventOmnichannelRoutingConfig[EventData WebhookOmnichannelRoutingConfigData] struct {
 	Type                WebhookEventType          `json:"type"`
 	AccountID           AccountID                 `json:"account_id"`
 	ID                  WebhookEventID            `json:"id"`
@@ -1583,12 +1591,64 @@ type WebhookEventArticleDetail struct {
 	ID      ArticleID `json:"id"`
 }
 
+type WebhookEventCommunityPost[EventData WebhookCommunityPostEventData] struct {
+	Type                WebhookEventType                `json:"type"`
+	AccountID           AccountID                       `json:"account_id"`
+	ID                  WebhookEventID                  `json:"id"`
+	Time                time.Time                       `json:"time"`
+	ZendeskEventVersion string                          `json:"zendesk_event_version"`
+	Subject             string                          `json:"subject"`
+	Event               EventData                       `json:"event"`
+	Detail              WebhookEventCommunityPostDetail `json:"detail"`
+}
+
+type WebhookEventCommunityPostDetail struct {
+	BrandID string `json:"brand_id"`
+	ID      string `json:"id"`
+	PostID  string `json:"post_id"`
+}
+
+type WebhookEventAgentState[EventData WebhookAgentStateEventData] struct {
+	Type                WebhookEventType             `json:"type"`
+	AccountID           AccountID                    `json:"account_id"`
+	ID                  WebhookEventID               `json:"id"`
+	Time                time.Time                    `json:"time"`
+	ZendeskEventVersion string                       `json:"zendesk_event_version"`
+	Subject             string                       `json:"subject"`
+	Event               EventData                    `json:"event"`
+	Detail              WebhookEventAgentStateDetail `json:"detail"`
+}
+
+type WebhookEventAgentStateDetail struct {
+	AccountID string `json:"account_id"`
+	AgentID   string `json:"agent_id"`
+	Version   string `json:"version"`
+}
+
+type WebhookEventOmnichannelRoutingConfig[EventData WebhookOmnichannelRoutingConfigData] struct {
+	Type                WebhookEventType                           `json:"type"`
+	AccountID           AccountID                                  `json:"account_id"`
+	ID                  WebhookEventID                             `json:"id"`
+	Time                time.Time                                  `json:"time"`
+	ZendeskEventVersion string                                     `json:"zendesk_event_version"`
+	Subject             string                                     `json:"subject"`
+	Event               EventData                                  `json:"event"`
+	Detail              WebhookEventOmnichannelRoutingConfigDetail `json:"detail"`
+}
+
+type WebhookEventOmnichannelRoutingConfigDetail struct {
+	AccountID string `json:"account_id"`
+}
+
 type WebhookArticleEventData interface {
 	EventTypeArticleAuthorChangedEvent | any
 }
 
 type WebhookOrganizationEventData interface {
-	any
+	WebhookEventDataEmpty |
+		WebhookEventDataCustomFieldUpdate |
+		WebhookEventDataSimpleStringUpdate |
+		WebhookEventDataTagsChanged
 }
 
 type WebhookAgentStateEventData interface {
@@ -1596,7 +1656,7 @@ type WebhookAgentStateEventData interface {
 }
 
 type WebhookOmnichannelRoutingConfigData interface {
-	any
+	WebhookEventDataSimpleBoolUpdateValue
 }
 
 type WebhookCommunityPostEventData interface {
@@ -1628,10 +1688,16 @@ type WebhookEventUserDetail struct {
 }
 
 type WebhookUserEventData interface {
-	WebhookEventUserAliasChangedPayload |
-		WebhookEventUserActiveStatusChangedPayload |
-		WebhookEventUserDetailsChangedPayload |
-		any
+	WebhookEventDataSimpleStringUpdate |
+		WebhookEventDataEmpty |
+		WebhookEventDataCustomFieldUpdate |
+		WebhookEventDataUserGroupMembershipChanged |
+		WebhookEventDataUserIdentityChanged |
+		WebhookEventDataUserIdentity |
+		WebhookEventDataSimpleBoolUpdate |
+		WebhookEventDataUserMerged |
+		WebhookEventDataUserOrganizationMembershipChanged |
+		WebhookEventDataTagsChanged
 }
 
 type WebhookEventUserActiveStatusChangedPayload struct {
@@ -1728,6 +1794,11 @@ type WebhookEventDataSimpleStringUpdate struct {
 type WebhookEventDataSimpleBoolUpdate struct {
 	Current  bool `json:"current"`
 	Previous bool `json:"previous"`
+}
+
+type WebhookEventDataSimpleBoolUpdateValue struct {
+	CurrentValue  bool `json:"current_value"`
+	PreviousValue bool `json:"previous_value"`
 }
 
 type WebhookEventDataEmpty struct{}
@@ -1860,4 +1931,6 @@ type (
 	WebhookEventAgentChannelDeletedPayload      WebhookEventAgentState[any]
 )
 
-type WebhookEventOmnichannelRoutingConfigFeatureChangedPayload WebhookEventOmnichannelRoutingConfig[any]
+type (
+	WebhookEventOmnichannelRoutingConfigFeatureChangedPayload WebhookEventOmnichannelRoutingConfig[WebhookEventDataSimpleBoolUpdateValue]
+)

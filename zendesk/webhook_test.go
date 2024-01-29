@@ -35,7 +35,7 @@ func Test_WebhookVerifySignature_200(t *testing.T) {
 				return nil
 			},
 		},
-		ZendeskTestStaticWebhookSignature,
+		zendesk.WithSigningSecret(ZendeskTestStaticWebhookSignature),
 	).ServeHTTP(recorder, testRequest)
 
 	response := recorder.Result()
@@ -68,7 +68,6 @@ func Test_WebhookSkipVerifySignature_200(t *testing.T) {
 				return nil
 			},
 		},
-		"",
 	).ServeHTTP(recorder, testRequest)
 
 	response := recorder.Result()
