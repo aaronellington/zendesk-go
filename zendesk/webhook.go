@@ -1521,7 +1521,16 @@ func (s *WebhookService) HandleWebhookEvent(
 	)
 }
 
-func (s *WebhookService) HandleWebhookTrigger(handler func(b []byte) error, webhookSigningSecret string) http.Handler {
+func (s *WebhookService) HandleWebhookTrigger(
+	handler func(b []byte) error,
+	modifiers ...WebhookHandlerModifier,
+) http.Handler {
+	// Handle adding Authentication Methods and Verification Signature Secret
+	webhookHandlerOptions := WebhookHandlerOptions{}
+	for _, modifier := range modifiers {
+		modifier.ModifyWebhookRequest(&webhookHandlerOptions)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		webhookBody, err := readWebhookBody(r)
 		if err != nil {
@@ -1530,8 +1539,8 @@ func (s *WebhookService) HandleWebhookTrigger(handler func(b []byte) error, webh
 			return
 		}
 
-		if webhookSigningSecret != "" {
-			if !s.verifyZendeskWebhookSignatureIsValid(r, webhookBody, webhookSigningSecret) {
+		if webhookHandlerOptions.webhookSigningSecret != "" {
+			if !s.verifyZendeskWebhookSignatureIsValid(r, webhookBody, webhookHandlerOptions.webhookSigningSecret) {
 				respondToWebhookRequest(w, http.StatusBadRequest, "Bad Request")
 
 				return
