@@ -1,0 +1,9 @@
+{
+	"type": "End User Comment",
+	"ticketID": "12345",
+	"priority": "Normal",
+	"tags": "new",
+	"groupID": "9000",
+	"assigneeID": "9001",
+	"assigneeEmail": "kren@example.com"
+}
