@@ -126,6 +126,12 @@ func NewService(
 				agentStatesMutex: &sync.Mutex{},
 				agentStates:      AgentStates{},
 			},
+			realTimeService: &RealTimeService{
+				client: c,
+			},
+			departmentService: &DepartmentService{
+				client: c,
+			},
 		},
 		webhookService: &WebhookService{
 			client: c,
