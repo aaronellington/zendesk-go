@@ -89,14 +89,23 @@ func (c *client) do(request *http.Request, target any) error {
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
+		fmt.Println("Error making HTTP request:", err)
 		return err
 	}
+
 	defer response.Body.Close()
 
+	// Print the HTTP status code
+	fmt.Println("HTTP Status Code:", response.StatusCode)
+
+	// Read and print the response body
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
+		fmt.Println("Error reading response body:", err)
 		return err
 	}
+
+	fmt.Println("Response Body:", string(bodyBytes))
 
 	if response.StatusCode >= http.StatusBadRequest {
 		responseErr := &Error{

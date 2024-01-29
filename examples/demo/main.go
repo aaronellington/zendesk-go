@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -40,22 +41,37 @@ func main() {
 	ctx := context.Background()
 
 	z := zendesk.NewService(
-		"kaseya1523304719",
+		os.Getenv("ZENDESK_DEMO_SUBDOMAIN"),
 		zendesk.AuthenticationToken{
-			Email: "zendesk_integrations@kaseya.com",
-			Token: "xQ6FrYWjSVyeQHCM3u1vpjhooyqhncXeRrbhM8lb",
+			Email: os.Getenv("ZENDESK_DEMO_EMAIL"),
+			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
 		},
 		zendesk.ChatCredentials{
-			ClientID:     "RLc1Ddddmtq88haQ64rm9ewGj8qgWuFSSSdaKTewllBwURq8N7",
-			ClientSecret: "EGfWIklds8kVXV1riZGpanb7W3w9hpkMsN5GOHvMauZtHOGb5KJfxEVtRVJcEl7b",
+			ClientID:     os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_ID"),
+			ClientSecret: os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_SECRET"),
 		},
-		zendesk.WithLogger(log.New(os.Stdout, "Zendesk Chat API - ", log.LstdFlags)),
+		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	// err := z.LiveChat().ChatStream().List(ctx, "13388700431505", func(response zendesk.ChatsStreamResponse) error {
-	// 	_ = prettyPrint(response)
-	// 	return nil
-	// })
-	state := z.LiveChat().AgentEvent().GetAgentStates(ctx)
-	prettyPrint(state)
+	err := z.LiveChat().ChatDepartments().List(ctx, func(departments []zendesk.Department) error {
+		for _, department := range departments {
+			deptID := department.ID
+			fmt.Println("Processing department ID:", deptID)
+
+			err := z.LiveChat().ChatStream().List(ctx, fmt.Sprint(deptID), func(response zendesk.ChatsStreamResponse) error {
+				fmt.Println("Completed processing for department ID:", deptID)
+				_ = prettyPrint(response)
+				return nil
+			})
+
+			if err != nil {
+				PrintErr(err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		PrintErr(err)
+	}
+
 }
