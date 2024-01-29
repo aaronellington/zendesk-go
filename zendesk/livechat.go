@@ -22,6 +22,7 @@ func (s *LiveChatService) AgentEvent() *AgentEventService {
 func (s *LiveChatService) ChatStream() *ChatStreamService {
 	return s.chatStreamService
 }
+
 func (s *LiveChatService) ChatDepartments() *ChatDepartmentsService {
 	return s.chatDepartmentsService
 }

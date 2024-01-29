@@ -22,12 +22,10 @@ type Department struct {
 }
 
 func (s *ChatDepartmentsService) List(ctx context.Context, pageHandler func(page []Department) error) error {
-
 	requestURL := "https://www.zopim.com/api/v2/departments"
 
 	for {
 		target := []Department{}
-
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
@@ -45,6 +43,5 @@ func (s *ChatDepartmentsService) List(ctx context.Context, pageHandler func(page
 		if err := pageHandler(target); err != nil {
 			return err
 		}
-
 	}
 }

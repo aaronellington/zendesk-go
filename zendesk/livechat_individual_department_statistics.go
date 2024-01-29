@@ -24,8 +24,6 @@ type ChatsStreamResponse struct {
 
 func (s *ChatStreamService) List(ctx context.Context, departmentID string, pageHandler func(page ChatsStreamResponse) error) error {
 	requestURL := fmt.Sprintf("https://rtm.zopim.com/stream/chats?department_id=%s", departmentID)
-	fmt.Println("Request URL:", requestURL)
-
 	target := ChatsStreamResponse{}
 
 	request, err := http.NewRequestWithContext(
