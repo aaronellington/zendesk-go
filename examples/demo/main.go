@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -53,25 +53,11 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	err := z.LiveChat().ChatDepartments().List(ctx, func(departments []zendesk.Department) error {
-		for _, department := range departments {
-			deptID := department.ID
-			fmt.Println("Processing department ID:", deptID)
-
-			err := z.LiveChat().ChatStream().List(ctx, fmt.Sprint(deptID), func(response zendesk.ChatsStreamResponse) error {
-				fmt.Println("Completed processing for department ID:", deptID)
-				_ = prettyPrint(response)
-				return nil
-			})
-
-			if err != nil {
-				PrintErr(err)
-			}
-		}
+	err := z.LiveChat().AgentEvent().IncrementalExport(ctx, time.Now().Add(time.Minute*-8), func(response zendesk.AgentEventExportResponse) error {
+		_ = prettyPrint(response)
 		return nil
 	})
 	if err != nil {
 		PrintErr(err)
 	}
-
 }
