@@ -32,6 +32,7 @@ func (s *ChatDepartmentsService) List(ctx context.Context, pageHandler func(page
 			requestURL,
 			http.NoBody,
 		)
+
 		if err != nil {
 			return err
 		}
