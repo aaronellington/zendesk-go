@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-type ChatStreamService struct {
+// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/#get-chat-metrics-by-department
+type RealTimeService struct {
 	client *client
 }
 
-type ChatsStreamResponse struct {
+type ChatMetrics struct {
 	ChatDurationMax *int `json:"chat_duration_max"`
 	ActiveChats     *int `json:"active_chats"`
 	IncomingChats   *int `json:"incoming_chats"`
@@ -22,8 +23,21 @@ type ChatsStreamResponse struct {
 	ResponseTimeMax *int `json:"response_time_max"`
 }
 
-func (s *ChatStreamService) List(ctx context.Context, departmentID string, pageHandler func(page ChatsStreamResponse) error) error {
-	requestURL := fmt.Sprintf("https://rtm.zopim.com/stream/chats?department_id=%s", departmentID)
+type ChatsStreamResponse struct {
+	Content    ChatsStreamResponseContent `json:"content"`
+	StatusCode int                        `json:"status_code"`
+}
+
+type ChatsStreamResponseContent struct {
+	Topic        string      `json:"topic"`
+	Data         ChatMetrics `json:"data"`
+	Type         string      `json:"type"`
+	DepartmentID int64       `json:"department_id"`
+}
+
+// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/#get-chat-metrics-by-department
+func (s *RealTimeService) GetChatMetricsByDepartment(ctx context.Context, departmentID int64) (ChatsStreamResponse, error) {
+	requestURL := fmt.Sprintf("https://rtm.zopim.com/stream/chats?department_id=%d", departmentID)
 	target := ChatsStreamResponse{}
 
 	request, err := http.NewRequestWithContext(
@@ -33,16 +47,12 @@ func (s *ChatStreamService) List(ctx context.Context, departmentID string, pageH
 		http.NoBody,
 	)
 	if err != nil {
-		return err
+		return ChatsStreamResponse{}, err
 	}
 
 	if err := s.client.LiveChatRequest(request, &target); err != nil {
-		return err
+		return ChatsStreamResponse{}, err
 	}
 
-	if err := pageHandler(target); err != nil {
-		return err
-	}
-
-	return nil
+	return target, nil
 }

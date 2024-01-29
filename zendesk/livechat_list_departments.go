@@ -5,7 +5,8 @@ import (
 	"net/http"
 )
 
-type ChatDepartmentsService struct {
+// https://developer.zendesk.com/api-reference/live-chat/chat-api/departments
+type DepartmentService struct {
 	client *client
 }
 
@@ -21,28 +22,25 @@ type Department struct {
 	Name *string `json:"name"`
 }
 
-func (s *ChatDepartmentsService) List(ctx context.Context, pageHandler func(page []Department) error) error {
+// https://developer.zendesk.com/api-reference/live-chat/chat-api/departments/#list-departments
+func (s *DepartmentService) List(ctx context.Context) ([]Department, error) {
 	requestURL := "https://www.zopim.com/api/v2/departments"
 
-	for {
-		target := []Department{}
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			requestURL,
-			http.NoBody,
-		)
+	target := []Department{}
 
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.LiveChatRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		requestURL,
+		http.NoBody,
+	)
+	if err != nil {
+		return []Department{}, err
 	}
+
+	if err := s.client.LiveChatRequest(request, &target); err != nil {
+		return []Department{}, err
+	}
+
+	return target, nil
 }

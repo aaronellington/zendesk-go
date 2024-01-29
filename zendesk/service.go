@@ -126,10 +126,10 @@ func NewService(
 				agentStatesMutex: &sync.Mutex{},
 				agentStates:      AgentStates{},
 			},
-			chatStreamService: &ChatStreamService{
+			realTimeService: &RealTimeService{
 				client: c,
 			},
-			chatDepartmentsService: &ChatDepartmentsService{
+			departmentService: &DepartmentService{
 				client: c,
 			},
 		},
