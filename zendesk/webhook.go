@@ -260,7 +260,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -279,7 +279,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -298,7 +298,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -317,7 +317,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -336,7 +336,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -355,7 +355,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -374,7 +374,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -393,7 +393,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -412,7 +412,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -431,7 +431,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -452,7 +452,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -471,7 +471,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -490,7 +490,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -509,7 +509,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -528,7 +528,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -547,7 +547,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -568,7 +568,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -587,7 +587,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -606,7 +606,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -625,7 +625,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -644,7 +644,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -663,7 +663,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -682,7 +682,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -701,7 +701,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -720,7 +720,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -739,7 +739,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -758,7 +758,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -777,7 +777,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -796,7 +796,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -815,7 +815,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -834,7 +834,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -853,7 +853,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -872,7 +872,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -891,7 +891,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -910,7 +910,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -929,7 +929,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -948,7 +948,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -967,7 +967,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -986,7 +986,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1005,7 +1005,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1025,7 +1025,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1044,7 +1044,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1063,7 +1063,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1084,7 +1084,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1103,7 +1103,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1122,7 +1122,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1141,7 +1141,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1160,7 +1160,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1179,7 +1179,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1198,7 +1198,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1217,7 +1217,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1236,7 +1236,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1255,7 +1255,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1274,7 +1274,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1293,7 +1293,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1312,7 +1312,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1331,7 +1331,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1352,7 +1352,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1371,7 +1371,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1390,7 +1390,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1409,7 +1409,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1428,7 +1428,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1447,7 +1447,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1487,7 +1487,7 @@ func (s *WebhookService) HandleWebhookEvent(
 					respondToWebhookRequest(
 						w,
 						http.StatusInternalServerError,
-						err.Error(),
+						"Server failed to process Webhook Request correctly",
 					)
 
 					return
@@ -1528,7 +1528,7 @@ func (s *WebhookService) HandleWebhookTrigger(
 
 		if handler != nil {
 			if err := handler(r.Context(), webhookBody); err != nil {
-				respondToWebhookRequest(w, http.StatusInternalServerError, err.Error())
+				respondToWebhookRequest(w, http.StatusInternalServerError, "Server failed to process Webhook Request correctly")
 
 				return
 			}
