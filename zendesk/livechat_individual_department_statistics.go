@@ -22,8 +22,6 @@ type ChatsStreamResponse struct {
 	ResponseTimeMax *int `json:"response_time_max"`
 }
 
-// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/#data-initialization
-
 func (s *ChatStreamService) List(ctx context.Context, departmentID string, pageHandler func(page ChatsStreamResponse) error) error {
 	requestURL := fmt.Sprintf("https://rtm.zopim.com/stream/chats?department_id=%s", departmentID)
 	fmt.Println("Request URL:", requestURL)

@@ -129,6 +129,9 @@ func NewService(
 			chatStreamService: &ChatStreamService{
 				client: c,
 			},
+			chatDepartmentsService: &ChatDepartmentsService{
+				client: c,
+			},
 		},
 	}
 }

@@ -21,8 +21,6 @@ type Department struct {
 	Name *string `json:"name"`
 }
 
-// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/#data-initialization
-
 func (s *ChatDepartmentsService) List(ctx context.Context, pageHandler func(page []Department) error) error {
 
 	requestURL := "https://www.zopim.com/api/v2/departments"
