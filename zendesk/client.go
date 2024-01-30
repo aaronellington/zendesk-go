@@ -196,6 +196,14 @@ type chatToken struct {
 	Scope       string `json:"scope"`
 }
 
+/*
+NOTE: You must configure the API Client in Zendesk Chat to be "client_type": "confidential". By default it is "public"
+and this setting reverts to "public" if you interact with the client via the Zendesk Chat Web UI.
+
+https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#implementing-an-oauth-authorization-flow
+
+https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#confidential-grant-types
+*/
 func (c *client) getAccessToken(ctx context.Context) error {
 	if c.chatToken != nil {
 		return nil
@@ -213,7 +221,12 @@ func (c *client) getAccessToken(ctx context.Context) error {
 	data.Set("client_id", c.chatCredentials.ClientID)
 	data.Set("client_secret", c.chatCredentials.ClientSecret)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://www.zopim.com/oauth2/token", strings.NewReader(data.Encode()))
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"https://www.zopim.com/oauth2/token",
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return err
 	}

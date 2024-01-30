@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const ZopimAPIBaseURL string = "www.zopim.com"
+
 type ChatsResponse struct {
 	Chats   []Chat  `json:"chats"`
 	NextURL *string `json:"next_url"`
