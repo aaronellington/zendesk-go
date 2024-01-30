@@ -151,6 +151,18 @@ func (c *client) ZendeskGetRequest(ctx context.Context, url string) (*http.Respo
 }
 
 func (c *client) LiveChatRequest(request *http.Request, target any) error {
+	if request.URL.Host == "" {
+		request.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
+	}
+
+	request.URL.Scheme = "https"
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("User-Agent", c.userAgent)
+
+	if request.Header.Get("Content-Type") == "" {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
 	attempts := 0
 	maxAttempts := 2
 
