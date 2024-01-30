@@ -207,7 +207,7 @@ func (c *client) RealTimeChatRequest(request *http.Request, target any) error {
 	return nil
 }
 
-func (c *client) ChatsRequest(request *http.Request, target any) error {
+func (c *client) ChatRequest(request *http.Request, target any) error {
 	if request.URL.Host == "" {
 		request.URL.Host = "www.zopim.com"
 	}

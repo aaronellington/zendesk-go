@@ -88,7 +88,7 @@ func (s *AgentEventService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.ChatsRequest(request, &target); err != nil {
+		if err := s.client.ChatRequest(request, &target); err != nil {
 			return err
 		}
 

@@ -156,7 +156,7 @@ func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResp
 			return err
 		}
 
-		if err := s.client.ChatsRequest(request, &target); err != nil {
+		if err := s.client.ChatRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -198,7 +198,7 @@ func (s *ChatsService) Search(
 			return err
 		}
 
-		if err := s.client.ChatsRequest(request, &target); err != nil {
+		if err := s.client.ChatRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -230,7 +230,7 @@ func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
 		return Chat{}, err
 	}
 
-	if err := s.client.ChatsRequest(request, &target); err != nil {
+	if err := s.client.ChatRequest(request, &target); err != nil {
 		return Chat{}, err
 	}
 
@@ -263,7 +263,7 @@ func (s *ChatsService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.ChatsRequest(request, &target); err != nil {
+		if err := s.client.ChatRequest(request, &target); err != nil {
 			return err
 		}
 
