@@ -55,6 +55,7 @@ func (s *RESTService) GetAllChatMetricsByDepartment(ctx context.Context, departm
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
+
 	return s.getChatMetricsBy(ctx, &filter)
 }
 
@@ -62,6 +63,7 @@ func (s *RESTService) GetAllChatMetricsForSpecificTimeWindow(ctx context.Context
 	filter := url.Values{
 		"window": []string{strconv.FormatUint(uint64(timeWindow), 10)},
 	}
+
 	return s.getChatMetricsBy(ctx, &filter)
 }
 
@@ -98,6 +100,7 @@ func (s *RESTService) GetSingleChatMetricForDepartment(ctx context.Context, chat
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
+
 	return s.getChatMetricBy(ctx, chatMetric, &filter)
 }
 
@@ -105,6 +108,7 @@ func (s *RESTService) GetSingleChatMetricForSpecificTimeWindow(ctx context.Conte
 	filter := url.Values{
 		"window": []string{strconv.FormatUint(uint64(timeWindow), 10)},
 	}
+
 	return s.getChatMetricBy(ctx, chatMetric, &filter)
 }
 

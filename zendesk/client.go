@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+const (
+	httpSecure      string = "https"
+	websocketSecure string = "wss"
+)
+
 type client struct {
 	httpClient           *http.Client
 	zendeskAuth          authentication
@@ -73,7 +78,7 @@ func (c *client) do(request *http.Request, target any) error {
 		request.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
 	}
 
-	request.URL.Scheme = "https"
+	request.URL.Scheme = httpSecure
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
 
@@ -160,7 +165,7 @@ func (c *client) RealTimeChatRequest(request *http.Request, target any) error {
 		request.URL.Host = "rtm.zopim.com"
 	}
 
-	request.URL.Scheme = "https"
+	request.URL.Scheme = httpSecure
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
 
@@ -212,7 +217,7 @@ func (c *client) ChatRequest(request *http.Request, target any) error {
 		request.URL.Host = "www.zopim.com"
 	}
 
-	request.URL.Scheme = "https"
+	request.URL.Scheme = httpSecure
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
 
