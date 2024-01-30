@@ -61,7 +61,7 @@ func main() {
 		deptID := department.ID
 		fmt.Println(len(departments))
 		fmt.Println("Processing department ID:", deptID)
-		metricResponse, err := z.LiveChat().RealTimeChat().REST().GetChatMetricsByDepartment(ctx, deptID)
+		metricResponse, err := z.LiveChat().RealTimeChat().REST().GetAllChatMetricsByDepartment(ctx, deptID)
 		_ = prettyPrint(metricResponse)
 
 		if err != nil {
