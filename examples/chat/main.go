@@ -53,7 +53,7 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	departments, err := z.LiveChat().Department().List(ctx)
+	departments, err := z.LiveChat().Chat().Department().List(ctx)
 	for _, department := range departments {
 		if !department.Settings.ChatEnabled {
 			continue
@@ -61,7 +61,7 @@ func main() {
 		deptID := department.ID
 		fmt.Println(len(departments))
 		fmt.Println("Processing department ID:", deptID)
-		metricResponse, err := z.LiveChat().RealTime().GetChatMetricsByDepartment(ctx, deptID)
+		metricResponse, err := z.LiveChat().RealTimeChat().REST().GetChatMetricsByDepartment(ctx, deptID)
 		_ = prettyPrint(metricResponse)
 
 		if err != nil {

@@ -24,21 +24,19 @@ type Department struct {
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/departments/#list-departments
 func (s *DepartmentService) List(ctx context.Context) ([]Department, error) {
-	requestURL := "https://www.zopim.com/api/v2/departments"
-
 	target := []Department{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		requestURL,
+		"/api/v2/departments",
 		http.NoBody,
 	)
 	if err != nil {
 		return []Department{}, err
 	}
 
-	if err := s.client.LiveChatRequest(request, &target); err != nil {
+	if err := s.client.ChatsRequest(request, &target); err != nil {
 		return []Department{}, err
 	}
 

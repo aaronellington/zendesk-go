@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-const ZopimAPIBaseURL string = "www.zopim.com"
+type ChatsService struct {
+	client *client
+}
 
 type ChatsResponse struct {
 	Chats   []Chat  `json:"chats"`
@@ -16,11 +18,11 @@ type ChatsResponse struct {
 }
 
 type ChatsSearchResponse struct {
-	Results []ChatSearchResult `json:"results"`
-	NextURL *string            `json:"next_url"`
+	Results []ChatsSearchResult `json:"results"`
+	NextURL *string             `json:"next_url"`
 }
 
-type ChatSearchResult struct {
+type ChatsSearchResult struct {
 	ID        ChatID    `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
 	Preview   string    `json:"preview"`
@@ -137,14 +139,9 @@ type ChatHistory struct {
 	Reason         string    `json:"reason"`
 }
 
-// https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/
-type ChatService struct {
-	client *client
-}
-
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#list-chats
-func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
-	requestURL := "https://www.zopim.com/api/v2/chats"
+func (s *ChatsService) List(ctx context.Context, pageHandler func(page ChatsResponse) error) error {
+	requestURL := "/api/v2/chats"
 
 	for {
 		target := ChatsResponse{}
@@ -159,7 +156,7 @@ func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsRespo
 			return err
 		}
 
-		if err := s.client.LiveChatRequest(request, &target); err != nil {
+		if err := s.client.ChatsRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -178,11 +175,15 @@ func (s *ChatService) List(ctx context.Context, pageHandler func(page ChatsRespo
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#search-chats
-func (s *ChatService) Search(ctx context.Context, query string, pageHandler func(page ChatsSearchResponse) error) error {
+func (s *ChatsService) Search(
+	ctx context.Context,
+	query string,
+	pageHandler func(page ChatsSearchResponse) error,
+) error {
 	values := &url.Values{}
 	values.Set("q", query)
 
-	requestURL := "https://www.zopim.com/api/v2/chats/search?" + values.Encode()
+	requestURL := "/api/v2/chats/search?" + values.Encode()
 
 	for {
 		target := ChatsSearchResponse{}
@@ -197,7 +198,7 @@ func (s *ChatService) Search(ctx context.Context, query string, pageHandler func
 			return err
 		}
 
-		if err := s.client.LiveChatRequest(request, &target); err != nil {
+		if err := s.client.ChatsRequest(request, &target); err != nil {
 			return err
 		}
 
@@ -216,20 +217,20 @@ func (s *ChatService) Search(ctx context.Context, query string, pageHandler func
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/#show-chat
-func (s *ChatService) Show(ctx context.Context, id ChatID) (Chat, error) {
+func (s *ChatsService) Show(ctx context.Context, id ChatID) (Chat, error) {
 	target := Chat{}
 
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("https://www.zopim.com/api/v2/chats/%s", id),
+		fmt.Sprintf("/api/v2/chats/%s", id),
 		http.NoBody,
 	)
 	if err != nil {
 		return Chat{}, err
 	}
 
-	if err := s.client.LiveChatRequest(request, &target); err != nil {
+	if err := s.client.ChatsRequest(request, &target); err != nil {
 		return Chat{}, err
 	}
 
@@ -237,7 +238,7 @@ func (s *ChatService) Show(ctx context.Context, id ChatID) (Chat, error) {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/incremental_export/#incremental-chat-export
-func (s *ChatService) IncrementalExport(
+func (s *ChatsService) IncrementalExport(
 	ctx context.Context,
 	startTime time.Time,
 	pageHandler func(response ChatsIncrementalExportResponse) error,
@@ -255,14 +256,14 @@ func (s *ChatService) IncrementalExport(
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
-			fmt.Sprintf("https://www.zopim.com/api/v2/incremental/chats?%s", query.Encode()),
+			fmt.Sprintf("/api/v2/incremental/chats?%s", query.Encode()),
 			http.NoBody,
 		)
 		if err != nil {
 			return err
 		}
 
-		if err := s.client.LiveChatRequest(request, &target); err != nil {
+		if err := s.client.ChatsRequest(request, &target); err != nil {
 			return err
 		}
 

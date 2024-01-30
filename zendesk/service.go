@@ -119,19 +119,27 @@ func NewService(
 		},
 		liveChatService: &LiveChatService{
 			chatService: &ChatService{
-				client: c,
+				chatsService: &ChatsService{
+					client: c,
+				},
+				agentEventService: &AgentEventService{
+					client:           c,
+					agentStatesMutex: &sync.Mutex{},
+					agentStates:      AgentStates{},
+				},
+				departmentService: &DepartmentService{
+					client: c,
+				},
 			},
-			agentEventService: &AgentEventService{
-				client:           c,
-				agentStatesMutex: &sync.Mutex{},
-				agentStates:      AgentStates{},
+			realTimeChatService: &RealTimeChatService{
+				restService: &RESTService{
+					client: c,
+				},
+				websocketStreamingService: &WebsocketStreamingService{
+					client: c,
+				},
 			},
-			departmentService: &DepartmentService{
-				client: c,
-			},
-		},
-		realTimeChatService: &RealTimeChatService{
-			restService: &RESTService{
+			chatConversationsService: &ChatConversationsService{
 				client: c,
 			},
 		},
@@ -147,7 +155,6 @@ type Service struct {
 	supportService              *SupportService
 	guideService                *GuideService
 	liveChatService             *LiveChatService
-	realTimeChatService         *RealTimeChatService
 	webhookService              *WebhookService
 }
 
@@ -173,11 +180,6 @@ func (s *Service) Guide() *GuideService {
 // https://developer.zendesk.com/api-reference/live-chat/introduction/
 func (s *Service) LiveChat() *LiveChatService {
 	return s.liveChatService
-}
-
-// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/introduction/
-func (s *Service) RealTimeChat() *RealTimeChatService {
-	return s.realTimeChatService
 }
 
 // https://developer.zendesk.com/api-reference/webhooks/introduction/
