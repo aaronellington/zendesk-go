@@ -130,7 +130,6 @@ type (
 	BrandID                  uint64
 	CategoryID               uint64
 	ChatAccountID            uint64
-	ChatDepartmentID         uint64
 	ChatEngagementID         string
 	ChatID                   string
 	CustomFieldOptionID      uint64

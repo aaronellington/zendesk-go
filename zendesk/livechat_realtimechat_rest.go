@@ -41,17 +41,17 @@ type ChatsStreamResponse struct {
 }
 
 type ChatsStreamResponseContent struct {
-	Topic        string            `json:"topic"`
-	Data         ChatMetrics       `json:"data"`
-	Type         string            `json:"type"`
-	DepartmentID *ChatDepartmentID `json:"department_id"`
+	Topic        string      `json:"topic"`
+	Data         ChatMetrics `json:"data"`
+	Type         string      `json:"type"`
+	DepartmentID *GroupID    `json:"department_id"`
 }
 
 func (s *RESTService) GetAllChatMetrics(ctx context.Context) (ChatsStreamResponse, error) {
 	return s.getChatMetricsBy(ctx, nil)
 }
 
-func (s *RESTService) GetAllChatMetricsByDepartment(ctx context.Context, departmentID ChatDepartmentID) (ChatsStreamResponse, error) {
+func (s *RESTService) GetAllChatMetricsByDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
@@ -96,7 +96,7 @@ func (s *RESTService) GetSingleChatMetric(ctx context.Context, chatMetric LiveCh
 	return s.getChatMetricBy(ctx, chatMetric, nil)
 }
 
-func (s *RESTService) GetSingleChatMetricForDepartment(ctx context.Context, chatMetric LiveChatMetricKeyChat, departmentID ChatDepartmentID) (ChatsStreamResponse, error) {
+func (s *RESTService) GetSingleChatMetricForDepartment(ctx context.Context, chatMetric LiveChatMetricKeyChat, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}

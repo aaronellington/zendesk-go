@@ -15,7 +15,7 @@ type Department struct {
 	Description string             `json:"description"`
 	Members     []UserID           `json:"members"`
 	Enabled     bool               `json:"enabled"`
-	ID          ChatDepartmentID   `json:"id"`
+	ID          GroupID            `json:"id"`
 	Settings    DepartmentSettings `json:"settings"`
 	Name        string             `json:"name"`
 }
@@ -47,7 +47,7 @@ func (s *DepartmentService) List(ctx context.Context) ([]Department, error) {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/departments/#show-department
-func (s *DepartmentService) Show(ctx context.Context, id ChatDepartmentID) (Department, error) {
+func (s *DepartmentService) Show(ctx context.Context, id GroupID) (Department, error) {
 	target := Department{}
 
 	request, err := http.NewRequestWithContext(
