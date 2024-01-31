@@ -7,11 +7,11 @@ type RealTimeChatService struct {
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/
-func (s *RealTimeChatService) REST() *RealTimeChatRestService {
+func (s *RealTimeChatService) RealTimeChatRestService() *RealTimeChatRestService {
 	return s.realTimeChatRestService
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
-func (s *RealTimeChatService) WebsocketStreaming() *RealTimeChatStreamingService {
+func (s *RealTimeChatService) RealTimeChatStreamingService() *RealTimeChatStreamingService {
 	return s.realTimeChatStreamingService
 }
