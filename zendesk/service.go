@@ -132,10 +132,10 @@ func NewService(
 				},
 			},
 			realTimeChatService: &RealTimeChatService{
-				restService: &RESTService{
+				realTimeChatRestService: &RealTimeChatRestService{
 					client: c,
 				},
-				websocketStreamingService: &WebsocketStreamingService{
+				realTimeChatStreamingService: &RealTimeChatStreamingService{
 					client: c,
 				},
 			},

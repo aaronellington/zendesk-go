@@ -9,7 +9,7 @@ import (
 )
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/
-type RESTService struct {
+type RealTimeChatRestService struct {
 	client *client
 }
 
@@ -47,11 +47,11 @@ type ChatsStreamResponseContent struct {
 	DepartmentID *GroupID    `json:"department_id"`
 }
 
-func (s *RESTService) GetAllChatMetrics(ctx context.Context) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetAllChatMetrics(ctx context.Context) (ChatsStreamResponse, error) {
 	return s.getChatMetricsBy(ctx, nil)
 }
 
-func (s *RESTService) GetAllChatMetricsByDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetAllChatMetricsByDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
@@ -59,7 +59,7 @@ func (s *RESTService) GetAllChatMetricsByDepartment(ctx context.Context, departm
 	return s.getChatMetricsBy(ctx, &filter)
 }
 
-func (s *RESTService) GetAllChatMetricsForSpecificTimeWindow(ctx context.Context, timeWindow LiveChatTimeWindow) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetAllChatMetricsForSpecificTimeWindow(ctx context.Context, timeWindow LiveChatTimeWindow) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"window": []string{strconv.FormatUint(uint64(timeWindow), 10)},
 	}
@@ -67,7 +67,7 @@ func (s *RESTService) GetAllChatMetricsForSpecificTimeWindow(ctx context.Context
 	return s.getChatMetricsBy(ctx, &filter)
 }
 
-func (s *RESTService) getChatMetricsBy(ctx context.Context, filter *url.Values) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) getChatMetricsBy(ctx context.Context, filter *url.Values) (ChatsStreamResponse, error) {
 	filters := ""
 	if filter != nil {
 		filters = fmt.Sprintf("?%s", filter.Encode())
@@ -92,11 +92,11 @@ func (s *RESTService) getChatMetricsBy(ctx context.Context, filter *url.Values) 
 	return target, nil
 }
 
-func (s *RESTService) GetSingleChatMetric(ctx context.Context, chatMetric LiveChatMetricKeyChat) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetSingleChatMetric(ctx context.Context, chatMetric LiveChatMetricKeyChat) (ChatsStreamResponse, error) {
 	return s.getChatMetricBy(ctx, chatMetric, nil)
 }
 
-func (s *RESTService) GetSingleChatMetricForDepartment(ctx context.Context, chatMetric LiveChatMetricKeyChat, departmentID GroupID) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetSingleChatMetricForDepartment(ctx context.Context, chatMetric LiveChatMetricKeyChat, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
@@ -104,7 +104,7 @@ func (s *RESTService) GetSingleChatMetricForDepartment(ctx context.Context, chat
 	return s.getChatMetricBy(ctx, chatMetric, &filter)
 }
 
-func (s *RESTService) GetSingleChatMetricForSpecificTimeWindow(ctx context.Context, chatMetric LiveChatMetricKeyChat, timeWindow LiveChatTimeWindow) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetSingleChatMetricForSpecificTimeWindow(ctx context.Context, chatMetric LiveChatMetricKeyChat, timeWindow LiveChatTimeWindow) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"window": []string{strconv.FormatUint(uint64(timeWindow), 10)},
 	}
@@ -112,7 +112,7 @@ func (s *RESTService) GetSingleChatMetricForSpecificTimeWindow(ctx context.Conte
 	return s.getChatMetricBy(ctx, chatMetric, &filter)
 }
 
-func (s *RESTService) getChatMetricBy(ctx context.Context, chatMetric LiveChatMetricKeyChat, filter *url.Values) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) getChatMetricBy(ctx context.Context, chatMetric LiveChatMetricKeyChat, filter *url.Values) (ChatsStreamResponse, error) {
 	filters := ""
 	if filter != nil {
 		filters = fmt.Sprintf("?%s", filter.Encode())

@@ -1,6 +1,6 @@
 package zendesk
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
-type WebsocketStreamingService struct {
+type RealTimeChatStreamingService struct {
 	client *client
 }
