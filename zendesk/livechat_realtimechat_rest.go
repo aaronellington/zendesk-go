@@ -51,7 +51,7 @@ func (s *RealTimeChatRestService) GetAllChatMetrics(ctx context.Context) (ChatsS
 	return s.getChatMetricsBy(ctx, nil)
 }
 
-func (s *RealTimeChatRestService) GetAllChatMetricsByDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
+func (s *RealTimeChatRestService) GetAllChatMetricsForDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
 		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
