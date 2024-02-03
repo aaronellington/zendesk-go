@@ -137,6 +137,7 @@ type (
 	CustomStatusID           uint64
 	GroupID                  uint64
 	GroupMembershipID        uint64
+	LiveChatOAuthClientID    uint64
 	OrganizationID           uint64
 	OrganizationFieldID      uint64
 	OrganizationMembershipID uint64

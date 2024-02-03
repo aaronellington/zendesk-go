@@ -122,6 +122,9 @@ func NewService(
 				chatsService: &ChatsService{
 					client: c,
 				},
+				oauthClientService: &OAuthClientService{
+					client: c,
+				},
 				agentEventService: &AgentEventService{
 					client:           c,
 					agentStatesMutex: &sync.Mutex{},

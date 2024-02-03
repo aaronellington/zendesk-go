@@ -2,9 +2,10 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/live-chat/introduction/
 type ChatService struct {
-	chatsService      *ChatsService
-	agentEventService *AgentEventService
-	departmentService *DepartmentService
+	chatsService       *ChatsService
+	agentEventService  *AgentEventService
+	departmentService  *DepartmentService
+	oauthClientService *OAuthClientService
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/chats/
@@ -20,4 +21,9 @@ func (s *ChatService) AgentEvent() *AgentEventService {
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/departments
 func (s *ChatService) Department() *DepartmentService {
 	return s.departmentService
+}
+
+// https://developer.zendesk.com/api-reference/live-chat/chat-api/oauth_clients/
+func (s *ChatService) OAuthClientService() *OAuthClientService {
+	return s.oauthClientService
 }
