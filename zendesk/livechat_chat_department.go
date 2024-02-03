@@ -60,7 +60,7 @@ func (s *DepartmentService) Show(ctx context.Context, id GroupID) (Department, e
 		return Department{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
+	if err := s.client.ChatRequest(request, &target); err != nil {
 		return Department{}, err
 	}
 
