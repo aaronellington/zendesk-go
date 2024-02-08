@@ -73,7 +73,7 @@ func (s *AgentEventService) IncrementalExport(
 	query := url.Values{}
 	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
 	query.Set("limit", fmt.Sprintf("%d", limit))
-	url := fmt.Sprintf("https://www.zopim.com/api/v2/incremental/agent_events?%s", query.Encode())
+	url := fmt.Sprintf("/api/v2/incremental/agent_events?%s", query.Encode())
 
 	for {
 		target := AgentEventExportResponse{}
@@ -88,7 +88,7 @@ func (s *AgentEventService) IncrementalExport(
 			return err
 		}
 
-		if err := s.client.LiveChatRequest(request, &target); err != nil {
+		if err := s.client.ChatRequest(request, &target); err != nil {
 			return err
 		}
 

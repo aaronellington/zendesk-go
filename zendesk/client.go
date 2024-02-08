@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+const (
+	httpSecure      string = "https"
+	websocketSecure string = "wss"
+)
+
 type client struct {
 	httpClient           *http.Client
 	zendeskAuth          authentication
@@ -73,7 +78,7 @@ func (c *client) do(request *http.Request, target any) error {
 		request.URL.Host = fmt.Sprintf("%s.zendesk.com", c.subDomain)
 	}
 
-	request.URL.Scheme = "https"
+	request.URL.Scheme = httpSecure
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("User-Agent", c.userAgent)
 
@@ -150,7 +155,76 @@ func (c *client) ZendeskGetRequest(ctx context.Context, url string) (*http.Respo
 	return c.httpClient.Do(request)
 }
 
-func (c *client) LiveChatRequest(request *http.Request, target any) error {
+/*
+NOTE: The RealTimeChat API uses a different URL to the LiveChat API/Zendesk API
+
+https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/
+*/
+func (c *client) RealTimeChatRequest(request *http.Request, target any) error {
+	if request.URL.Host == "" {
+		request.URL.Host = "rtm.zopim.com"
+	}
+
+	request.URL.Scheme = httpSecure
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("User-Agent", c.userAgent)
+
+	if request.Header.Get("Content-Type") == "" {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
+	attempts := 0
+	maxAttempts := 2
+
+	for attempts < maxAttempts {
+		attempts++
+
+		if err := c.getAccessToken(request.Context()); err != nil {
+			return err
+		}
+
+		if c.chatToken == nil {
+			return errors.New("no token")
+		}
+
+		if c.chatToken.AccessToken == "" {
+			return errors.New("blank token")
+		}
+
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.chatToken.AccessToken))
+
+		if err := c.do(request, target); err != nil {
+			if zdError, ok := err.(*Error); ok {
+				if zdError.Response.StatusCode == http.StatusUnauthorized {
+					// Clear out the token
+					c.chatToken = nil
+
+					continue
+				}
+			}
+
+			return err
+		}
+
+		break
+	}
+
+	return nil
+}
+
+func (c *client) ChatRequest(request *http.Request, target any) error {
+	if request.URL.Host == "" {
+		request.URL.Host = "www.zopim.com"
+	}
+
+	request.URL.Scheme = httpSecure
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("User-Agent", c.userAgent)
+
+	if request.Header.Get("Content-Type") == "" {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
 	attempts := 0
 	maxAttempts := 2
 
@@ -196,6 +270,14 @@ type chatToken struct {
 	Scope       string `json:"scope"`
 }
 
+/*
+NOTE: You must configure the API Client in Zendesk Chat to be "client_type": "confidential". By default it is "public"
+and this setting reverts to "public" if you interact with the client via the Zendesk Chat Web UI.
+
+https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#implementing-an-oauth-authorization-flow
+
+https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#confidential-grant-types
+*/
 func (c *client) getAccessToken(ctx context.Context) error {
 	if c.chatToken != nil {
 		return nil
@@ -213,7 +295,12 @@ func (c *client) getAccessToken(ctx context.Context) error {
 	data.Set("client_id", c.chatCredentials.ClientID)
 	data.Set("client_secret", c.chatCredentials.ClientSecret)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://www.zopim.com/oauth2/token", strings.NewReader(data.Encode()))
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"https://www.zopim.com/oauth2/token",
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return err
 	}

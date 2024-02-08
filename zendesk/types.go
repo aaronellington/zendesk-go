@@ -86,6 +86,40 @@ const (
 	Update   AuditLogAction = "update"
 )
 
+type LiveChatTimeWindow uint64
+
+const (
+	LiveChatTimeWindow30Minutes LiveChatTimeWindow = 30
+	LiveChatTimeWindow60Minutes LiveChatTimeWindow = 60
+)
+
+type LiveChatMetricKeyChat string
+
+// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/metrics/#chat-metrics
+const (
+	LiveChatMetricKeyIncomingChats    LiveChatMetricKeyChat = "incoming_chats"
+	LiveChatMetricKeyAssignedChats    LiveChatMetricKeyChat = "assigned_chats"
+	LiveChatMetricKeyMissedChats      LiveChatMetricKeyChat = "missed_chats"
+	LiveChatMetricKeyActiveChats      LiveChatMetricKeyChat = "active_chats"
+	LiveChatMetricKeyWaitingTimeAvg   LiveChatMetricKeyChat = "waiting_time_avg"
+	LiveChatMetricKeyWaitingTimeMax   LiveChatMetricKeyChat = "waiting_time_max"
+	LiveChatMetricKeyChatDurationAvg  LiveChatMetricKeyChat = "chat_duration_avg"
+	LiveChatMetricKeyChatDurationMax  LiveChatMetricKeyChat = "chat_duration_max"
+	LiveChatMetricKeyResponseTimeAvg  LiveChatMetricKeyChat = "response_time_avg"
+	LiveChatMetricKeyResponseTimeMax  LiveChatMetricKeyChat = "response_time_max"
+	LiveChatMetricKeySatisfactionGood LiveChatMetricKeyChat = "satisfaction_good"
+	LiveChatMetricKeySatisfactionBad  LiveChatMetricKeyChat = "satisfaction_bad"
+)
+
+type LiveChatMetricKeyAgent string
+
+// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/metrics/#agent-metrics
+const (
+	LiveChatMetricKeyAgentsOnline    LiveChatMetricKeyAgent = "agents_online"
+	LiveChatMetricKeyAgentsAway      LiveChatMetricKeyAgent = "agents_away"
+	LiveChatMetricKeyAgentsInvisible LiveChatMetricKeyAgent = "agents_invisible"
+)
+
 type (
 	AccountID                uint64
 	ActorID                  int64
@@ -103,6 +137,7 @@ type (
 	CustomStatusID           uint64
 	GroupID                  uint64
 	GroupMembershipID        uint64
+	LiveChatOAuthClientID    uint64
 	OrganizationID           uint64
 	OrganizationFieldID      uint64
 	OrganizationMembershipID uint64

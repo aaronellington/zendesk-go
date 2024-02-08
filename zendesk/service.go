@@ -119,17 +119,30 @@ func NewService(
 		},
 		liveChatService: &LiveChatService{
 			chatService: &ChatService{
-				client: c,
+				chatsService: &ChatsService{
+					client: c,
+				},
+				oauthClientService: &OAuthClientService{
+					client: c,
+				},
+				agentEventService: &AgentEventService{
+					client:           c,
+					agentStatesMutex: &sync.Mutex{},
+					agentStates:      AgentStates{},
+				},
+				departmentService: &DepartmentService{
+					client: c,
+				},
 			},
-			agentEventService: &AgentEventService{
-				client:           c,
-				agentStatesMutex: &sync.Mutex{},
-				agentStates:      AgentStates{},
+			realTimeChatService: &RealTimeChatService{
+				realTimeChatRestService: &RealTimeChatRestService{
+					client: c,
+				},
+				realTimeChatStreamingService: &RealTimeChatStreamingService{
+					client: c,
+				},
 			},
-			realTimeService: &RealTimeService{
-				client: c,
-			},
-			departmentService: &DepartmentService{
+			chatConversationsService: &ChatConversationsService{
 				client: c,
 			},
 		},
