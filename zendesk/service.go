@@ -140,6 +140,7 @@ func NewService(
 				},
 				realTimeChatStreamingService: &RealTimeChatStreamingService{
 					client: c,
+					wsConn: config.websocketConnection,
 				},
 			},
 			chatConversationsService: &ChatConversationsService{

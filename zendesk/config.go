@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 )
@@ -22,6 +23,7 @@ func (p RequestPreProcessorFunc) ProcessRequest(r *http.Request) error {
 
 type internalConfig struct {
 	roundTripper         http.RoundTripper
+	websocketConnection  *net.Conn
 	userAgent            string
 	timeout              time.Duration
 	requestPreProcessors []RequestPreProcessor
@@ -30,6 +32,12 @@ type internalConfig struct {
 func WithRoundTripper(roundTripper http.RoundTripper) configOption {
 	return func(s *internalConfig) {
 		s.roundTripper = roundTripper
+	}
+}
+
+func WithWebsocketConnection(websocketConnection *net.Conn) configOption {
+	return func(s *internalConfig) {
+		s.websocketConnection = websocketConnection
 	}
 }
 
