@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -52,9 +53,13 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().InitiateWebsocketConnection(ctx)
+	go func() {
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				log.Fatalf("Websocket exiting, restarting. Here is the error message: %s", err.Error())
+			}
+		}
+	}()
 
-	if err != nil {
-		PrintErr(err)
-	}
+	select {}
 }
