@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -61,5 +63,10 @@ func main() {
 		}
 	}()
 
-	select {}
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+
+	for range t.C {
+		fmt.Println("Time since last frame: ", z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameReceived())
+	}
 }

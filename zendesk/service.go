@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/aaronellington/zendesk-go/zendesk/internal/utils"
 )
 
 func NewService(
@@ -141,6 +143,15 @@ func NewService(
 				realTimeChatStreamingService: &RealTimeChatStreamingService{
 					client: c,
 					wsConn: config.websocketConnection,
+					wsChatCache: &wsChatCache{
+						individualDepartments: &utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]{},
+					},
+					wsAgentCache: &wsAgentCache{
+						individualDepartments: &utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]{},
+					},
+					wsConnMetadata: &wsConnMetadata{
+						mutex: &sync.Mutex{},
+					},
 				},
 			},
 			chatConversationsService: &ChatConversationsService{
