@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,12 +20,27 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 
 	testError := make(chan error)
 
+	// This is our test mockserver
+	mockableZendeskRTCWebsocketServer := &mockRealTimeChatWebsocketServer{
+		State: State{},
+		Settings: Settings{
+			ValidOAuthToken: "Bearer fake-token",
+		},
+	}
+
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Validate that the Upgrade Header  is being sent, as well as Auth header
+		authorizationHeader := r.Header.Get("Authorization")
+		if authorizationHeader != mockableZendeskRTCWebsocketServer.Settings.ValidOAuthToken {
+			testError <- fmt.Errorf("expected '%s', got: '%s'", mockableZendeskRTCWebsocketServer.Settings.ValidOAuthToken, authorizationHeader)
+
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
 			testError <- err
+			return
 		}
 		go func() {
 			defer conn.Close()
@@ -41,6 +55,7 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 				header, err := serverReader.NextFrame()
 				if err != nil {
 					testError <- err
+					return
 				}
 
 				if header.OpCode == ws.OpPing {
@@ -49,27 +64,32 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 
 					if err := ws.WriteHeader(serverWriter, header); err != nil {
 						testError <- err
+						return
 					}
 
 					_, err := serverWriter.Write(nil)
 					if err != nil {
 						testError <- err
+						return
 					}
 
 					if err := serverWriter.Flush(); err != nil {
 						testError <- err
+						return
 					}
 
 				}
 
 				if err := serverReader.Discard(); err != nil {
 					testError <- err
+					return
 				}
 
 				testError <- nil
 			}
 		}()
 	}))
+	defer mockServer.Close()
 
 	rtcWSHost := strings.TrimPrefix(mockServer.URL, "http")
 
@@ -95,24 +115,42 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 	go func() {
 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Fatalf("Websocket exiting, restarting. Here is the error message: %s", err.Error())
+				testError <- err
+				return
 			}
 		}
 	}()
 
 	time.Sleep(time.Second * 6)
 
-	actualTimeSinceLastFrame := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameReceived()
-	if actualTimeSinceLastFrame == nil {
-		t.Fatalf("expected to have recorded ping")
-	}
+	go func() {
+		actualTimeSinceLastFrame := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameReceived()
+		if actualTimeSinceLastFrame == nil {
+			testError <- fmt.Errorf("expected to have recorded ping")
+			return
+		}
 
-	if *actualTimeSinceLastFrame > time.Second*10 {
-		t.Fatal("expected a ping within 10 seconds")
-	}
+		if *actualTimeSinceLastFrame > time.Second*10 {
+			testError <- fmt.Errorf("expected to received ping within 10 seconds")
+		}
+
+	}()
 
 	if err := <-testError; err != nil {
 		t.Fatal(err)
 	}
+}
 
+type mockRealTimeChatWebsocketServer struct {
+	State    State
+	Settings Settings
+}
+
+type State struct {
+	lastWriteFromClient *time.Time
+}
+
+type Settings struct {
+	ValidOAuthToken string
+	WriteTimeout    time.Duration
 }
