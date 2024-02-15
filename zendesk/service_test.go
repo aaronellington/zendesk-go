@@ -3,7 +3,6 @@ package zendesk_test
 import (
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -27,7 +26,7 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Servi
 	)
 }
 
-func createTestWebsocketService(t *testing.T, queue []study.RoundTripFunc, wsConnection *net.Conn) *zendesk.Service {
+func createTestRealTimeChatWebsocketService(t *testing.T, queue []study.RoundTripFunc, wsHost string) *zendesk.Service {
 	return zendesk.NewService(
 		"example",
 		zendesk.AuthenticationToken{
@@ -39,7 +38,7 @@ func createTestWebsocketService(t *testing.T, queue []study.RoundTripFunc, wsCon
 			ClientSecret: "fake-client-secret",
 		},
 		zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)),
-		zendesk.WithWebsocketConnection(wsConnection),
+		zendesk.SetRealTimeChatWebsocketHost(wsHost),
 	)
 }
 

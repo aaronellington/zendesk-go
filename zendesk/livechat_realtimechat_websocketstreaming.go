@@ -14,23 +14,33 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
+const RealTimeChatStreamingHost string = "wss://rtm.zopim.com/stream"
+
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
 type RealTimeChatStreamingService struct {
-	client         *client
-	wsConn         *net.Conn
-	wsChatCache    *wsChatCache
-	wsAgentCache   *wsAgentCache
-	wsConnMetadata *wsConnMetadata
+	wsClient *wsClient
+	wsConn   *net.Conn
+	wsCache  *wsCache
+}
+
+type wsCache struct {
+	chat     *wsChatCache
+	agent    *wsAgentCache
+	metadata *wsConnMetadata
+}
+
+type wsClient struct {
+	client    *client   //
+	rtcWSHost string    // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
+	conn      *net.Conn //
 }
 
 type wsChatCache struct {
 	individualDepartments *utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]
-	globalMetrics         *WebsocketChatMetricData
 }
 
 type wsAgentCache struct {
 	individualDepartments *utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]
-	globalMetrics         *WebsocketAgentMetricData
 }
 type wsConnMetadata struct {
 	mutex           *sync.Mutex
@@ -115,35 +125,32 @@ type WebsocketAgentMetricSubscription struct {
 	AgentsInvisible bool `json:"agents_invisible"`
 }
 
-func (s *RealTimeChatStreamingService) InitiateWebsocketConnection(ctx context.Context) error {
+func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
 	if s.wsConn != nil {
 		return nil
 	}
 
-	if err := s.client.GetAccessToken(ctx); err != nil {
+	if err := s.wsClient.client.GetAccessToken(ctx); err != nil {
 		return err
 	}
 
 	headers := ws.HandshakeHeaderHTTP{}
-	headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", s.client.chatToken.AccessToken)}
+	headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", s.wsClient.client.chatToken.AccessToken)}
 
 	dialer := ws.Dialer{
 		Header: headers,
 	}
 
-	conn, _, _, err := dialer.Dial(ctx, "wss://rtm.zopim.com/stream")
+	conn, _, _, err := dialer.Dial(ctx, s.wsClient.rtcWSHost)
 	if err != nil {
 		return err
 	}
 
 	s.wsConn = &conn
 
-	s.wsConnMetadata.mutex.Lock()
-	defer s.wsConnMetadata.mutex.Unlock()
-
 	connectionStartedTime := time.Now()
 
-	s.wsConnMetadata.connStarted = &connectionStartedTime
+	s.wsCache.metadata.connStarted = &connectionStartedTime
 
 	return nil
 }
@@ -154,7 +161,7 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 		cancelHandler()
 	}()
 
-	if err := s.InitiateWebsocketConnection(ctx); err != nil {
+	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
 	}
 
@@ -194,7 +201,7 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 	}
 
 	firstPing := time.Now()
-	s.wsConnMetadata.sentPing = &firstPing
+	s.wsCache.metadata.sentPing = &firstPing
 
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
@@ -210,7 +217,7 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 				return err
 			}
 
-			s.wsConnMetadata.sentPing = &currentPingSentTime
+			s.wsCache.metadata.sentPing = &currentPingSentTime
 
 		case <-ctx.Done():
 			return nil
@@ -271,11 +278,11 @@ func (s *RealTimeChatStreamingService) write(ctx context.Context) error {
 }
 
 func (s *RealTimeChatStreamingService) handleControlFrame(reader *wsutil.Reader, header ws.Header) error {
-	s.wsConnMetadata.mutex.Lock()
-	defer s.wsConnMetadata.mutex.Unlock()
+	s.wsCache.metadata.mutex.Lock()
+	defer s.wsCache.metadata.mutex.Unlock()
 
 	receivedTime := time.Now()
-	s.wsConnMetadata.receivedControl = &receivedTime
+	s.wsCache.metadata.receivedControl = &receivedTime
 
 	switch header.OpCode {
 	case ws.OpClose:
@@ -299,9 +306,9 @@ func (s *RealTimeChatStreamingService) SubscribeToChatMetric()                  
 func (s *RealTimeChatStreamingService) SubscribeToChatMetricForSpecificTimeWindow() {}
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {
-	return s.wsConnMetadata.getTimeSinceMostRecentFrameReceived()
+	return s.wsCache.metadata.getTimeSinceMostRecentFrameReceived()
 }
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameSent() *time.Duration {
-	return s.wsConnMetadata.getTimeSinceMostRecentFrameReceived()
+	return s.wsCache.metadata.getTimeSinceMostRecentFrameReceived()
 }

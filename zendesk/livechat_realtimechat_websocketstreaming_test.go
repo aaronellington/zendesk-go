@@ -3,9 +3,11 @@ package zendesk_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
-	"net"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,9 +19,61 @@ import (
 func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 	ctx := context.Background()
 
-	client, server := net.Pipe()
+	testError := make(chan error)
 
-	z := createTestWebsocketService(
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Validate that the Upgrade Header  is being sent, as well as Auth header
+
+		conn, _, _, err := ws.UpgradeHTTP(r, w)
+		if err != nil {
+			testError <- err
+		}
+		go func() {
+			defer conn.Close()
+
+			var (
+				state        = ws.StateServerSide
+				serverReader = wsutil.NewReader(conn, state)
+				serverWriter = wsutil.NewWriter(conn, state, ws.OpText)
+			)
+
+			for {
+				header, err := serverReader.NextFrame()
+				if err != nil {
+					testError <- err
+				}
+
+				if header.OpCode == ws.OpPing {
+
+					serverWriter.Reset(conn, ws.StateServerSide, ws.OpPong)
+
+					if err := ws.WriteHeader(serverWriter, header); err != nil {
+						testError <- err
+					}
+
+					_, err := serverWriter.Write(nil)
+					if err != nil {
+						testError <- err
+					}
+
+					if err := serverWriter.Flush(); err != nil {
+						testError <- err
+					}
+
+				}
+
+				if err := serverReader.Discard(); err != nil {
+					testError <- err
+				}
+
+				testError <- nil
+			}
+		}()
+	}))
+
+	rtcWSHost := strings.TrimPrefix(mockServer.URL, "http")
+
+	z := createTestRealTimeChatWebsocketService(
 		t,
 		[]study.RoundTripFunc{
 			createSuccessfulChatAuth(t),
@@ -35,57 +89,8 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 				},
 			),
 		},
-		&client,
+		fmt.Sprintf("ws%s", rtcWSHost),
 	)
-
-	serverWriter := wsutil.NewWriter(server, ws.StateServerSide, ws.OpText)
-	serverReader := wsutil.NewReader(server, ws.StateServerSide)
-
-	testError := make(chan error)
-	testMarker := make(chan int)
-
-	// Handle incoming messages from the client (our service)
-	go func() error {
-		// Set up a limit on the expected messages
-		messageCount := 0
-		for {
-			header, err := serverReader.NextFrame()
-			if err != nil {
-				testError <- err
-			}
-
-			if header.OpCode == ws.OpPing {
-
-				serverWriter.Reset(server, ws.StateServerSide, ws.OpPong)
-
-				if err := ws.WriteHeader(serverWriter, header); err != nil {
-					testError <- err
-				}
-
-				_, err := serverWriter.Write(nil)
-				if err != nil {
-					testError <- err
-				}
-
-				if err := serverWriter.Flush(); err != nil {
-					testError <- err
-				}
-
-				messageCount++
-			}
-
-			if err := serverReader.Discard(); err != nil {
-				testError <- err
-			}
-
-			// Once the limit on messages is reached, trigger the "shutdown" of the server
-			if messageCount >= 2 {
-				testMarker <- messageCount
-				testError <- nil
-			}
-		}
-
-	}()
 
 	go func() {
 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
@@ -95,8 +100,7 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 		}
 	}()
 
-	// Wait for the messageCount to be reached before progressing
-	<-testMarker
+	time.Sleep(time.Second * 6)
 
 	actualTimeSinceLastFrame := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameReceived()
 	if actualTimeSinceLastFrame == nil {
