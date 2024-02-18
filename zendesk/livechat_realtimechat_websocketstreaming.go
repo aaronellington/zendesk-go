@@ -135,7 +135,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	}
 
 	headers := ws.HandshakeHeaderHTTP{}
-	headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", s.wsClient.client.chatToken.AccessToken)}
+	headers["Authorization"] = []string{fmt.Sprintf("Bearer aaaaaa", s.wsClient.client.chatToken.AccessToken)}
 
 	dialer := ws.Dialer{
 		Header: headers,
@@ -177,12 +177,6 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 			errorChan <- err
 		}
 	}()
-
-	// go func() {
-	// 	if err := s.write(ctx); err != nil {
-	// 		errorChan <- err
-	// 	}
-	// }()
 
 	return <-errorChan
 }
@@ -311,4 +305,9 @@ func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Dur
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameSent() *time.Duration {
 	return s.wsCache.metadata.getTimeSinceMostRecentFrameReceived()
+}
+
+type RealTimeChatStreamingMessage struct {
+	StatusCode int    `json:"status_code"`
+	Message    string `json:"message"`
 }
