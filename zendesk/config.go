@@ -22,11 +22,12 @@ func (p RequestPreProcessorFunc) ProcessRequest(r *http.Request) error {
 }
 
 type internalConfig struct {
-	roundTripper         http.RoundTripper
-	websocketConnection  *net.Conn
-	userAgent            string
-	timeout              time.Duration
-	requestPreProcessors []RequestPreProcessor
+	roundTripper                    http.RoundTripper
+	userAgent                       string
+	timeout                         time.Duration
+	realTimeChatWebsocketHost       string
+	realTimeChatWebsocketConnection *net.Conn
+	requestPreProcessors            []RequestPreProcessor
 }
 
 func WithRoundTripper(roundTripper http.RoundTripper) configOption {
@@ -35,9 +36,9 @@ func WithRoundTripper(roundTripper http.RoundTripper) configOption {
 	}
 }
 
-func WithWebsocketConnection(websocketConnection *net.Conn) configOption {
+func WithUserAgent(userAgent string) configOption {
 	return func(s *internalConfig) {
-		s.websocketConnection = websocketConnection
+		s.userAgent = userAgent
 	}
 }
 
@@ -47,9 +48,15 @@ func SetTimeout(timeout time.Duration) configOption {
 	}
 }
 
-func WithUserAgent(userAgent string) configOption {
+func SetRealTimeChatWebsocketConnection(websocketConnection *net.Conn) configOption {
 	return func(s *internalConfig) {
-		s.userAgent = userAgent
+		s.realTimeChatWebsocketConnection = websocketConnection
+	}
+}
+
+func SetRealTimeChatWebsocketHost(websocketHost string) configOption {
+	return func(s *internalConfig) {
+		s.realTimeChatWebsocketHost = websocketHost
 	}
 }
 

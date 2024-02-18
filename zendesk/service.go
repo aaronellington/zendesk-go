@@ -15,9 +15,11 @@ func NewService(
 	opts ...configOption,
 ) *Service {
 	config := &internalConfig{
-		userAgent: "aaronellington/zendesk-go",
-		timeout:   time.Second * 15,
+		userAgent:                 "aaronellington/zendesk-go",
+		timeout:                   time.Second * 15,
+		realTimeChatWebsocketHost: RealTimeChatStreamingHost,
 	}
+
 	for _, opt := range opts {
 		opt(config)
 	}
@@ -34,6 +36,12 @@ func NewService(
 		chatMutex:            &sync.Mutex{},
 		chatToken:            nil,
 		requestPreProcessors: config.requestPreProcessors,
+	}
+
+	wsClient := wsClient{
+		client:    c,
+		conn:      config.realTimeChatWebsocketConnection,
+		rtcWSHost: config.realTimeChatWebsocketHost,
 	}
 
 	return &Service{
@@ -141,16 +149,17 @@ func NewService(
 					client: c,
 				},
 				realTimeChatStreamingService: &RealTimeChatStreamingService{
-					client: c,
-					wsConn: config.websocketConnection,
-					wsChatCache: &wsChatCache{
-						individualDepartments: &utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]{},
-					},
-					wsAgentCache: &wsAgentCache{
-						individualDepartments: &utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]{},
-					},
-					wsConnMetadata: &wsConnMetadata{
-						mutex: &sync.Mutex{},
+					wsClient: &wsClient,
+					wsCache: &wsCache{
+						chat: &wsChatCache{
+							individualDepartments: &utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]{},
+						},
+						agent: &wsAgentCache{
+							individualDepartments: &utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]{},
+						},
+						metadata: &wsConnMetadata{
+							mutex: &sync.Mutex{},
+						},
 					},
 				},
 			},
