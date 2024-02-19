@@ -99,7 +99,7 @@ func (s TicketAttachmentService) Download(
 			return err
 		}
 
-		response, err = s.client.httpClient.Do(req)
+		response, err = http.DefaultClient.Do(req)
 		if err != nil {
 			return err
 		}

@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
@@ -31,10 +30,11 @@ func PrintErr(err error) {
 	zdErr, ok := err.(*zendesk.Error)
 	if ok {
 		errBytes, _ := io.ReadAll(zdErr.Response.Body)
-		log.Fatalf("Zendesk Error: [%d] %s", zdErr.Response.StatusCode, string(errBytes))
+		log.Printf("Zendesk Error: [%d] %s", zdErr.Response.StatusCode, string(errBytes))
+		return
 	}
 
-	log.Fatal(err)
+	log.Print(err)
 }
 
 func main() {
@@ -53,15 +53,21 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	err := z.LiveChat().Chat().AgentEvent().IncrementalExport(
-		ctx,
-		time.Now().Add(time.Minute*-8),
-		func(response zendesk.AgentEventExportResponse) error {
-			_ = prettyPrint(response)
-			return nil
-		},
-	)
-	if err != nil {
-		PrintErr(err)
-	}
+	go func() {
+		for {
+			if _, err := z.Support().Users().ShowSelf(ctx); err != nil {
+				PrintErr(err)
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			if _, err := z.LiveChat().Chat().Department().List(ctx); err != nil {
+				PrintErr(err)
+			}
+		}
+	}()
+	wait := make(chan bool)
+	<-wait
 }
