@@ -25,7 +25,11 @@ func NewService(
 	}
 
 	c := &client{
-		httpClient: &http.Client{
+		httpClientForZendesk: &http.Client{
+			Transport: config.roundTripper,
+			Timeout:   config.timeout,
+		},
+		httpClientForZopim: &http.Client{
 			Transport: config.roundTripper,
 			Timeout:   config.timeout,
 		},

@@ -20,7 +20,8 @@ const (
 )
 
 type client struct {
-	httpClient           *http.Client
+	httpClientForZendesk *http.Client
+	httpClientForZopim   *http.Client
 	zendeskAuth          authentication
 	chatCredentials      ChatCredentials
 	chatToken            *chatToken
@@ -92,7 +93,12 @@ func (c *client) do(request *http.Request, target any) error {
 		}
 	}
 
-	response, err := c.httpClient.Do(request)
+	clientToUse := c.httpClientForZendesk
+	if strings.Contains(request.Host, "zopim.com") {
+		clientToUse = c.httpClientForZopim
+	}
+
+	response, err := clientToUse.Do(request)
 	if err != nil {
 		return err
 	}
@@ -152,7 +158,7 @@ func (c *client) ZendeskGetRequest(ctx context.Context, url string) (*http.Respo
 
 	c.zendeskAuth.AddZendeskAuthentication(request)
 
-	return c.httpClient.Do(request)
+	return c.httpClientForZendesk.Do(request)
 }
 
 /*
