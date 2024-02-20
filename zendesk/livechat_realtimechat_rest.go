@@ -53,7 +53,7 @@ func (s *RealTimeChatRestService) GetAllChatMetrics(ctx context.Context) (ChatsS
 
 func (s *RealTimeChatRestService) GetAllChatMetricsForDepartment(ctx context.Context, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
-		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
+		"department_id": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
 
 	return s.getChatMetricsBy(ctx, &filter)
@@ -98,7 +98,7 @@ func (s *RealTimeChatRestService) GetSingleChatMetric(ctx context.Context, chatM
 
 func (s *RealTimeChatRestService) GetSingleChatMetricForDepartment(ctx context.Context, chatMetric LiveChatMetricKeyChat, departmentID GroupID) (ChatsStreamResponse, error) {
 	filter := url.Values{
-		"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
+		"department_id": []string{strconv.FormatUint(uint64(departmentID), 10)},
 	}
 
 	return s.getChatMetricBy(ctx, chatMetric, &filter)
