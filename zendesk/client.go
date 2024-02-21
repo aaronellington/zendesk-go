@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -50,7 +49,7 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 		}
 
 		// Check to see if the error is a network error
-		networkErr, ok := latestAttemptError.(*net.OpError)
+		networkErr, ok := latestAttemptError.(*url.Error)
 		if ok {
 			// If the error is determined temporary, retry
 			if networkErr.Temporary() {

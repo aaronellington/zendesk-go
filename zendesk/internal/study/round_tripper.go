@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -117,12 +116,12 @@ func (f *TestResponseNoContent) CreateResponse() (*http.Response, error) {
 	}, nil
 }
 
-type TestResponseNetError struct {
-	NetError *net.OpError
+type TestResponseURLError struct {
+	URLError *url.Error
 }
 
-func (f *TestResponseNetError) CreateResponse() (*http.Response, error) {
-	return nil, f.NetError
+func (f *TestResponseURLError) CreateResponse() (*http.Response, error) {
+	return nil, f.URLError
 }
 
 func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest) RoundTripFunc {

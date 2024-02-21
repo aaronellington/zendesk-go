@@ -284,11 +284,14 @@ func Test_Client_ECONNRESET_Retry(t *testing.T) {
 	z := createTestService(t, []study.RoundTripFunc{
 		study.ServeAndValidate(
 			t,
-			&study.TestResponseNetError{
-				NetError: &net.OpError{
-					Op:  "read",
-					Net: "tcp",
-					Err: syscall.ECONNRESET,
+			&study.TestResponseURLError{
+				URLError: &url.Error{
+					Op: "read",
+					Err: &net.OpError{
+						Op:  "read",
+						Net: "tcp",
+						Err: syscall.ECONNRESET,
+					},
 				},
 			},
 			study.ExpectedTestRequest{
