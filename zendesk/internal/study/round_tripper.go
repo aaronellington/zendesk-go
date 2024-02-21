@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -114,6 +115,14 @@ func (f *TestResponseNoContent) CreateResponse() (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusNoContent,
 	}, nil
+}
+
+type TestResponseNetError struct {
+	NetError *net.OpError
+}
+
+func (f *TestResponseNetError) CreateResponse() (*http.Response, error) {
+	return nil, f.NetError
 }
 
 func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest) RoundTripFunc {

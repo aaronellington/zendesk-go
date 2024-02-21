@@ -2,8 +2,10 @@ package zendesk_test
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/url"
+	"syscall"
 	"testing"
 	"time"
 
@@ -273,4 +275,68 @@ func Test_Client_HTML_Error_Received(t *testing.T) {
 	if zdErr.Response.StatusCode != http.StatusInternalServerError {
 		t.Fatalf("expected to get 500 error with HTML response body, got: %d", zdErr.Response.StatusCode)
 	}
+}
+
+func Test_Client_ECONNRESET_Retry(t *testing.T) {
+	ctx := context.Background()
+	allRequestsMade := false
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseNetError{
+				NetError: &net.OpError{
+					Op:  "read",
+					Net: "tcp",
+					Err: syscall.ECONNRESET,
+				},
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"0"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/tickets/incremental_export_page2.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/api/v2/incremental/tickets.json",
+				Query: url.Values{
+					"per_page":   []string{"2"},
+					"start_time": []string{"250"},
+				},
+				Validator: func(r *http.Request) error {
+					allRequestsMade = true
+
+					return nil
+				},
+			},
+		),
+	})
+
+	tickets := []zendesk.Ticket{}
+
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+		tickets = append(tickets, response.Tickets...)
+
+		return nil
+	})
+	if err == nil {
+		t.Fatalf("expected to get error")
+	}
+
+	t.Fatal(err)
+
+	if !allRequestsMade {
+		t.Fatal("expected to retry on temporary error")
+	}
+
 }
