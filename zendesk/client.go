@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -46,6 +47,17 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 		latestAttemptError = c.do(request, target)
 		if latestAttemptError == nil {
 			return nil
+		}
+
+		// Check to see if the error is a network error
+		networkErr, ok := latestAttemptError.(*net.OpError)
+		if ok {
+			// If the error is determined temporary, retry
+			if networkErr.Temporary() {
+				continue
+			}
+
+			return networkErr
 		}
 
 		zendeskErr, ok := latestAttemptError.(*Error)
