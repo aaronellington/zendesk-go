@@ -109,6 +109,9 @@ func NewService(
 			ticketTagService: &TicketTagService{
 				client: c,
 			},
+			macroService: &MacroService{
+				client: c,
+			},
 			automationService: &AutomationService{
 				client: c,
 			},

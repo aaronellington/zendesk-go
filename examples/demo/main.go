@@ -54,8 +54,8 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	if err := z.Support().ViewService().List(ctx, func(response zendesk.ViewsResponse) error {
-		for _, entity := range response.Views {
+	if err := z.Support().MacroService().List(ctx, func(response zendesk.MacrosResponse) error {
+		for _, entity := range response.Macros {
 			fmt.Println(entity.ID)
 		}
 

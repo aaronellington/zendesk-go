@@ -154,6 +154,7 @@ type (
 	SuspendedTicketID        uint64
 	TicketAuditEventID       uint64
 	TicketAuditID            uint64
+	MacroID                  uint64
 	TicketCommentID          uint64
 	TicketFieldID            uint64
 	TicketFormID             uint64
