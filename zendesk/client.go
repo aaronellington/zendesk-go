@@ -19,6 +19,10 @@ const (
 	websocketSecure string = "wss"
 )
 
+const (
+	RequestHeaderRetryAttempts string = "X-Attempt-Count"
+)
+
 type client struct {
 	httpClientForZendesk *http.Client
 	httpClientForZopim   *http.Client
@@ -40,6 +44,9 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 
 	for attempts < maxAttempts {
 		attempts++
+
+		// Set the current attempt count in the request header, so that consumers of the library can identify when a request is being retried
+		request.Header.Set(RequestHeaderRetryAttempts, fmt.Sprintf("%d", attempts))
 
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 
