@@ -103,6 +103,9 @@ func NewService(
 			userFieldsService: &UserFieldService{
 				client: c,
 			},
+			ticketTagService: &TicketTagService{
+				client: c,
+			},
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},
