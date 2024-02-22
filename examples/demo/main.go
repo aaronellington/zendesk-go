@@ -54,9 +54,9 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	if err := z.Support().AutomationService().List(ctx, func(response zendesk.AutomationsResponse) error {
-		for _, automation := range response.Automations {
-			fmt.Println(automation.ID)
+	if err := z.Support().TriggerService().List(ctx, func(response zendesk.TriggersResponse) error {
+		for _, trigger := range response.Triggers {
+			fmt.Println(trigger.ID)
 		}
 		return nil
 	}); err != nil {

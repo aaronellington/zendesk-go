@@ -109,6 +109,9 @@ func NewService(
 			automationService: &AutomationService{
 				client: c,
 			},
+			triggerService: &TriggerService{
+				client: c,
+			},
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},

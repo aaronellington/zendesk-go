@@ -162,6 +162,7 @@ type (
 	UserFieldID              uint64
 	UserID                   int64
 	IdentityID               uint64
+	TriggerID                uint64
 	UserSegmentID            uint64
 	WebhookEventID           string
 )
@@ -203,7 +204,7 @@ type BusinessRuleConditions struct {
 type BusinessRuleCondition struct {
 	Field    string `json:"field"`
 	Operator string `json:"operator"`
-	Value    string `json:"value"`
+	Value    any    `json:"value"`
 }
 
 type BusinessRuleAction struct {
