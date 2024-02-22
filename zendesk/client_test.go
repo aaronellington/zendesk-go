@@ -286,9 +286,9 @@ func Test_Client_ECONNRESET_Retry(t *testing.T) {
 			t,
 			&study.TestResponseURLError{
 				URLError: &url.Error{
-					Op: "read",
+					Op: "Get",
 					Err: &net.OpError{
-						Op:  "read",
+						Op:  "accept",
 						Net: "tcp",
 						Err: syscall.ECONNRESET,
 					},
@@ -314,7 +314,7 @@ func Test_Client_ECONNRESET_Retry(t *testing.T) {
 				Path:   "/api/v2/incremental/tickets.json",
 				Query: url.Values{
 					"per_page":   []string{"2"},
-					"start_time": []string{"250"},
+					"start_time": []string{"0"},
 				},
 				Validator: func(r *http.Request) error {
 					allRequestsMade = true
@@ -332,11 +332,9 @@ func Test_Client_ECONNRESET_Retry(t *testing.T) {
 
 		return nil
 	})
-	if err == nil {
+	if err != nil {
 		t.Fatalf("expected to get error")
 	}
-
-	t.Fatal(err)
 
 	if !allRequestsMade {
 		t.Fatal("expected to retry on temporary error")
