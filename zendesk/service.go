@@ -106,6 +106,9 @@ func NewService(
 			ticketTagService: &TicketTagService{
 				client: c,
 			},
+			automationService: &AutomationService{
+				client: c,
+			},
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},

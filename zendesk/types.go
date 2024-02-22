@@ -127,6 +127,7 @@ type (
 	AttachmentID             uint64
 	AuditID                  uint64
 	AuditLogID               uint64
+	AutomationID             uint64
 	BrandID                  uint64
 	CategoryID               uint64
 	ChatAccountID            uint64
