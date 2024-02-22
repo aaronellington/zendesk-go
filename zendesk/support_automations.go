@@ -14,33 +14,17 @@ type AutomationsResponse struct {
 }
 
 type Automation struct {
-	ID         AutomationID         `json:"id"`
-	URL        string               `json:"url"`
-	Title      string               `json:"title"`
-	Active     bool                 `json:"active"`
-	UpdatedAt  time.Time            `json:"updated_at"`
-	CreatedAt  time.Time            `json:"created_at"`
-	Default    bool                 `json:"default"`
-	Actions    []AutomationActions  `json:"actions"`
-	Conditions AutomationConditions `json:"conditions"`
-	Position   int                  `json:"position"`
-	RawTitle   string               `json:"raw_title"`
-}
-
-type AutomationConditions struct {
-	All []AutomationCondition `json:"all"`
-	Any []AutomationCondition `json:"any"`
-}
-
-type AutomationCondition struct {
-	Field    string `json:"field"`
-	Operator string `json:"operator"`
-	Value    string `json:"value"`
-}
-
-type AutomationActions struct {
-	Field string `json:"field"`
-	Value any    `json:"value"`
+	ID         AutomationID           `json:"id"`
+	URL        string                 `json:"url"`
+	Title      string                 `json:"title"`
+	Active     bool                   `json:"active"`
+	UpdatedAt  time.Time              `json:"updated_at"`
+	CreatedAt  time.Time              `json:"created_at"`
+	Default    bool                   `json:"default"`
+	Actions    []BusinessRuleAction   `json:"actions"`
+	Conditions BusinessRuleConditions `json:"conditions"`
+	Position   int                    `json:"position"`
+	RawTitle   string                 `json:"raw_title"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/automations/

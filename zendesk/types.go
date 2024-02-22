@@ -195,6 +195,22 @@ func (tag Tag) Validate() error {
 	return nil
 }
 
+type BusinessRuleConditions struct {
+	All []BusinessRuleCondition `json:"all"`
+	Any []BusinessRuleCondition `json:"any"`
+}
+
+type BusinessRuleCondition struct {
+	Field    string `json:"field"`
+	Operator string `json:"operator"`
+	Value    string `json:"value"`
+}
+
+type BusinessRuleAction struct {
+	Field string `json:"field"`
+	Value any    `json:"value"`
+}
+
 func structToReader(x any) io.Reader {
 	payloadBytes, err := json.Marshal(x)
 	if err != nil {
