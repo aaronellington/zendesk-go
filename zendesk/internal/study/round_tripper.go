@@ -116,6 +116,14 @@ func (f *TestResponseNoContent) CreateResponse() (*http.Response, error) {
 	}, nil
 }
 
+type TestResponseURLError struct {
+	URLError *url.Error
+}
+
+func (f *TestResponseURLError) CreateResponse() (*http.Response, error) {
+	return nil, f.URLError
+}
+
 func ServeAndValidate(t *testing.T, r TestResponse, expected ExpectedTestRequest) RoundTripFunc {
 	return func(t *testing.T, request *http.Request) (*http.Response, error) {
 		if err := Assert(expected.Method, request.Method); err != nil {
