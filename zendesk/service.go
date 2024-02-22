@@ -94,6 +94,9 @@ func NewService(
 			ticketCommentService: &TicketCommentService{
 				client: c,
 			},
+			viewService: &ViewService{
+				client: c,
+			},
 			ticketFormService: &TicketFormService{
 				client: c,
 			},

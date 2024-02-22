@@ -54,10 +54,11 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	if err := z.Support().TriggerService().List(ctx, func(response zendesk.TriggersResponse) error {
-		for _, trigger := range response.Triggers {
-			fmt.Println(trigger.ID)
+	if err := z.Support().ViewService().List(ctx, func(response zendesk.ViewsResponse) error {
+		for _, entity := range response.Views {
+			fmt.Println(entity.ID)
 		}
+
 		return nil
 	}); err != nil {
 		PrintErr(err)

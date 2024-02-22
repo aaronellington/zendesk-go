@@ -161,6 +161,7 @@ type (
 	UploadToken              string
 	UserFieldID              uint64
 	UserID                   int64
+	ViewID                   uint64
 	IdentityID               uint64
 	TriggerID                uint64
 	UserSegmentID            uint64

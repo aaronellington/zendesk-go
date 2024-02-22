@@ -24,6 +24,7 @@ type SupportService struct {
 	sideConversationService       *SideConversationService
 	automationService             *AutomationService
 	triggerService                *TriggerService
+	viewService                   *ViewService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -114,6 +115,11 @@ func (s *SupportService) AutomationService() *AutomationService {
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/triggers/
 func (s *SupportService) TriggerService() *TriggerService {
 	return s.triggerService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/business-rules/views/
+func (s *SupportService) ViewService() *ViewService {
+	return s.viewService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags
