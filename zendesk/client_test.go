@@ -339,5 +339,4 @@ func Test_Client_ECONNRESET_Retry(t *testing.T) {
 	if !allRequestsMade {
 		t.Fatal("expected to retry on temporary error")
 	}
-
 }
