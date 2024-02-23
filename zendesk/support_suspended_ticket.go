@@ -15,14 +15,21 @@ type SuspendedTicketsResponse struct {
 }
 
 type SuspendedTicket struct {
-	ID        SuspendedTicketID `json:"id"`
-	Subject   string            `json:"subject"`
-	Cause     string            `json:"cause"`
-	CauseID   int               `json:"cause_id"`
-	TicketID  *TicketID         `json:"ticket_id"`
-	CreatedAt time.Time         `json:"created_at"`
-	UpdatedAt time.Time         `json:"updated_at"`
-	Recipient string            `json:"recipient"`
+	ID        SuspendedTicketID     `json:"id"`
+	Subject   string                `json:"subject"`
+	Cause     string                `json:"cause"`
+	Author    SuspendedTicketAuthor `json:"author"`
+	CauseID   int                   `json:"cause_id"`
+	TicketID  *TicketID             `json:"ticket_id"`
+	CreatedAt time.Time             `json:"created_at"`
+	UpdatedAt time.Time             `json:"updated_at"`
+	Recipient string                `json:"recipient"`
+}
+
+type SuspendedTicketAuthor struct {
+	ID    *UserID `json:"id"`
+	Name  string  `json:"name"`
+	Email string  `json:"email"`
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/
