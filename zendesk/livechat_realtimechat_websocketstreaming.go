@@ -3,6 +3,7 @@ package zendesk
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -19,7 +20,6 @@ const RealTimeChatStreamingHost string = "wss://rtm.zopim.com/stream"
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
 type RealTimeChatStreamingService struct {
 	wsClient *wsClient
-	wsConn   *net.Conn
 	wsCache  *wsCache
 }
 
@@ -46,6 +46,7 @@ type wsConnMetadata struct {
 	mutex           *sync.Mutex
 	connStarted     *time.Time
 	sentPing        *time.Time
+	sentData        *time.Time
 	receivedControl *time.Time
 	receivedData    *time.Time
 }
@@ -126,7 +127,7 @@ type WebsocketAgentMetricSubscription struct {
 }
 
 func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
-	if s.wsConn != nil {
+	if s.wsClient.conn != nil {
 		return nil
 	}
 
@@ -135,7 +136,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	}
 
 	headers := ws.HandshakeHeaderHTTP{}
-	headers["Authorization"] = []string{fmt.Sprintf("Bearer aaaaaa", s.wsClient.client.chatToken.AccessToken)}
+	headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", s.wsClient.client.chatToken.AccessToken)}
 
 	dialer := ws.Dialer{
 		Header: headers,
@@ -146,7 +147,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 		return err
 	}
 
-	s.wsConn = &conn
+	s.wsClient.conn = &conn
 
 	connectionStartedTime := time.Now()
 
@@ -155,9 +156,32 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	return nil
 }
 
+func (s *RealTimeChatStreamingService) retryableErr() bool {
+	return true
+}
+
+func (s *RealTimeChatStreamingService) cleanConnection() {
+	s.wsClient.conn = nil
+
+	newCache := &wsCache{
+		chat: &wsChatCache{
+			individualDepartments: &utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]{},
+		},
+		agent: &wsAgentCache{
+			individualDepartments: &utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]{},
+		},
+		metadata: &wsConnMetadata{
+			mutex: &sync.Mutex{},
+		},
+	}
+
+	s.wsCache = newCache
+}
+
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
 	ctx, cancelHandler := context.WithCancel(parentCtx)
 	defer func() {
+		s.cleanConnection()
 		cancelHandler()
 	}()
 
@@ -182,7 +206,11 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 }
 
 func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
-	writer := wsutil.NewWriter(*s.wsConn, ws.StateClientSide, ws.OpPing)
+	if s.wsClient.conn == nil {
+		return errors.New("websocket connection is nil - cannot write")
+	}
+
+	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpPing)
 	encoder := json.NewEncoder(writer)
 
 	// Send first ping immediately
@@ -220,7 +248,11 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 }
 
 func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
-	reader := wsutil.NewClientSideReader(*s.wsConn)
+	if s.wsClient.conn == nil {
+		return errors.New("websocket connection is nil - cannot read")
+	}
+
+	reader := wsutil.NewClientSideReader(*s.wsClient.conn)
 	decoder := json.NewDecoder(reader)
 	for {
 		header, err := reader.NextFrame()
@@ -242,33 +274,38 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 				return err
 			}
 
-			fmt.Println(b)
+			messageBytes, err := json.Marshal(b)
+			if err != nil {
+				return err
+			}
+
+			if err := s.handleWebsocketMessage(ctx, messageBytes); err != nil {
+				return err
+			}
 
 			continue
 		}
 	}
 }
 
-func (s *RealTimeChatStreamingService) write(ctx context.Context) error {
-	writer := wsutil.NewWriter(*s.wsConn, ws.StateClientSide, ws.OpText)
-	encoder := json.NewEncoder(writer)
-	for {
+func (s *RealTimeChatStreamingService) handleWebsocketMessage(ctx context.Context, messageBytes []byte) error {
 
-		// b := Subscription{
-		// 	Topic:  "chats.incoming_chats",
-		// 	Action: "subscribe",
-		// }
+	return nil
+}
 
-		if err := encoder.Encode(nil); err != nil {
-			return err
-		}
-
-		if err := writer.Flush(); err != nil {
-			return err
-		}
-
-		time.Sleep(time.Second * 5)
+func (s *RealTimeChatStreamingService) write(ctx context.Context, payload any) error {
+	if s.wsClient.conn == nil {
+		return errors.New("websocket connection is nil - cannot write")
 	}
+
+	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpText)
+	encoder := json.NewEncoder(writer)
+
+	if err := encoder.Encode(payload); err != nil {
+		return err
+	}
+
+	return writer.Flush()
 }
 
 func (s *RealTimeChatStreamingService) handleControlFrame(reader *wsutil.Reader, header ws.Header) error {
@@ -290,12 +327,30 @@ func (s *RealTimeChatStreamingService) handleControlFrame(reader *wsutil.Reader,
 	return nil
 }
 
+func (s *RealTimeChatStreamingService) WebsocketReady() bool {
+	return s.wsClient.conn != nil
+}
+
 type Subscription struct {
 	Topic  string `json:"topic"`
 	Action string `json:"action"`
 }
 
-func (s *RealTimeChatStreamingService) SubscribeToAgentMetric()                     {}
+func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Context, metric LiveChatMetricKeyAgent) error {
+	payload := Subscription{
+		Topic:  fmt.Sprintf("agents.%s", metric),
+		Action: "subscribe",
+	}
+
+	if err := s.write(ctx, payload); err != nil {
+		return err
+	}
+
+	sentDataTime := time.Now()
+	s.wsCache.metadata.sentData = &sentDataTime
+
+	return nil
+}
 func (s *RealTimeChatStreamingService) SubscribeToChatMetric()                      {}
 func (s *RealTimeChatStreamingService) SubscribeToChatMetricForSpecificTimeWindow() {}
 
@@ -310,4 +365,16 @@ func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameSent() *time.Duratio
 type RealTimeChatStreamingMessage struct {
 	StatusCode int    `json:"status_code"`
 	Message    string `json:"message"`
+}
+
+type RealTimeChatStreamingContent[payload any] struct {
+	Content    payload `json:"content"`
+	StatusCode int     `json:"status_code"`
+}
+
+type RealTimeChatStreamingContentAgentMetric struct {
+	Topic        string                          `json:"topic"`
+	Data         map[LiveChatMetricKeyAgent]uint `json:"data"`
+	Type         string                          `json:"type"`
+	DepartmentID *GroupID                        `json:"department_id"`
 }

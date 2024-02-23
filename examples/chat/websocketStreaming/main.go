@@ -66,7 +66,20 @@ func main() {
 	t := time.NewTicker(time.Second)
 	defer t.Stop()
 
+	subscribed := false
+
 	for range t.C {
 		fmt.Println("Time since last frame: ", z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameReceived())
+
+		if !subscribed && z.LiveChat().RealTimeChat().RealTimeChatStreamingService().WebsocketReady() {
+			if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
+				log.Fatalf(err.Error())
+				return
+			}
+
+			subscribed = true
+
+			log.Println("subbed to metric!!")
+		}
 	}
 }
