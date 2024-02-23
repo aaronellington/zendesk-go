@@ -127,6 +127,7 @@ type (
 	AttachmentID             uint64
 	AuditID                  uint64
 	AuditLogID               uint64
+	AutomationID             uint64
 	BrandID                  uint64
 	CategoryID               uint64
 	ChatAccountID            uint64
@@ -153,6 +154,7 @@ type (
 	SuspendedTicketID        uint64
 	TicketAuditEventID       uint64
 	TicketAuditID            uint64
+	MacroID                  uint64
 	TicketCommentID          uint64
 	TicketFieldID            uint64
 	TicketFormID             uint64
@@ -160,7 +162,9 @@ type (
 	UploadToken              string
 	UserFieldID              uint64
 	UserID                   int64
+	ViewID                   uint64
 	IdentityID               uint64
+	TriggerID                uint64
 	UserSegmentID            uint64
 	WebhookEventID           string
 )
@@ -192,6 +196,22 @@ func (tag Tag) Validate() error {
 	}
 
 	return nil
+}
+
+type BusinessRuleConditions struct {
+	All []BusinessRuleCondition `json:"all"`
+	Any []BusinessRuleCondition `json:"any"`
+}
+
+type BusinessRuleCondition struct {
+	Field    string `json:"field"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
+}
+
+type BusinessRuleAction struct {
+	Field string `json:"field"`
+	Value any    `json:"value"`
 }
 
 func structToReader(x any) io.Reader {

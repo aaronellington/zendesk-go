@@ -87,7 +87,7 @@ func TestRealTimeChatRest_GetAllChatMetricsForDepartment_200(t *testing.T) {
 				Method: http.MethodGet,
 				Path:   "/stream/chats",
 				Query: url.Values{
-					"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
+					"department_id": []string{strconv.FormatUint(uint64(departmentID), 10)},
 				},
 			},
 		),
@@ -243,7 +243,7 @@ func TestRealTimeChatRest_GetSingleChatMetricForDepartment_200(t *testing.T) {
 				Method: http.MethodGet,
 				Path:   fmt.Sprintf("/stream/chats/%s", liveChatMetricKey),
 				Query: url.Values{
-					"department": []string{strconv.FormatUint(uint64(departmentID), 10)},
+					"department_id": []string{strconv.FormatUint(uint64(departmentID), 10)},
 				},
 			},
 		),

@@ -104,6 +104,9 @@ func NewService(
 			ticketCommentService: &TicketCommentService{
 				client: c,
 			},
+			viewService: &ViewService{
+				client: c,
+			},
 			ticketFormService: &TicketFormService{
 				client: c,
 			},
@@ -111,6 +114,18 @@ func NewService(
 				client: c,
 			},
 			userFieldsService: &UserFieldService{
+				client: c,
+			},
+			ticketTagService: &TicketTagService{
+				client: c,
+			},
+			macroService: &MacroService{
+				client: c,
+			},
+			automationService: &AutomationService{
+				client: c,
+			},
+			triggerService: &TriggerService{
 				client: c,
 			},
 			userIdentityService: &UserIdentityService{

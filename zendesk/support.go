@@ -22,6 +22,10 @@ type SupportService struct {
 	userService                   *UserService
 	userIdentityService           *UserIdentityService
 	sideConversationService       *SideConversationService
+	automationService             *AutomationService
+	triggerService                *TriggerService
+	viewService                   *ViewService
+	macroService                  *MacroService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
@@ -102,6 +106,26 @@ func (s *SupportService) TicketComments() *TicketCommentService {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields
 func (s *SupportService) TicketFields() *TicketFieldService {
 	return s.ticketFieldService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/business-rules/automations/
+func (s *SupportService) AutomationService() *AutomationService {
+	return s.automationService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/business-rules/triggers/
+func (s *SupportService) TriggerService() *TriggerService {
+	return s.triggerService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/business-rules/views/
+func (s *SupportService) ViewService() *ViewService {
+	return s.viewService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/business-rules/macros/
+func (s *SupportService) MacroService() *MacroService {
+	return s.macroService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags

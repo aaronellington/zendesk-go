@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -53,21 +54,13 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	go func() {
-		for {
-			if _, err := z.Support().Users().ShowSelf(ctx); err != nil {
-				PrintErr(err)
-			}
+	if err := z.Support().MacroService().List(ctx, func(response zendesk.MacrosResponse) error {
+		for _, entity := range response.Macros {
+			fmt.Println(entity.ID)
 		}
-	}()
 
-	go func() {
-		for {
-			if _, err := z.LiveChat().Chat().Department().List(ctx); err != nil {
-				PrintErr(err)
-			}
-		}
-	}()
-	wait := make(chan bool)
-	<-wait
+		return nil
+	}); err != nil {
+		PrintErr(err)
+	}
 }
