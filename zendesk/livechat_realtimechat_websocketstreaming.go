@@ -253,7 +253,6 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 	}
 
 	reader := wsutil.NewClientSideReader(*s.wsClient.conn)
-	decoder := json.NewDecoder(reader)
 	for {
 		header, err := reader.NextFrame()
 		if err != nil {
@@ -269,17 +268,12 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 		}
 
 		if header.OpCode.IsData() {
-			b := map[string]any{}
-			if err := decoder.Decode(&b); err != nil {
+			data := []byte{}
+			if _, err := reader.Read(data); err != nil {
 				return err
 			}
 
-			messageBytes, err := json.Marshal(b)
-			if err != nil {
-				return err
-			}
-
-			if err := s.handleWebsocketMessage(ctx, messageBytes); err != nil {
+			if err := s.handleWebsocketMessage(ctx, data); err != nil {
 				return err
 			}
 
@@ -288,7 +282,23 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 	}
 }
 
-func (s *RealTimeChatStreamingService) handleWebsocketMessage(ctx context.Context, messageBytes []byte) error {
+func (s *RealTimeChatStreamingService) handleWebsocketMessage(
+	ctx context.Context,
+	messageBytes []byte,
+) error {
+	placeholder := RealTimeChatStreamingResponse{}
+	if err := json.Unmarshal(messageBytes, &placeholder); err != nil {
+		return err
+	}
+
+	status, ok := placeholder["status_code"]
+	if !ok {
+		return errors.New("error unsupported message format")
+	}
+
+	if status == 401 {
+		return errors.New("error unauthenticated")
+	}
 
 	return nil
 }
@@ -351,6 +361,7 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Contex
 
 	return nil
 }
+
 func (s *RealTimeChatStreamingService) SubscribeToChatMetric()                      {}
 func (s *RealTimeChatStreamingService) SubscribeToChatMetricForSpecificTimeWindow() {}
 
@@ -368,8 +379,8 @@ type RealTimeChatStreamingMessage struct {
 }
 
 type RealTimeChatStreamingContent[payload any] struct {
-	Content    payload `json:"content"`
 	StatusCode int     `json:"status_code"`
+	Content    payload `json:"content"`
 }
 
 type RealTimeChatStreamingContentAgentMetric struct {
@@ -378,3 +389,5 @@ type RealTimeChatStreamingContentAgentMetric struct {
 	Type         string                          `json:"type"`
 	DepartmentID *GroupID                        `json:"department_id"`
 }
+
+type RealTimeChatStreamingResponse map[string]any
