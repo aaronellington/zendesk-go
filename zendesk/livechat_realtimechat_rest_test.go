@@ -21,7 +21,7 @@ func TestRealTimeChatRest_GetAllChatMetrics_200(t *testing.T) {
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_all_chat_metrics_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_all_chat_metrics_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -81,7 +81,7 @@ func TestRealTimeChatRest_GetAllChatMetricsForDepartment_200(t *testing.T) {
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_all_chat_metrics_for_department_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_all_chat_metrics_for_department_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -140,7 +140,7 @@ func TestRealTimeChatRest_GetAllChatMetricsForSpecificTimeWindow_200(t *testing.
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_all_chat_metrics_for_time_window_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_all_chat_metrics_for_time_window_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -195,7 +195,7 @@ func TestRealTimeChatRest_GetSingleChatMetric_200(t *testing.T) {
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_single_chat_metric_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_single_chat_metric_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -237,7 +237,7 @@ func TestRealTimeChatRest_GetSingleChatMetricForDepartment_200(t *testing.T) {
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_single_chat_metric_for_department_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_single_chat_metric_for_department_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
@@ -283,7 +283,7 @@ func TestRealTimeChatRest_GetSingleChatMetricForSpecificTimeWindow_200(t *testin
 			t,
 			&study.TestResponseFile{
 				StatusCode: http.StatusOK,
-				FilePath:   "test_files/responses/livechat/realtimechat/get_single_chat_metric_for_time_window_200.json",
+				FilePath:   "test_files/responses/livechat/realtimechat_rest/get_single_chat_metric_for_time_window_200.json",
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -210,6 +211,8 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 		return errors.New("websocket connection is nil - cannot write")
 	}
 
+	log.Println("writing ping to websocket")
+
 	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpPing)
 	encoder := json.NewEncoder(writer)
 
@@ -253,13 +256,16 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 	}
 
 	reader := wsutil.NewClientSideReader(*s.wsClient.conn)
+	decoder := json.NewDecoder(reader)
 	for {
+		log.Println("reading from websocket")
 		header, err := reader.NextFrame()
 		if err != nil {
 			return err
 		}
 
 		if header.OpCode.IsControl() {
+			log.Println("Is control")
 			if err := s.handleControlFrame(reader, header); err != nil {
 				return err
 			}
@@ -268,12 +274,18 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 		}
 
 		if header.OpCode.IsData() {
-			data := []byte{}
-			if _, err := reader.Read(data); err != nil {
+			log.Println("Reading Data")
+			b := map[string]any{}
+			if err := decoder.Decode(&b); err != nil {
 				return err
 			}
 
-			if err := s.handleWebsocketMessage(ctx, data); err != nil {
+			messageBytes, err := json.Marshal(b)
+			if err != nil {
+				return err
+			}
+
+			if err := s.handleWebsocketMessage(ctx, messageBytes); err != nil {
 				return err
 			}
 
@@ -296,7 +308,7 @@ func (s *RealTimeChatStreamingService) handleWebsocketMessage(
 		return errors.New("error unsupported message format")
 	}
 
-	if status == 401 {
+	if status == float64(401) {
 		return errors.New("error unauthenticated")
 	}
 
@@ -307,6 +319,8 @@ func (s *RealTimeChatStreamingService) write(ctx context.Context, payload any) e
 	if s.wsClient.conn == nil {
 		return errors.New("websocket connection is nil - cannot write")
 	}
+
+	log.Println("writing data to websocket")
 
 	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpText)
 	encoder := json.NewEncoder(writer)

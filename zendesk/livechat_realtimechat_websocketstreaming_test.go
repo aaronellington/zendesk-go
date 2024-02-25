@@ -137,9 +137,6 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 				serverEncoder = json.NewEncoder(serverWriter)
 			)
 
-			// Record a successful connection
-			m.state.successfulConnection = true
-
 			// Read forever until err
 			for {
 				header, err := serverReader.NextFrame()
@@ -167,8 +164,11 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 						return
 					}
 
+					time.Sleep(time.Second * 15)
 					serverWriter.Reset(conn, ws.StateServerSide, ws.OpClose)
-					if err := serverEncoder.Encode(nil); err != nil {
+
+					_, err := serverWriter.Write([]byte{})
+					if err != nil {
 						m.testError <- err
 						return
 					}
@@ -185,6 +185,8 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 
 					return
 				}
+
+				m.state.successfulConnection = true
 
 				if header.OpCode == ws.OpPing {
 					serverWriter.Reset(conn, ws.StateServerSide, ws.OpPong)
@@ -205,7 +207,7 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 					return
 				}
 
-				m.testError <- nil
+				m.testError <- err
 			}
 		}()
 	}))
