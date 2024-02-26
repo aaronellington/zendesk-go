@@ -164,7 +164,6 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 						return
 					}
 
-					time.Sleep(time.Second * 15)
 					serverWriter.Reset(conn, ws.StateServerSide, ws.OpClose)
 
 					_, err := serverWriter.Write([]byte{})

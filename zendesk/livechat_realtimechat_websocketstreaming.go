@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"sync"
 	"time"
@@ -17,6 +16,12 @@ import (
 )
 
 const RealTimeChatStreamingHost string = "wss://rtm.zopim.com/stream"
+
+var (
+	ErrRealTimeChatWebsocketUnauthenticated            error = errors.New("unauthenticated")
+	ErrRealTimeChatWebsocketUnsupportedIncomingMessage error = errors.New("unsupported incoming message")
+	ErrRealTimeChatWebsocketConnectionIsNil            error = errors.New("realtimechat websocket connection is nil")
+)
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
 type RealTimeChatStreamingService struct {
@@ -207,21 +212,7 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 }
 
 func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
-	if s.wsClient.conn == nil {
-		return errors.New("websocket connection is nil - cannot write")
-	}
-
-	log.Println("writing ping to websocket")
-
-	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpPing)
-	encoder := json.NewEncoder(writer)
-
-	// Send first ping immediately
-	if err := encoder.Encode(nil); err != nil {
-		return err
-	}
-
-	if err := writer.Flush(); err != nil {
+	if err := s.write(ctx, nil, ws.OpPing); err != nil {
 		return err
 	}
 
@@ -234,11 +225,7 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 	for {
 		select {
 		case currentPingSentTime := <-ticker.C:
-			if err := encoder.Encode(nil); err != nil {
-				return err
-			}
-
-			if err := writer.Flush(); err != nil {
+			if err := s.write(ctx, nil, ws.OpPing); err != nil {
 				return err
 			}
 
@@ -252,20 +239,20 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 
 func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 	if s.wsClient.conn == nil {
-		return errors.New("websocket connection is nil - cannot read")
+		return ErrRealTimeChatWebsocketConnectionIsNil
 	}
 
 	reader := wsutil.NewClientSideReader(*s.wsClient.conn)
 	decoder := json.NewDecoder(reader)
 	for {
-		log.Println("reading from websocket")
+
 		header, err := reader.NextFrame()
 		if err != nil {
 			return err
 		}
 
 		if header.OpCode.IsControl() {
-			log.Println("Is control")
+
 			if err := s.handleControlFrame(reader, header); err != nil {
 				return err
 			}
@@ -274,7 +261,6 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context) error {
 		}
 
 		if header.OpCode.IsData() {
-			log.Println("Reading Data")
 			b := map[string]any{}
 			if err := decoder.Decode(&b); err != nil {
 				return err
@@ -305,22 +291,20 @@ func (s *RealTimeChatStreamingService) handleWebsocketMessage(
 
 	status, ok := placeholder["status_code"]
 	if !ok {
-		return errors.New("error unsupported message format")
+		return ErrRealTimeChatWebsocketUnsupportedIncomingMessage
 	}
 
 	if status == float64(401) {
-		return errors.New("error unauthenticated")
+		return ErrRealTimeChatWebsocketUnauthenticated
 	}
 
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) write(ctx context.Context, payload any) error {
+func (s *RealTimeChatStreamingService) write(ctx context.Context, payload any, opCode ws.OpCode) error {
 	if s.wsClient.conn == nil {
-		return errors.New("websocket connection is nil - cannot write")
+		return ErrRealTimeChatWebsocketConnectionIsNil
 	}
-
-	log.Println("writing data to websocket")
 
 	writer := wsutil.NewWriter(*s.wsClient.conn, ws.StateClientSide, ws.OpText)
 	encoder := json.NewEncoder(writer)
@@ -366,7 +350,7 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Contex
 		Action: "subscribe",
 	}
 
-	if err := s.write(ctx, payload); err != nil {
+	if err := s.write(ctx, payload, ws.OpText); err != nil {
 		return err
 	}
 
