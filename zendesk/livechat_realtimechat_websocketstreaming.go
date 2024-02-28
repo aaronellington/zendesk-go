@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -57,30 +58,25 @@ type wsConnMetadata struct {
 	receivedData    *time.Time
 }
 
-func (w *wsConnMetadata) getTimeSinceMostRecentFrameReceived() *time.Duration {
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
-
-	var controlFrameTime time.Duration
-	var dataFrameTime time.Duration
-
-	if w.receivedControl != nil {
-		controlFrameTime = time.Since(*w.receivedControl)
-	}
-
-	if w.receivedData != nil {
-		dataFrameTime = time.Since(*w.receivedData)
-	}
-
-	if controlFrameTime == 0 && dataFrameTime == 0 {
+func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
+	if t1 == nil && t2 == nil {
 		return nil
 	}
 
-	if controlFrameTime == 0 {
-		return &dataFrameTime
+	var t2d time.Duration
+	if t1 == nil {
+		t2d = time.Since(*t2)
+		log.Print("return t2")
+		return &t2d
 	}
 
-	return &controlFrameTime
+	t1d := time.Since(*t1)
+	if t1d < t2d {
+		log.Print("return t2 t1 is less")
+		return &t2d
+	}
+	log.Print("return t1")
+	return &t1d
 }
 
 type WebsocketChatMetricData struct {
@@ -360,15 +356,12 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Contex
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) SubscribeToChatMetric()                      {}
-func (s *RealTimeChatStreamingService) SubscribeToChatMetricForSpecificTimeWindow() {}
-
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {
-	return s.wsCache.metadata.getTimeSinceMostRecentFrameReceived()
+	return getMostRecentTime(s.wsCache.metadata.receivedControl, s.wsCache.metadata.receivedData)
 }
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameSent() *time.Duration {
-	return s.wsCache.metadata.getTimeSinceMostRecentFrameReceived()
+	return getMostRecentTime(s.wsCache.metadata.sentPing, s.wsCache.metadata.sentData)
 }
 
 type RealTimeChatStreamingMessage struct {
