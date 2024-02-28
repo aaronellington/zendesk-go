@@ -158,10 +158,6 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) retryableErr() bool {
-	return true
-}
-
 func (s *RealTimeChatStreamingService) cleanConnection() {
 	s.wsClient.conn = nil
 
