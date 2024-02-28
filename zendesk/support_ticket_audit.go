@@ -26,7 +26,7 @@ type TicketAuditEvent struct {
 
 type TicketAuditsResponse struct {
 	Audits []TicketAudit `json:"audits"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 type TicketAuditResponse struct {
 	Audit TicketAudit `json:"audit"`

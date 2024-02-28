@@ -34,7 +34,7 @@ func Test_SupportOrganizationMembership_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleOrganizationMembershipID, actual.ID); err != nil {
+	if err := study.Assert(exampleOrganizationMembershipID, actual.OrganizationMembership.ID); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -54,12 +54,36 @@ func NewService(
 		supportService: &SupportService{
 			customStatusService: &CustomStatusService{
 				client: c,
+				generic: genericService[
+					CustomStatusID,
+					CustomStatusResponse,
+					CustomStatusesResponse,
+				]{
+					client:  c,
+					apiName: "custom_statuses",
+				},
 			},
 			organizationService: &OrganizationService{
 				client: c,
+				generic: genericService[
+					OrganizationID,
+					OrganizationResponse,
+					OrganizationsResponse,
+				]{
+					client:  c,
+					apiName: "organizations",
+				},
 			},
 			ticketService: &TicketService{
 				client: c,
+				generic: genericService[
+					TicketID,
+					TicketResponse,
+					TicketsResponse,
+				]{
+					client:  c,
+					apiName: "tickets",
+				},
 			},
 			ticketAuditService: &TicketAuditService{
 				client: c,
@@ -72,21 +96,69 @@ func NewService(
 			},
 			groupMembershipService: &GroupMembershipService{
 				client: c,
+				generic: genericService[
+					GroupMembershipID,
+					GroupMembershipResponse,
+					GroupMembershipsResponse,
+				]{
+					client:  c,
+					apiName: "group_memberships",
+				},
 			},
 			groupService: &GroupsService{
 				client: c,
+				generic: genericService[
+					GroupID,
+					GroupResponse,
+					GroupsResponse,
+				]{
+					client:  c,
+					apiName: "groups",
+				},
 			},
 			organizationFieldService: &OrganizationFieldService{
 				client: c,
+				generic: genericService[
+					OrganizationFieldID,
+					OrganizationFieldResponse,
+					OrganizationFieldsResponse,
+				]{
+					client:  c,
+					apiName: "organization_fields",
+				},
 			},
 			organizationMembershipService: &OrganizationMembershipService{
 				client: c,
+				generic: genericService[
+					OrganizationMembershipID,
+					OrganizationMembershipResponse,
+					OrganizationMembershipsResponse,
+				]{
+					client:  c,
+					apiName: "organization_memberships",
+				},
 			},
 			suspendedTicketService: &SuspendedTicketService{
 				client: c,
+				generic: genericService[
+					SuspendedTicketID,
+					SuspendedTicketResponse,
+					SuspendedTicketsResponse,
+				]{
+					client:  c,
+					apiName: "suspended_tickets",
+				},
 			},
 			satisfactionRatingService: &SatisfactionRatingService{
 				client: c,
+				generic: genericService[
+					SatisfactionRatingID,
+					SatisfactionRatingResponse,
+					SatisfactionRatingsResponse,
+				]{
+					client:  c,
+					apiName: "satisfaction_ratings",
+				},
 			},
 			ticketAttachmentService: &TicketAttachmentService{
 				client: c,
@@ -96,33 +168,97 @@ func NewService(
 			},
 			viewService: &ViewService{
 				client: c,
+				generic: genericService[
+					ViewID,
+					ViewResponse,
+					ViewsResponse,
+				]{
+					client:  c,
+					apiName: "views",
+				},
 			},
 			ticketFormService: &TicketFormService{
 				client: c,
+				generic: genericService[
+					TicketFormID,
+					TicketFormResponse,
+					TicketFormsResponse,
+				]{
+					client:  c,
+					apiName: "ticket_forms",
+				},
 			},
 			ticketFieldService: &TicketFieldService{
 				client: c,
+				generic: genericService[
+					TicketFieldID,
+					TicketFieldResponse,
+					TicketFieldsResponse,
+				]{
+					client:  c,
+					apiName: "ticket_fields",
+				},
 			},
 			userFieldsService: &UserFieldService{
 				client: c,
+				generic: genericService[
+					UserFieldID,
+					UserFieldResponse,
+					UserFieldsResponse,
+				]{
+					client:  c,
+					apiName: "user_fields",
+				},
 			},
 			ticketTagService: &TicketTagService{
 				client: c,
 			},
 			macroService: &MacroService{
 				client: c,
+				generic: genericService[
+					MacroID,
+					MacroResponse,
+					MacrosResponse,
+				]{
+					client:  c,
+					apiName: "macros",
+				},
 			},
 			automationService: &AutomationService{
 				client: c,
+				generic: genericService[
+					AutomationID,
+					AutomationResponse,
+					AutomationsResponse,
+				]{
+					client:  c,
+					apiName: "automations",
+				},
 			},
 			triggerService: &TriggerService{
 				client: c,
+				generic: genericService[
+					TriggerID,
+					TriggerResponse,
+					TriggersResponse,
+				]{
+					client:  c,
+					apiName: "triggers",
+				},
 			},
 			userIdentityService: &UserIdentityService{
 				client: c,
 			},
 			userService: &UserService{
 				client: c,
+				generic: genericService[
+					UserID,
+					UserResponse,
+					UsersResponse,
+				]{
+					client:  c,
+					apiName: "users",
+				},
 			},
 		},
 		guideService: &GuideService{

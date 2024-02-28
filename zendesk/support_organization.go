@@ -18,6 +18,7 @@ type OrganizationResponse struct {
 
 type OrganizationsResponse struct {
 	Organizations []Organization `json:"organizations"`
+	cursorPaginationResponse
 }
 
 // NOTE: Organization Fields are returned as a map[string (name of field)]any (value of field), instead of the
@@ -84,28 +85,17 @@ type OrganizationsIncrementalExportResponse struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
 type OrganizationService struct {
-	client *client
+	client  *client
+	generic genericService[
+		OrganizationID,
+		OrganizationResponse,
+		OrganizationsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#show-organization
-func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organization, error) {
-	target := OrganizationResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/organizations/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return Organization{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return Organization{}, err
-	}
-
-	return target.Organization, nil
+func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (OrganizationResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-organization-export
@@ -150,49 +140,17 @@ func (s OrganizationService) IncrementalExport(
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#create-organization
 func (s OrganizationService) Create(ctx context.Context, payload OrganizationPayload) (OrganizationResponse, error) {
-	target := OrganizationResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"/api/v2/organizations",
-		structToReader(payload),
-	)
-	if err != nil {
-		return OrganizationResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Create(ctx, payload)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#update-organization
 func (s OrganizationService) Update(ctx context.Context, id OrganizationID, payload OrganizationPayload) (OrganizationResponse, error) {
-	target := OrganizationResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPut,
-		fmt.Sprintf("/api/v2/organizations/%d", id),
-		structToReader(payload),
-	)
-	if err != nil {
-		return OrganizationResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return OrganizationResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Update(ctx, id, payload)
 }
 
 type OrganizationAutocompleteResponse struct {
 	Organizations []Organization `json:"organizations"`
-	OffsetPaginationResponse
+	offsetPaginationResponse
 }
 
 /*

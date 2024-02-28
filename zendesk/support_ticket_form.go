@@ -2,14 +2,17 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/
 type TicketFormService struct {
-	client *client
+	client  *client
+	generic genericService[
+		TicketFormID,
+		TicketFormResponse,
+		TicketFormsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#json-format
@@ -32,59 +35,25 @@ type TicketForm struct {
 
 type TicketFormsResponse struct {
 	TicketForms []TicketForm `json:"ticket_forms"`
+	offsetPaginationResponse
 }
 
 type TicketFormResponse struct {
 	TicketForm TicketForm `json:"ticket_form"`
 }
 
-/*
-https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
-
-Does not support pagination.
-*/
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#list-ticket-forms
 func (s TicketFormService) List(
 	ctx context.Context,
-) ([]TicketForm, error) {
-	target := TicketFormsResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		"/api/v2/ticket_forms",
-		http.NoBody,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return nil, err
-	}
-
-	return target.TicketForms, nil
+	pageHandler func(response TicketFormsResponse) error,
+) error {
+	return s.generic.List(ctx, pageHandler)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#show-ticket-form
 func (s TicketFormService) Show(
 	ctx context.Context,
-	ticketFormID TicketFormID,
-) (TicketForm, error) {
-	target := TicketFormResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/ticket_forms/%d", ticketFormID),
-		http.NoBody,
-	)
-	if err != nil {
-		return TicketForm{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return TicketForm{}, err
-	}
-
-	return target.TicketForm, nil
+	id TicketFormID,
+) (TicketFormResponse, error) {
+	return s.generic.Show(ctx, id)
 }

@@ -34,7 +34,7 @@ func Test_SupportGroupMembership_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleGroupMembershipID, actual.ID); err != nil {
+	if err := study.Assert(exampleGroupMembershipID, actual.GroupMembership.ID); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -46,7 +46,7 @@ type TicketCommentMetadataSystem struct {
 type TicketCommentResponse struct {
 	Comments []TicketComment `json:"comments"`
 	Users    []User          `json:"users"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments/#list-comments

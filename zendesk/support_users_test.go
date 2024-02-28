@@ -35,7 +35,7 @@ func Test_SupportUsersShow_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleUserID, actual.ID); err != nil {
+	if err := study.Assert(exampleUserID, actual.User.ID); err != nil {
 		t.Fatal(err)
 	}
 }

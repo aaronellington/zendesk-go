@@ -23,12 +23,12 @@ type TagMeta struct {
 
 type TagsResponse struct {
 	Tags []TagMeta `json:"tags"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type TagSearchResponse struct {
 	Tags []Tag `json:"tags"`
-	OffsetPaginationResponse
+	offsetPaginationResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#list-tags

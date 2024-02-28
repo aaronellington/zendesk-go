@@ -33,7 +33,7 @@ func Test_SupportTicketFormsShow_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleFormID, actual.ID); err != nil {
+	if err := study.Assert(exampleFormID, actual.TicketForm.ID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -55,8 +55,13 @@ func Test_SupportTicketFormsList_200(t *testing.T) {
 		),
 	})
 
-	actual, err := z.Support().TicketForms().List(ctx)
-	if err != nil {
+	actual := []zendesk.TicketForm{}
+
+	if err := z.Support().TicketForms().List(ctx, func(response zendesk.TicketFormsResponse) error {
+		actual = append(actual, response.TicketForms...)
+
+		return nil
+	}); err != nil {
 		t.Fatal(err)
 	}
 

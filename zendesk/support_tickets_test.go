@@ -36,7 +36,7 @@ func Test_SupportTicketsShow_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleTicketID, actual.ID); err != nil {
+	if err := study.Assert(exampleTicketID, actual.Ticket.ID); err != nil {
 		t.Fatal(err)
 	}
 }

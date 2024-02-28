@@ -33,7 +33,7 @@ func Test_SupportOrganizationField_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleOrganizationFieldID, actual.ID); err != nil {
+	if err := study.Assert(exampleOrganizationFieldID, actual.OrganizationField.ID); err != nil {
 		t.Fatal(err)
 	}
 }

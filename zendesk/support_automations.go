@@ -2,15 +2,16 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
+type AutomationResponse struct {
+	Automation Automation `json:"automation"`
+}
+
 type AutomationsResponse struct {
 	Automations []Automation `json:"automations"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type Automation struct {
@@ -29,7 +30,12 @@ type Automation struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/automations/
 type AutomationService struct {
-	client *client
+	client  *client
+	generic genericService[
+		AutomationID,
+		AutomationResponse,
+		AutomationsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/automations/#list-automations
@@ -37,37 +43,5 @@ func (s AutomationService) List(
 	ctx context.Context,
 	pageHandler func(response AutomationsResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf("/api/v2/automations?%s", query.Encode())
-
-	for {
-		target := AutomationsResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }

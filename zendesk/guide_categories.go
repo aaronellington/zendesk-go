@@ -10,7 +10,7 @@ import (
 
 type CategoriesResponse struct {
 	Categories []Category `json:"categories"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type CategoryResponse struct {

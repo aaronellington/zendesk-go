@@ -14,7 +14,7 @@ type ArticleResponse struct {
 
 type ArticlesResponse struct {
 	Articles []Article `json:"articles"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type Article struct {

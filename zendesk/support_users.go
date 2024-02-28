@@ -20,6 +20,7 @@ type UserPayload struct {
 
 type UsersResponse struct {
 	Users []User `json:"users"`
+	cursorPaginationResponse
 }
 
 type UserSearchResponse struct {
@@ -28,7 +29,7 @@ type UserSearchResponse struct {
 	Organizations   []Organization    `json:"organizations"`
 	Groups          []Group           `json:"groups"`
 	OpenTicketCount map[string]uint64 `json:"open_ticket_count"`
-	OffsetPaginationResponse
+	offsetPaginationResponse
 }
 
 type UsersIncrementalExportResponse struct {
@@ -100,17 +101,17 @@ type UserFields map[string]any
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/
 type UserService struct {
-	client *client
+	client  *client
+	generic genericService[
+		UserID,
+		UserResponse,
+		UsersResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#show-user
-func (s UserService) Show(ctx context.Context, id UserID) (User, error) {
-	userInfo, err := s.ShowWithSideloads(ctx, id, nil)
-	if err != nil {
-		return User{}, err
-	}
-
-	return userInfo.User, nil
+func (s UserService) Show(ctx context.Context, id UserID) (UserResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#show-user
@@ -319,23 +320,7 @@ func (s UserService) Create(
 	ctx context.Context,
 	payload UserPayload,
 ) (UserResponse, error) {
-	target := UserResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"/api/v2/users",
-		structToReader(payload),
-	)
-	if err != nil {
-		return UserResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return UserResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Create(ctx, payload)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#update-user
@@ -344,21 +329,5 @@ func (s UserService) Update(
 	id UserID,
 	payload UserPayload,
 ) (UserResponse, error) {
-	target := UserResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPut,
-		fmt.Sprintf("/api/v2/users/%d", id),
-		structToReader(payload),
-	)
-	if err != nil {
-		return UserResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return UserResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Update(ctx, id, payload)
 }

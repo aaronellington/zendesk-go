@@ -24,7 +24,7 @@ type GroupMembership struct {
 
 type GroupMembershipsResponse struct {
 	GroupMemberships []GroupMembership `json:"group_memberships"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type GroupMembershipResponse struct {
@@ -33,7 +33,12 @@ type GroupMembershipResponse struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/
 type GroupMembershipService struct {
-	client *client
+	client  *client
+	generic genericService[
+		GroupMembershipID,
+		GroupMembershipResponse,
+		GroupMembershipsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/#list-memberships
@@ -189,72 +194,28 @@ func (s GroupMembershipService) Create(
 	userID UserID,
 	groupID GroupID,
 ) (GroupMembershipResponse, error) {
-	target := GroupMembershipResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"/api/v2/group_memberships",
-		structToReader(GroupMembershipPayload{
-			GroupMembership: map[string]any{
-				"user_id":  userID,
-				"group_id": groupID,
-			},
-		}),
-	)
-	if err != nil {
-		return GroupMembershipResponse{}, err
+	payload := GroupMembershipPayload{
+		GroupMembership: map[string]any{
+			"user_id":  userID,
+			"group_id": groupID,
+		},
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return GroupMembershipResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Create(ctx, payload)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/#delete-membership
 func (s GroupMembershipService) Delete(
 	ctx context.Context,
-	userID UserID,
-	groupMembershipID GroupMembershipID,
+	id GroupMembershipID,
 ) error {
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodDelete,
-		fmt.Sprintf("/api/v2/users/%d/group_memberships/%d", userID, groupMembershipID),
-		http.NoBody,
-	)
-	if err != nil {
-		return err
-	}
-
-	return s.client.ZendeskRequest(
-		request,
-		nil,
-	)
+	return s.generic.Delete(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/#show-membership
 func (s GroupMembershipService) Show(
 	ctx context.Context,
 	id GroupMembershipID,
-) (GroupMembership, error) {
-	target := GroupMembershipResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/group_memberships/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return GroupMembership{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return GroupMembership{}, err
-	}
-
-	return target.GroupMembership, nil
+) (GroupMembershipResponse, error) {
+	return s.generic.Show(ctx, id)
 }

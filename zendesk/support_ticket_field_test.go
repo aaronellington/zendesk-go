@@ -34,7 +34,7 @@ func Test_SupportTicketField_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleTicketFieldID, actual.ID); err != nil {
+	if err := study.Assert(exampleTicketFieldID, actual.TicketField.ID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -78,7 +78,7 @@ func Test_SupportTicketField_List_200(t *testing.T) {
 	actualFieldsLen := 0
 
 	if err := z.Support().TicketFields().List(ctx,
-		func(response zendesk.TicketFieldsConfigurationResponse) error {
+		func(response zendesk.TicketFieldsResponse) error {
 			for range response.TicketFields {
 				actualFieldsLen++
 			}

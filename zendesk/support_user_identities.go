@@ -9,7 +9,7 @@ import (
 
 type UserIdentitiesResponse struct {
 	Identities []UserIdentity `json:"identities"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type UserIdentityResponse struct {

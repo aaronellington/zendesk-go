@@ -10,7 +10,7 @@ import (
 
 type AuditLogsResponse struct {
 	AuditLogs []AuditLog `json:"audit_logs"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/audit_logs/#json-format
@@ -99,7 +99,7 @@ func WithPageSize(pageSize uint8) listAccountConfigurationAuditLogModifier {
 	})
 }
 
-func WithSort(field string, direction CursorPaginationSortDirection) listAccountConfigurationAuditLogModifier {
+func WithSort(field string, direction cursorPaginationSortDirection) listAccountConfigurationAuditLogModifier {
 	return listAccountConfigurationAuditLogModifier(func(queryParameters *url.Values) {
 		queryParameters.Set("sort", fmt.Sprintf("%s%s", direction, field))
 	})

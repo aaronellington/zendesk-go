@@ -35,7 +35,7 @@ type Brand struct {
 
 type BrandsResponse struct {
 	Brands []Brand `json:"brands"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type BrandResponse struct {

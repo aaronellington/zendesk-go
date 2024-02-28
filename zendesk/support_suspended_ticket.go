@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
 
+type SuspendedTicketResponse struct {
+	SuspendedTicket SuspendedTicket `json:"suspended_ticket"`
+}
+
 type SuspendedTicketsResponse struct {
 	SuspendedTickets []SuspendedTicket `json:"suspended_tickets"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type SuspendedTicket struct {
@@ -34,7 +37,12 @@ type SuspendedTicketAuthor struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/
 type SuspendedTicketService struct {
-	client *client
+	client  *client
+	generic genericService[
+		SuspendedTicketID,
+		SuspendedTicketResponse,
+		SuspendedTicketsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#list-suspended-tickets
@@ -42,39 +50,7 @@ func (s SuspendedTicketService) List(
 	ctx context.Context,
 	pageHandler func(response SuspendedTicketsResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf("/api/v2/suspended_tickets?%s", query.Encode())
-
-	for {
-		target := SuspendedTicketsResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#recover-multiple-suspended-tickets
@@ -99,15 +75,5 @@ func (s *SuspendedTicketService) RecoverMultiple(ctx context.Context, ids []Susp
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#delete-suspended-ticket
 func (s *SuspendedTicketService) Delete(ctx context.Context, id SuspendedTicketID) error {
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodDelete,
-		fmt.Sprintf("/api/v2/suspended_tickets/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return err
-	}
-
-	return s.client.ZendeskRequest(request, nil)
+	return s.generic.Delete(ctx, id)
 }

@@ -109,7 +109,7 @@ func Test_Support_Satisfaction_Ratings_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(expectedSatisfactionRating, actual); err != nil {
+	if err := study.Assert(expectedSatisfactionRating, actual.SatisfactionRating); err != nil {
 		t.Fatal(err)
 	}
 }

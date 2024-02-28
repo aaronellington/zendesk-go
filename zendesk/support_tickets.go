@@ -20,6 +20,7 @@ type TicketResponse struct {
 
 type TicketsResponse struct {
 	Tickets []Ticket `json:"tickets"`
+	cursorPaginationResponse
 }
 
 type MergeRequestPayload struct {
@@ -34,11 +35,11 @@ type Ticket struct {
 	AssigneeID         *UserID                  `json:"assignee_id"`
 	CreatedAt          time.Time                `json:"created_at"`
 	CollaboratorIDs    []UserID                 `json:"collaborator_ids"`
-	CustomFields       []TicketField            `json:"custom_fields"`
+	CustomFields       []TicketFieldValue       `json:"custom_fields"`
 	Description        string                   `json:"description"`
 	DueAt              *time.Time               `json:"due_at"`
 	ExternalID         *string                  `json:"external_id"`
-	Fields             []TicketField            `json:"fields"`
+	Fields             []TicketFieldValue       `json:"fields"`
 	FollowerIDs        []UserID                 `json:"follower_ids"`
 	GroupID            *GroupID                 `json:"group_id"`
 	HasIncidents       bool                     `json:"has_incidents"`
@@ -76,9 +77,9 @@ type TicketVia struct {
 	Channel string `json:"channel"`
 }
 
-type TicketFields []TicketField
+type TicketFieldValues []TicketFieldValue
 
-func (fields TicketFields) CreateMap() map[TicketFieldID]any {
+func (fields TicketFieldValues) CreateMap() map[TicketFieldID]any {
 	fieldMap := map[TicketFieldID]any{}
 	for _, field := range fields {
 		fieldMap[field.ID] = field.Value
@@ -87,7 +88,7 @@ func (fields TicketFields) CreateMap() map[TicketFieldID]any {
 	return fieldMap
 }
 
-type TicketField struct {
+type TicketFieldValue struct {
 	ID    TicketFieldID `json:"id"`
 	Value any           `json:"value"`
 }
@@ -119,49 +120,22 @@ type TicketsIncrementalExportResponse struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
 type TicketService struct {
-	client *client
+	client  *client
+	generic genericService[
+		TicketID,
+		TicketResponse,
+		TicketsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#show-ticket
-func (s TicketService) Show(ctx context.Context, id TicketID) (Ticket, error) {
-	target := TicketResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/tickets/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return Ticket{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return Ticket{}, err
-	}
-
-	return target.Ticket, nil
+func (s TicketService) Show(ctx context.Context, id TicketID) (TicketResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#create-ticket
 func (s TicketService) Create(ctx context.Context, payload TicketPayload) (TicketResponse, error) {
-	target := TicketResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		"/api/v2/tickets",
-		structToReader(payload),
-	)
-	if err != nil {
-		return TicketResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return TicketResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Create(ctx, payload)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_import/#ticket-import
@@ -208,23 +182,7 @@ func (s TicketService) Merge(ctx context.Context, destination TicketID, payload 
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#update-ticket
 func (s TicketService) Update(ctx context.Context, id TicketID, payload TicketPayload) (TicketResponse, error) {
-	target := TicketResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPut,
-		fmt.Sprintf("/api/v2/tickets/%d", id),
-		structToReader(payload),
-	)
-	if err != nil {
-		return TicketResponse{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return TicketResponse{}, err
-	}
-
-	return target, nil
+	return s.generic.Update(ctx, id, payload)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based
@@ -378,7 +336,7 @@ func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags T
 
 type ListProblemTicketIncidentsResponse struct {
 	Tickets []Ticket `json:"tickets"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 func (s TicketService) ListProblemTicketIncidents(

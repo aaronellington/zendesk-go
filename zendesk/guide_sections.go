@@ -18,7 +18,7 @@ type SectionsResponse struct {
 	Count        int       `json:"count"`
 	SortBy       string    `json:"sort_by"`
 	SortOrder    string    `json:"sort_order"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type Section struct {

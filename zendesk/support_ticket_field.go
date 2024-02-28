@@ -2,19 +2,21 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/
 type TicketFieldService struct {
-	client *client
+	client  *client
+	generic genericService[
+		TicketFieldID,
+		TicketFieldResponse,
+		TicketFieldsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/#json-format
-type TicketFieldConfiguration struct {
+type TicketField struct {
 	Active              bool                `json:"active"`
 	AgentDescription    string              `json:"agent_description"`
 	CollapsedForAgents  bool                `json:"collapsed_for_agents"`
@@ -57,75 +59,24 @@ const (
 	TicketFieldTypeLookup            TicketFieldType = "lookup"            // A field to create a relationship  to another object such as a user, ticket, or organization
 )
 
-type TicketFieldConfigurationResponse struct {
-	TicketField TicketFieldConfiguration `json:"ticket_field"`
+type TicketFieldResponse struct {
+	TicketField TicketField `json:"ticket_field"`
 }
 
-type TicketFieldsConfigurationResponse struct {
-	TicketFields []TicketFieldConfiguration `json:"ticket_fields"`
-	CursorPaginationResponse
+type TicketFieldsResponse struct {
+	TicketFields []TicketField `json:"ticket_fields"`
+	cursorPaginationResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/#show-ticket-field
-func (s TicketFieldService) Show(ctx context.Context, id TicketFieldID) (TicketFieldConfiguration, error) {
-	target := TicketFieldConfigurationResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/ticket_fields/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return TicketFieldConfiguration{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return TicketFieldConfiguration{}, err
-	}
-
-	return target.TicketField, nil
+func (s TicketFieldService) Show(ctx context.Context, id TicketFieldID) (TicketFieldResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/#list-ticket-fields
 func (s TicketFieldService) List(
 	ctx context.Context,
-	pageHandler func(response TicketFieldsConfigurationResponse) error,
+	pageHandler func(response TicketFieldsResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf(
-		"/api/v2/ticket_fields?%s",
-		query.Encode(),
-	)
-
-	for {
-		target := TicketFieldsConfigurationResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }

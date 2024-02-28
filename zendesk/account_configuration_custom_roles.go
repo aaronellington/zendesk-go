@@ -94,7 +94,7 @@ type CustomRoleConfiguration struct {
 
 type CustomRolesResponse struct {
 	CustomRoles []CustomRole `json:"custom_roles"`
-	OffsetPaginationResponse
+	offsetPaginationResponse
 }
 
 type CustomRoleResponse struct {

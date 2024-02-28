@@ -2,15 +2,16 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
+type MacroResponse struct {
+	Macro Macro `json:"macro"`
+}
+
 type MacrosResponse struct {
 	Macros []Macro `json:"macros"`
-	CursorPaginationResponse
+	cursorPaginationResponse
 }
 
 type Macro struct {
@@ -30,7 +31,12 @@ type Macro struct {
 
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/macros/
 type MacroService struct {
-	client *client
+	client  *client
+	generic genericService[
+		MacroID,
+		MacroResponse,
+		MacrosResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/business-rules/macros/#list-macros
@@ -38,37 +44,5 @@ func (s *MacroService) List(
 	ctx context.Context,
 	pageHandler func(response MacrosResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf("/api/v2/macros?%s", query.Encode())
-
-	for {
-		target := MacrosResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }

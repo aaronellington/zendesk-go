@@ -80,8 +80,8 @@ func Test_SupportTicketCustomStatus_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if actual.ID != expectedCustomStatusID {
-		t.Fatalf("expected ID: %d - got ID: %d", expectedCustomStatusID, actual.ID)
+	if actual.CustomStatus.ID != expectedCustomStatusID {
+		t.Fatalf("expected ID: %d - got ID: %d", expectedCustomStatusID, actual.CustomStatus.ID)
 	}
 }
 
