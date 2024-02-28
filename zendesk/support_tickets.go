@@ -186,65 +186,13 @@ func (s TicketService) Update(ctx context.Context, id TicketID, payload TicketPa
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based
-func (s TicketService) IncrementalExportWithSideloads(
-	ctx context.Context,
-	startTime time.Time,
-	sideloads []TicketSideload,
-	perPage uint,
-	pageHandler func(response TicketsIncrementalExportResponse) error,
-) error {
-	query := url.Values{}
-	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
-	query.Set("per_page", fmt.Sprintf("%d", perPage))
-
-	if len(sideloads) > 0 {
-		sideload, sideloads := string(sideloads[0]), sideloads[1:]
-		for _, s := range sideloads {
-			sideload = fmt.Sprintf("%s,%s", sideload, string(s))
-		}
-
-		query.Set("include", sideload)
-	}
-
-	for {
-		target := TicketsIncrementalExportResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			fmt.Sprintf("/api/v2/incremental/tickets.json?%s", query.Encode()),
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.EndOfStream {
-			break
-		}
-
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
-	}
-
-	return nil
-}
-
-// https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based
 func (s TicketService) IncrementalExport(
 	ctx context.Context,
 	startTime time.Time,
 	perPage uint,
-	pageHandler func(response TicketsIncrementalExportResponse) error,
+	pageHandler func(response TicketsResponse) error,
 ) error {
-	return s.IncrementalExportWithSideloads(ctx, startTime, nil, perPage, pageHandler)
+	return s.generic.IncrementalExport(ctx, startTime, perPage, []string{}, pageHandler)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#add-tags

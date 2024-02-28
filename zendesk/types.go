@@ -31,12 +31,12 @@ const (
 type UserSideload string
 
 const (
-	UserSideloadIdentities      UserSideload = "identities"
-	UserSideloadOrganizations   UserSideload = "organizations"
-	UserSideloadRoles           UserSideload = "roles"
-	UserSideloadAbilities       UserSideload = "abilities"
-	UserSideloadGroups          UserSideload = "groups"
-	UserSideloadOpenTicketCount UserSideload = "open_ticket_count"
+	UserSideloadIdentities      = "identities"
+	UserSideloadOrganizations   = "organizations"
+	UserSideloadRoles           = "roles"
+	UserSideloadAbilities       = "abilities"
+	UserSideloadGroups          = "groups"
+	UserSideloadOpenTicketCount = "open_ticket_count"
 )
 
 type TicketCommentSideload string

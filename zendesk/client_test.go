@@ -102,7 +102,7 @@ func Test_Client_429(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	if err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	if err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsResponse) error {
 		tickets = append(tickets, response.Tickets...)
 
 		return nil
@@ -210,7 +210,7 @@ func Test_Client_429_Retries_Exceeded(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsResponse) error {
 		tickets = append(tickets, response.Tickets...)
 
 		return nil
@@ -259,7 +259,7 @@ func Test_Client_HTML_Error_Received(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsResponse) error {
 		tickets = append(tickets, response.Tickets...)
 
 		return nil
@@ -328,7 +328,7 @@ func Test_Client_ECONNRESET_Retry_Success(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsResponse) error {
 		tickets = append(tickets, response.Tickets...)
 
 		return nil
@@ -420,7 +420,7 @@ func Test_Client_ECONNRESET_Retry_Exhausted(t *testing.T) {
 
 	tickets := []zendesk.Ticket{}
 
-	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsIncrementalExportResponse) error {
+	err := z.Support().Tickets().IncrementalExport(ctx, time.Unix(0, 0), 2, func(response zendesk.TicketsResponse) error {
 		tickets = append(tickets, response.Tickets...)
 
 		return nil

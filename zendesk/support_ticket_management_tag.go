@@ -85,7 +85,7 @@ func (s TicketTagService) Search(
 	pageHandler func(response TagSearchResponse) error,
 ) error {
 	if utf8.RuneCountInString(searchTerm) < 3 {
-		return errors.New("invalid searchterm - searchterm must be at least 2 characters")
+		return errors.New("invalid search term - search term must be at least 2 characters")
 	}
 
 	query := url.Values{}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 )
 
 type genericService[
@@ -16,28 +18,31 @@ type genericService[
 	apiName string
 }
 
+type genericChildService[
+	ID comparable,
+	ParentID comparable,
+	SingleResponse any,
+	ListResponse paginationResponse,
+] struct {
+	client  *client
+	apiName string
+}
+
 func (s genericService[
 	ID,
 	SingleResponse,
 	ListResponse,
-]) Show(ctx context.Context, id ID) (SingleResponse, error) {
-	target := *new(SingleResponse)
-
-	request, err := http.NewRequestWithContext(
+]) Show(
+	ctx context.Context,
+	id ID,
+) (
+	SingleResponse,
+	error,
+) {
+	return s.getSingle(
 		ctx,
-		http.MethodGet,
 		fmt.Sprintf("/api/v2/%s/%v", s.apiName, id),
-		http.NoBody,
 	)
-	if err != nil {
-		return target, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return target, err
-	}
-
-	return target, nil
 }
 
 func (s genericService[
@@ -59,37 +64,53 @@ func (s genericService[
 
 	endpoint := fmt.Sprintf("/api/v2/%s?%s", s.apiName, query.Encode())
 
-	for {
-		target := *new(ListResponse)
+	return s.getList(ctx, endpoint, pageHandler)
+}
 
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
+func (s genericService[
+	ID,
+	SingleResponse,
+	ListResponse,
+]) Search(
+	ctx context.Context,
+	query string,
+	pageHandler func(response ListResponse) error,
+) error {
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
+	q := url.Values{}
+	q.Set("query", query)
 
-		if err := pageHandler(target); err != nil {
-			return err
-		}
+	return s.getList(
+		ctx,
+		fmt.Sprintf("/api/v2/%s/search?%s", s.apiName, q.Encode()),
+		pageHandler,
+	)
+}
 
-		nextPage := target.nextPage()
+func (s genericService[
+	ID,
+	SingleResponse,
+	ListResponse,
+]) IncrementalExport(
+	ctx context.Context,
+	startTime time.Time,
+	perPage uint,
+	sideloads []string,
+	pageHandler func(response ListResponse) error,
+) error {
+	query := url.Values{}
+	query.Set("start_time", fmt.Sprintf("%d", startTime.Unix()))
+	query.Set("per_page", fmt.Sprintf("%d", perPage))
 
-		if nextPage == nil {
-			break
-		}
-
-		endpoint = *nextPage
+	if len(sideloads) > 0 {
+		query.Set("include", strings.Join(sideloads, ","))
 	}
 
-	return nil
+	return s.getList(
+		ctx,
+		fmt.Sprintf("/api/v2/incremental/%s.json?%s", s.apiName, query.Encode()),
+		pageHandler,
+	)
 }
 
 func (s genericService[
@@ -100,7 +121,10 @@ func (s genericService[
 	ctx context.Context,
 	id ID,
 	payload any,
-) (SingleResponse, error) {
+) (
+	SingleResponse,
+	error,
+) {
 	target := *new(SingleResponse)
 
 	request, err := http.NewRequestWithContext(
@@ -163,4 +187,75 @@ func (s genericService[
 	}
 
 	return s.client.ZendeskRequest(request, nil)
+}
+
+func (s genericService[
+	ID,
+	SingleResponse,
+	ListResponse,
+]) getList(
+	ctx context.Context,
+	endpoint string,
+	pageHandler func(response ListResponse) error,
+) error {
+	for {
+		target := *new(ListResponse)
+
+		// err, ok := any(target).(error)
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		nextPage := target.nextPage()
+
+		if nextPage == nil {
+			break
+		}
+
+		endpoint = *nextPage
+	}
+
+	return nil
+}
+
+func (s genericService[
+	ID,
+	SingleResponse,
+	ListResponse,
+]) getSingle(
+	ctx context.Context,
+	endpoint string,
+) (SingleResponse, error) {
+	target := *new(SingleResponse)
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		endpoint,
+		http.NoBody,
+	)
+	if err != nil {
+		return target, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return target, err
+	}
+
+	return target, nil
 }
