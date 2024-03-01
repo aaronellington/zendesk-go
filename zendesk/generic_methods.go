@@ -44,17 +44,18 @@ func (s genericService[
 	pageHandler func(response ListResponse) error,
 ) error {
 	query := url.Values{}
-
-	x := any(new(ListResponse))
-	if _, ok := x.(isCursorPagination); ok {
+	if _, ok := any(new(ListResponse)).(isCursorPagination); ok {
 		if !query.Has("page[size]") {
 			query.Set("page[size]", "100")
 		}
 	}
 
-	endpoint := fmt.Sprintf("/api/v2/%s?%s", s.apiName, query.Encode())
-
-	return s.getList(ctx, endpoint, pageHandler)
+	return genericList(
+		ctx,
+		s.client,
+		fmt.Sprintf("/api/v2/%s?%s", s.apiName, query.Encode()),
+		pageHandler,
+	)
 }
 
 func (s genericService[
@@ -69,8 +70,9 @@ func (s genericService[
 	q := url.Values{}
 	q.Set("query", query)
 
-	return s.getList(
+	return genericList(
 		ctx,
+		s.client,
 		fmt.Sprintf("/api/v2/%s/search?%s", s.apiName, q.Encode()),
 		pageHandler,
 	)
@@ -95,8 +97,9 @@ func (s genericService[
 		query.Set("include", strings.Join(sideloads, ","))
 	}
 
-	return s.getList(
+	return genericList(
 		ctx,
+		s.client,
 		fmt.Sprintf("/api/v2/incremental/%s.json?%s", s.apiName, query.Encode()),
 		pageHandler,
 	)
@@ -126,11 +129,7 @@ func (s genericService[
 		return target, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return target, err
-	}
-
-	return target, nil
+	return genericRequest[SingleResponse](s.client, request)
 }
 
 func (s genericService[
@@ -141,8 +140,6 @@ func (s genericService[
 	ctx context.Context,
 	payload any,
 ) (SingleResponse, error) {
-	target := *new(SingleResponse)
-
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -150,14 +147,10 @@ func (s genericService[
 		structToReader(payload),
 	)
 	if err != nil {
-		return target, err
+		return *new(SingleResponse), err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return target, err
-	}
-
-	return target, nil
+	return genericRequest[SingleResponse](s.client, request)
 }
 
 func (s genericService[
@@ -182,14 +175,44 @@ func (s genericService[
 	ID,
 	SingleResponse,
 	ListResponse,
-]) getList(
+]) getSingle(
 	ctx context.Context,
 	endpoint string,
-	pageHandler func(response ListResponse) error,
+) (SingleResponse, error) {
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		endpoint,
+		http.NoBody,
+	)
+	if err != nil {
+		return *new(SingleResponse), err
+	}
+
+	return genericRequest[SingleResponse](s.client, request)
+}
+
+func genericRequest[T any](
+	client *client,
+	request *http.Request,
+) (T, error) {
+	target := *new(T)
+
+	if err := client.ZendeskRequest(request, &target); err != nil {
+		return *new(T), err
+	}
+
+	return target, nil
+}
+
+func genericList[T paginationResponse](
+	ctx context.Context,
+	client *client,
+	endpoint string,
+	pageHandler func(page T) error,
 ) error {
 	for {
-		target := *new(ListResponse)
-
+		// Create the Request
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
@@ -200,56 +223,33 @@ func (s genericService[
 			return err
 		}
 
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
+		// Make the Request
+		page, err := genericRequest[T](client, request)
+		if err != nil {
 			return err
 		}
 
-		if err := pageHandler(target); err != nil {
+		// Give the caller the page data
+		if err := pageHandler(page); err != nil {
 			return err
 		}
 
-		incrementalExportResponse, isIncrementalExportResponse := any(target).(isIncrementalExport)
+		// Calculate the next page
+		nextPage := page.nextPage()
 
-		var nextPage *string
-		if strings.Contains(endpoint, "/incremental/") && isIncrementalExportResponse {
-			nextPage = incrementalExportResponse.isIncrementalExportNextPage(request.URL)
-		} else {
-			nextPage = target.nextPage()
+		// Calculate the next page for incremental exports
+		if strings.Contains(request.URL.Path, "/incremental/") {
+			if incrementalExportResponse, ok := any(page).(isIncrementalExport); ok {
+				nextPage = incrementalExportResponse.isIncrementalExportNextPage(request.URL)
+			}
 		}
 
-		if nextPage == nil {
+		if nextPage == "" {
 			break
 		}
 
-		endpoint = *nextPage
+		endpoint = nextPage
 	}
 
 	return nil
-}
-
-func (s genericService[
-	ID,
-	SingleResponse,
-	ListResponse,
-]) getSingle(
-	ctx context.Context,
-	endpoint string,
-) (SingleResponse, error) {
-	target := *new(SingleResponse)
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		endpoint,
-		http.NoBody,
-	)
-	if err != nil {
-		return target, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return target, err
-	}
-
-	return target, nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type paginationResponse interface {
-	nextPage() *string
+	nextPage() string
 }
 
 type isCursorPagination interface {
@@ -15,7 +15,7 @@ type isCursorPagination interface {
 }
 
 type isIncrementalExport interface {
-	isIncrementalExportNextPage(pre *url.URL) *string
+	isIncrementalExportNextPage(pre *url.URL) string
 }
 
 // https://developer.zendesk.com/api-reference/introduction/pagination/#using-cursor-pagination
@@ -24,12 +24,12 @@ type cursorPaginationResponse struct {
 	Links cursorPaginationLinks `json:"links"`
 }
 
-func (r cursorPaginationResponse) nextPage() *string {
+func (r cursorPaginationResponse) nextPage() string {
 	if !r.Meta.HasMore {
-		return nil
+		return ""
 	}
 
-	return &r.Links.Next
+	return r.Links.Next
 }
 
 func (r cursorPaginationResponse) isCursorPagination() {}
@@ -60,8 +60,12 @@ type offsetPaginationResponse struct {
 	Count        uint64  `json:"count"`
 }
 
-func (r offsetPaginationResponse) nextPage() *string {
-	return r.NextPage
+func (r offsetPaginationResponse) nextPage() string {
+	if r.NextPage == nil {
+		return ""
+	}
+
+	return *r.NextPage
 }
 
 type incrementalExportResponse struct {
@@ -73,9 +77,9 @@ func (response incrementalExportResponse) EndTime() time.Time {
 	return time.Unix(response.EndTimeUnix, 0)
 }
 
-func (response incrementalExportResponse) isIncrementalExportNextPage(previousEndpoint *url.URL) *string {
+func (response incrementalExportResponse) isIncrementalExportNextPage(previousEndpoint *url.URL) string {
 	if response.EndOfStream {
-		return nil
+		return ""
 	}
 
 	q := previousEndpoint.Query()
@@ -83,7 +87,5 @@ func (response incrementalExportResponse) isIncrementalExportNextPage(previousEn
 
 	previousEndpoint.RawQuery = q.Encode()
 
-	newURL := previousEndpoint.String()
-
-	return &newURL
+	return previousEndpoint.String()
 }
