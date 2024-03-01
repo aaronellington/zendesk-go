@@ -18,16 +18,6 @@ type genericService[
 	apiName string
 }
 
-type genericChildService[
-	ID comparable,
-	ParentID comparable,
-	SingleResponse any,
-	ListResponse paginationResponse,
-] struct {
-	client  *client
-	apiName string
-}
-
 func (s genericService[
 	ID,
 	SingleResponse,
@@ -76,7 +66,6 @@ func (s genericService[
 	query string,
 	pageHandler func(response ListResponse) error,
 ) error {
-
 	q := url.Values{}
 	q.Set("query", query)
 
@@ -201,8 +190,6 @@ func (s genericService[
 	for {
 		target := *new(ListResponse)
 
-		// err, ok := any(target).(error)
-
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodGet,
@@ -221,7 +208,14 @@ func (s genericService[
 			return err
 		}
 
-		nextPage := target.nextPage()
+		incrementalExportResponse, isIncrementalExportResponse := any(target).(isIncrementalExport)
+
+		var nextPage *string
+		if strings.Contains(endpoint, "/incremental/") && isIncrementalExportResponse {
+			nextPage = incrementalExportResponse.isIncrementalExportNextPage(request.URL)
+		} else {
+			nextPage = target.nextPage()
+		}
 
 		if nextPage == nil {
 			break

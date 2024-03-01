@@ -21,6 +21,7 @@ type TicketResponse struct {
 type TicketsResponse struct {
 	Tickets []Ticket `json:"tickets"`
 	cursorPaginationResponse
+	incrementalExportResponse
 }
 
 type MergeRequestPayload struct {
@@ -115,7 +116,7 @@ func (tags Tags) HasTag(targetTag Tag) bool {
 
 type TicketsIncrementalExportResponse struct {
 	TicketsResponse
-	IncrementalExportResponse
+	incrementalExportResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/

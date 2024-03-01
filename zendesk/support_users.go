@@ -17,7 +17,7 @@ type UserPayload struct {
 
 type UsersResponse struct {
 	Users []User `json:"users"`
-	IncrementalExportResponse
+	incrementalExportResponse
 
 	cursorPaginationResponse
 }
@@ -33,7 +33,7 @@ type UserSearchResponse struct {
 
 type UsersIncrementalExportResponse struct {
 	UsersResponse
-	IncrementalExportResponse
+	incrementalExportResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/users/#json-format
@@ -156,7 +156,6 @@ func (s UserService) IncrementalExportWithSideloads(
 	sideloads []string,
 	pageHandler func(response UsersResponse) error,
 ) error {
-
 	return s.generic.IncrementalExport(
 		ctx,
 		time.Unix(startTime, 0),

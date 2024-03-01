@@ -183,7 +183,8 @@ func Test_Support_Tickets_IncrementalExport(t *testing.T) {
 				},
 			},
 		),
-	})
+	},
+	)
 
 	tickets := []zendesk.Ticket{}
 

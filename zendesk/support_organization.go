@@ -80,7 +80,7 @@ type OrganizationSatisfactionRating struct {
 
 type OrganizationsIncrementalExportResponse struct {
 	OrganizationsResponse
-	IncrementalExportResponse
+	incrementalExportResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/

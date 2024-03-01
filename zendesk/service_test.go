@@ -3,6 +3,7 @@ package zendesk_test
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -22,6 +23,7 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Servi
 			ClientID:     "fake-client-id",
 			ClientSecret: "fake-client-secret",
 		},
+		zendesk.WithLogger(log.Default()),
 		zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)),
 	)
 }

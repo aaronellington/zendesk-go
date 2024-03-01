@@ -1,11 +1,21 @@
 package zendesk
 
+import (
+	"fmt"
+	"net/url"
+	"time"
+)
+
 type paginationResponse interface {
 	nextPage() *string
 }
 
 type isCursorPagination interface {
 	isCursorPagination()
+}
+
+type isIncrementalExport interface {
+	isIncrementalExportNextPage(pre *url.URL) *string
 }
 
 // https://developer.zendesk.com/api-reference/introduction/pagination/#using-cursor-pagination
@@ -52,4 +62,28 @@ type offsetPaginationResponse struct {
 
 func (r offsetPaginationResponse) nextPage() *string {
 	return r.NextPage
+}
+
+type incrementalExportResponse struct {
+	EndTimeUnix int64 `json:"end_time"`
+	EndOfStream bool  `json:"end_of_stream"`
+}
+
+func (response incrementalExportResponse) EndTime() time.Time {
+	return time.Unix(response.EndTimeUnix, 0)
+}
+
+func (response incrementalExportResponse) isIncrementalExportNextPage(previousEndpoint *url.URL) *string {
+	if response.EndOfStream {
+		return nil
+	}
+
+	q := previousEndpoint.Query()
+	q.Set("start_time", fmt.Sprintf("%d", response.EndTime().Unix()))
+
+	previousEndpoint.RawQuery = q.Encode()
+
+	newURL := previousEndpoint.String()
+
+	return &newURL
 }
