@@ -63,7 +63,7 @@ func main() {
 		}
 	}()
 
-	t := time.NewTicker(time.Second)
+	t := time.NewTicker(time.Second * 10)
 	defer t.Stop()
 
 	// subscribed := false

@@ -44,7 +44,6 @@ func NewService(
 
 	wsClient := wsClient{
 		client:    c,
-		conn:      config.realTimeChatWebsocketConnection,
 		rtcWSHost: config.realTimeChatWebsocketHost,
 	}
 
