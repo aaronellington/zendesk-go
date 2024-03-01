@@ -16,22 +16,22 @@ type RealTimeChatRestService struct {
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/rest/#example-response
 type ChatMetrics struct {
 	MissedChats      *ChatMetricWindow `json:"missed_chats"`
-	ChatDurationMax  *uint64           `json:"chat_duration_max"`
+	ChatDurationMax  *int64            `json:"chat_duration_max"`
 	SatisfactionBad  *ChatMetricWindow `json:"satisfaction_bad"`
-	ActiveChats      uint64            `json:"active_chats"`
+	ActiveChats      int64             `json:"active_chats"`
 	SatisfactionGood *ChatMetricWindow `json:"satisfaction_good"`
-	IncomingChats    uint64            `json:"incoming_chats"`
-	AssignedChats    uint64            `json:"assigned_chats"`
-	ChatDurationAvg  *uint64           `json:"chat_duration_avg"`
-	WaitingTimeAvg   *uint64           `json:"waiting_time_avg"`
-	ResponseTimeAvg  *uint64           `json:"response_time_avg"`
-	WaitingTimeMax   *uint64           `json:"waiting_time_max"`
-	ResponseTimeMax  *uint64           `json:"response_time_max"`
+	IncomingChats    int64             `json:"incoming_chats"`
+	AssignedChats    int64             `json:"assigned_chats"`
+	ChatDurationAvg  *int64            `json:"chat_duration_avg"`
+	WaitingTimeAvg   *int64            `json:"waiting_time_avg"`
+	ResponseTimeAvg  *int64            `json:"response_time_avg"`
+	WaitingTimeMax   *int64            `json:"waiting_time_max"`
+	ResponseTimeMax  *int64            `json:"response_time_max"`
 }
 
 type ChatMetricWindow struct {
-	SixtyMinuteWindow  uint64 `json:"60"`
-	ThirtyMinuteWindow uint64 `json:"30"`
+	SixtyMinuteWindow  int64 `json:"60"`
+	ThirtyMinuteWindow int64 `json:"30"`
 }
 
 type ChatsStreamResponse struct {

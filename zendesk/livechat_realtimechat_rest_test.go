@@ -35,7 +35,7 @@ func TestRealTimeChatRest_GetAllChatMetrics_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedChatDuration := uint64(325)
+	expectedChatDuration := int64(325)
 
 	expected := zendesk.ChatsStreamResponse{
 		StatusCode: 200,

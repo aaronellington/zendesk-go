@@ -26,12 +26,18 @@ type View struct {
 	Description *string               `json:"description"`
 	Execution   ViewExecution         `json:"execution"`
 	Conditions  BusinessRuleCondition `json:"conditions"`
-	Restriction any                   `json:"restriction"`
+	Restriction ViewRestriction       `json:"restriction"`
 	RawTitle    string                `json:"raw_title"`
 }
 
+type ViewRestriction struct {
+	ID   uint      `json:"id"`
+	IDs  []GroupID `json:"ids"`
+	Type string    `json:"type"`
+}
+
 type ViewGroup struct {
-	ID         string `json:"id"`
+	ID         any    `json:"id"`
 	Title      string `json:"title"`
 	Filterable bool   `json:"filterable"`
 	Sortable   bool   `json:"sortable"`
@@ -39,7 +45,7 @@ type ViewGroup struct {
 }
 
 type ViewSort struct {
-	ID         string `json:"id"`
+	ID         any    `json:"id"`
 	Title      string `json:"title"`
 	Filterable bool   `json:"filterable"`
 	Sortable   bool   `json:"sortable"`
@@ -47,7 +53,7 @@ type ViewSort struct {
 }
 
 type ViewColumns struct {
-	ID         string `json:"id"`
+	ID         any    `json:"id"`
 	Title      string `json:"title"`
 	Filterable bool   `json:"filterable"`
 	Sortable   bool   `json:"sortable"`
