@@ -37,9 +37,11 @@ type wsCache struct {
 }
 
 type wsClient struct {
-	client    *client //
-	conn      net.Conn
-	rtcWSHost string // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
+	client          *client //
+	conn            net.Conn
+	connEstablished chan bool
+	connMutex       *sync.Mutex
+	rtcWSHost       string // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
 }
 
 type wsChatCache struct {
@@ -147,6 +149,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	s.wsCache.metadata.connStarted = &connectionStartedTime
 
 	s.wsClient.conn = conn
+	s.wsClient.connEstablished <- true
 
 	return nil
 }
@@ -273,10 +276,24 @@ func (s *RealTimeChatStreamingService) write(payload []byte, opCode ws.OpCode) e
 }
 
 func (s *RealTimeChatStreamingService) connectionEstablished() error {
-	timeout := time.NewTimer(time.Second * 30)
-	connReady := make(chan bool)
-	for s.wsClient.conn == nil {
-		if timeout {
+	if s.wsClient.conn != nil {
+		return nil
+	}
+
+	s.wsClient.connMutex.Lock()
+	defer s.wsClient.connMutex.Unlock()
+
+	if s.wsClient.conn != nil {
+		return nil
+	}
+
+	timeout := time.NewTimer(time.Second * 15)
+	for {
+		select {
+		case <-timeout.C:
+			return fmt.Errorf("timeout reached")
+		case <-s.wsClient.connEstablished:
+			return nil
 		}
 	}
 }

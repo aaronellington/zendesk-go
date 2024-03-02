@@ -23,7 +23,9 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 
 	// This is our test mockserver
 	mockableZendeskRTCWebsocketServer := &mockRealTimeChatWebsocketServer{
-		state: State{},
+		state: State{
+			successfulConnection: make(chan bool),
+		},
 		settings: Settings{
 			ValidOAuthToken: "Bearer fake-token",
 		},
@@ -54,12 +56,20 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 		}
 	}()
 
-	if err := <-testError; err != nil {
-		t.Fatal(err)
-	}
+	timeout := time.NewTimer(time.Second * 2)
+	select {
+	case err := <-testError:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-timeout.C:
+		t.Fatal("did not record a successful connection within timeout")
+	case successfulConnection := <-mockableZendeskRTCWebsocketServer.state.successfulConnection:
+		if !successfulConnection {
+			t.Fatal("did not connect successfully")
+		}
 
-	if !mockableZendeskRTCWebsocketServer.state.successfulConnection {
-		t.Fatal("did not record a successful connection")
+		return
 	}
 }
 
@@ -70,7 +80,9 @@ func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
 
 	// This is our test mockserver
 	mockableZendeskRTCWebsocketServer := &mockRealTimeChatWebsocketServer{
-		state: State{},
+		state: State{
+			successfulConnection: make(chan bool),
+		},
 		settings: Settings{
 			ValidOAuthToken: "No valid token",
 		},
@@ -101,12 +113,21 @@ func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
 		}
 	}()
 
-	err := <-testError
-	if err == nil {
-		t.Fatal("expected to get an error")
-	}
+	timeout := time.NewTimer(time.Second * 2)
+	select {
+	case err := <-testError:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-timeout.C:
+		t.Fatal("did not record a successful connection within timeout")
+	case successfulConnection := <-mockableZendeskRTCWebsocketServer.state.successfulConnection:
+		if successfulConnection {
+			t.Fatal("expected to fail connection")
+		}
 
-	t.Fatal(err)
+		return
+	}
 }
 
 type mockRealTimeChatWebsocketServer struct {
@@ -136,6 +157,8 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 				serverWriter  = wsutil.NewWriter(conn, state, ws.OpText)
 				serverEncoder = json.NewEncoder(serverWriter)
 			)
+
+			m.state.successfulConnection <- m.settings.Authorized
 
 			// Read forever until err
 			for {
@@ -185,8 +208,6 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 					return
 				}
 
-				m.state.successfulConnection = true
-
 				if header.OpCode == ws.OpPing {
 					serverWriter.Reset(conn, ws.StateServerSide, ws.OpPong)
 
@@ -213,7 +234,7 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 }
 
 type State struct {
-	successfulConnection bool
+	successfulConnection chan bool
 	lastWriteFromClient  *time.Time
 }
 
