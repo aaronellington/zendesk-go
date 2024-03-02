@@ -3,8 +3,6 @@ package zendesk
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -101,41 +99,10 @@ func (s OrganizationService) Show(ctx context.Context, id OrganizationID) (Organ
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-organization-export
 func (s OrganizationService) IncrementalExport(
 	ctx context.Context,
-	startTime int64,
-	pageHandler func(response OrganizationsIncrementalExportResponse) error,
+	startTime time.Time,
+	pageHandler func(response OrganizationsResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("start_time", fmt.Sprintf("%d", startTime))
-
-	for {
-		target := OrganizationsIncrementalExportResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			fmt.Sprintf("/api/v2/incremental/organizations.json?%s", query.Encode()),
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.EndOfStream {
-			break
-		}
-
-		query.Set("start_time", fmt.Sprintf("%d", target.EndTimeUnix))
-	}
-
-	return nil
+	return s.generic.IncrementalExport(ctx, startTime, 500, []string{}, pageHandler)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#create-organization
@@ -165,35 +132,10 @@ func (s OrganizationService) Autocomplete(
 ) error {
 	endpoint := fmt.Sprintf("/api/v2/organizations/autocomplete?name=%s", term)
 
-	for {
-		target := OrganizationAutocompleteResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.NextPage != nil {
-			endpoint = *target.NextPage
-
-			continue
-		}
-
-		break
-	}
-
-	return nil
+	return genericList(
+		ctx,
+		s.client,
+		endpoint,
+		pageHandler,
+	)
 }

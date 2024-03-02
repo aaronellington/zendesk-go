@@ -2,9 +2,6 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -46,28 +43,17 @@ type Article struct {
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/
 type ArticleService struct {
-	client *client
+	client  *client
+	generic genericService[
+		ArticleID,
+		ArticleResponse,
+		ArticlesResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/#show-article
-func (s ArticleService) Show(ctx context.Context, id ArticleID) (Article, error) {
-	target := ArticleResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/help_center/articles/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return Article{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return Article{}, err
-	}
-
-	return target.Article, nil
+func (s ArticleService) Show(ctx context.Context, id ArticleID) (ArticleResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/#list-articles
@@ -75,36 +61,5 @@ func (s ArticleService) List(
 	ctx context.Context,
 	pageHandler func(response ArticlesResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-
-	for {
-		target := ArticlesResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			fmt.Sprintf("/api/v2/help_center/articles?%s", query.Encode()),
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		query.Set("page[after]", target.Meta.AfterCursor)
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }

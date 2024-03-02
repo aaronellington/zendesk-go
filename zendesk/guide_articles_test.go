@@ -33,7 +33,7 @@ func Test_Guide_Articles_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := study.Assert(exampleArticleID, actual.ID); err != nil {
+	if err := study.Assert(exampleArticleID, actual.Article.ID); err != nil {
 		t.Fatal(err)
 	}
 }

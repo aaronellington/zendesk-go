@@ -2,14 +2,17 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles
 type CustomRoleService struct {
-	client *client
+	client  *client
+	generic genericService[
+		CustomRoleID,
+		CustomRoleResponse,
+		CustomRolesResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#json-format
@@ -110,58 +113,10 @@ func (s CustomRoleService) List(
 	ctx context.Context,
 	pageHandler func(response CustomRolesResponse) error,
 ) error {
-	endpoint := "/api/v2/custom_roles"
-
-	for {
-		target := CustomRolesResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.NextPage != nil {
-			endpoint = *target.NextPage
-
-			continue
-		}
-
-		break
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#show-custom-role
-func (s CustomRoleService) Show(ctx context.Context, id CustomRoleID) (CustomRole, error) {
-	target := CustomRoleResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/custom_roles/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return CustomRole{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return CustomRole{}, err
-	}
-
-	return target.CustomRole, nil
+func (s CustomRoleService) Show(ctx context.Context, id CustomRoleID) (CustomRoleResponse, error) {
+	return s.generic.Show(ctx, id)
 }

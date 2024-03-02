@@ -35,8 +35,8 @@ func Test_AccountConfiguration_Brands_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if actual.ID != expectedBrandID {
-		t.Fatalf("expected ID: %d - got ID: %d", expectedBrandID, actual.ID)
+	if actual.Brand.ID != expectedBrandID {
+		t.Fatalf("expected ID: %d - got ID: %d", expectedBrandID, actual.Brand.ID)
 	}
 }
 

@@ -2,15 +2,17 @@ package zendesk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/brands/
 type BrandService struct {
-	client *client
+	client  *client
+	generic genericService[
+		BrandID,
+		BrandResponse,
+		BrandsResponse,
+	]
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/brands/#json-format
@@ -60,24 +62,8 @@ type BrandLogoAttachment struct {
 func (s BrandService) Show(
 	ctx context.Context,
 	id BrandID,
-) (Brand, error) {
-	target := BrandResponse{}
-
-	request, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("/api/v2/brands/%d", id),
-		http.NoBody,
-	)
-	if err != nil {
-		return Brand{}, err
-	}
-
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return Brand{}, err
-	}
-
-	return target.Brand, nil
+) (BrandResponse, error) {
+	return s.generic.Show(ctx, id)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/brands/#list-brands
@@ -85,40 +71,5 @@ func (s BrandService) List(
 	ctx context.Context,
 	pageHandler func(response BrandsResponse) error,
 ) error {
-	query := url.Values{}
-	query.Set("page[size]", "100")
-	endpoint := fmt.Sprintf(
-		"/api/v2/brands?%s",
-		query.Encode(),
-	)
-
-	for {
-		target := BrandsResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return s.generic.List(ctx, pageHandler)
 }

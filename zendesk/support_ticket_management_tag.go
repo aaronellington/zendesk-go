@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"unicode/utf8"
 )
@@ -43,35 +42,12 @@ func (s TicketTagService) List(
 		query.Encode(),
 	)
 
-	for {
-		target := TagsResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return genericList(
+		ctx,
+		s.client,
+		endpoint,
+		pageHandler,
+	)
 }
 
 /*
@@ -95,35 +71,10 @@ func (s TicketTagService) Search(
 		query.Encode(),
 	)
 
-	for {
-		target := TagSearchResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.NextPage != nil {
-			endpoint = *target.NextPage
-
-			continue
-		}
-
-		break
-	}
-
-	return nil
+	return genericList(
+		ctx,
+		s.client,
+		endpoint,
+		pageHandler,
+	)
 }

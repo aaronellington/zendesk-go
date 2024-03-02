@@ -45,37 +45,15 @@ func (s *UserIdentityService) List(
 ) error {
 	query := url.Values{}
 	query.Set("page[size]", "100")
+
 	endpoint := fmt.Sprintf("/api/v2/users/%d/identities?%s", userID, query.Encode())
 
-	for {
-		target := UserIdentitiesResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return genericList(
+		ctx,
+		s.client,
+		endpoint,
+		pageHandler,
+	)
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/users/user_identities/#create-identity
@@ -84,8 +62,6 @@ func (s *UserIdentityService) Create(
 	userID UserID,
 	payload UserIdentityPayload,
 ) (UserIdentityResponse, error) {
-	target := UserIdentityResponse{}
-
 	request, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -96,9 +72,5 @@ func (s *UserIdentityService) Create(
 		return UserIdentityResponse{}, err
 	}
 
-	if err := s.client.ZendeskRequest(request, &target); err != nil {
-		return UserIdentityResponse{}, err
-	}
-
-	return target, nil
+	return genericRequest[UserIdentityResponse](s.client, request)
 }

@@ -43,12 +43,36 @@ func NewService(
 		accountConfigurationService: &AccountConfigurationService{
 			auditLogService: &AuditLogService{
 				client: c,
+				generic: genericService[
+					AuditLogID,
+					AuditLogResponse,
+					AuditLogsResponse,
+				]{
+					client:  c,
+					apiName: "audit_logs",
+				},
 			},
 			brandService: &BrandService{
 				client: c,
+				generic: genericService[
+					BrandID,
+					BrandResponse,
+					BrandsResponse,
+				]{
+					client:  c,
+					apiName: "brands",
+				},
 			},
 			customRoleService: &CustomRoleService{
 				client: c,
+				generic: genericService[
+					CustomRoleID,
+					CustomRoleResponse,
+					CustomRolesResponse,
+				]{
+					client:  c,
+					apiName: "custom_roles",
+				},
 			},
 		},
 		supportService: &SupportService{
@@ -264,12 +288,36 @@ func NewService(
 		guideService: &GuideService{
 			categoriesService: &CategoryService{
 				client: c,
+				generic: genericService[
+					CategoryID,
+					CategoryResponse,
+					CategoriesResponse,
+				]{
+					client:  c,
+					apiName: "help_center/categories",
+				},
 			},
 			sectionsService: &SectionService{
 				client: c,
+				generic: genericService[
+					SectionID,
+					SectionResponse,
+					SectionsResponse,
+				]{
+					client:  c,
+					apiName: "help_center/sections",
+				},
 			},
 			articlesService: &ArticleService{
 				client: c,
+				generic: genericService[
+					ArticleID,
+					ArticleResponse,
+					ArticlesResponse,
+				]{
+					client:  c,
+					apiName: "help_center/articles",
+				},
 			},
 		},
 		liveChatService: &LiveChatService{

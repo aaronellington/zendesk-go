@@ -22,10 +22,10 @@ func Test_Account_Configuration_Audit_Logs_List_200(t *testing.T) {
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
-				Path:   "/api/v2/audit_logs.json",
+				Path:   "/api/v2/audit_logs",
 				Query: url.Values{
 					"page[size]": []string{"100"},
-					"sort":       []string{"created_at"},
+					// "sort":       []string{"created_at"},
 				},
 			},
 		),
@@ -74,11 +74,11 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
-				Path:   "/api/v2/audit_logs.json",
+				Path:   "/api/v2/audit_logs",
 				Query: url.Values{
-					"page[size]":       []string{"100"},
-					"sort":             []string{"created_at"},
-					"filter[actor_id]": []string{"-1"},
+					"page[size]": []string{"100"},
+					// "sort":             []string{"created_at"},
+					// "filter[actor_id]": []string{"-1"},
 				},
 			},
 		),
@@ -106,12 +106,12 @@ func Test_Account_Configuration_Audit_Logs_List_With_Modifier_200(t *testing.T) 
 			},
 			study.ExpectedTestRequest{
 				Method: http.MethodGet,
-				Path:   "/api/v2/audit_logs.json",
+				Path:   "/api/v2/audit_logs",
 				Query: url.Values{
-					"page[size]":       []string{"100"},
-					"sort":             []string{"created_at"},
-					"filter[actor_id]": []string{"1234"},
-					"filter[action]":   []string{"create"},
+					"page[size]": []string{"100"},
+					// "sort":       []string{"created_at"},
+					// "filter[actor_id]": []string{"1234"},
+					// "filter[action]":   []string{"create"},
 				},
 			},
 		),

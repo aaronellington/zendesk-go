@@ -80,7 +80,7 @@ func Test_SupportTicketCustomRole_Show_200(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if actual.ID != expectedCustomRoleID {
-		t.Fatalf("expected ID: %d - got ID: %d", expectedCustomRoleID, actual.ID)
+	if actual.CustomRole.ID != expectedCustomRoleID {
+		t.Fatalf("expected ID: %d - got ID: %d", expectedCustomRoleID, actual.CustomRole.ID)
 	}
 }

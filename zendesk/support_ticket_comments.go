@@ -3,7 +3,6 @@ package zendesk
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 )
@@ -83,33 +82,10 @@ func (s TicketCommentService) ListByTicketIDWithSideload(
 		query.Encode(),
 	)
 
-	for {
-		target := TicketCommentResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if !target.Meta.HasMore {
-			break
-		}
-
-		endpoint = target.Links.Next
-	}
-
-	return nil
+	return genericList(
+		ctx,
+		s.client,
+		endpoint,
+		pageHandler,
+	)
 }
