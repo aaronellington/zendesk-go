@@ -223,6 +223,8 @@ func (s *RealTimeChatStreamingService) read() error {
 			ws.Cipher(payload, header.Mask, 0)
 		}
 
+		fmt.Println(string(payload))
+
 		if header.OpCode.IsControl() {
 			if err := s.handleControlFrame(payload, header.OpCode); err != nil {
 				return err
