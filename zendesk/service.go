@@ -12,7 +12,7 @@ func NewService(
 	subDomain string,
 	zendeskAuth authentication,
 	chatCredentials ChatCredentials,
-	opts ...configOption,
+	opts ...ConfigOption,
 ) *Service {
 	config := &internalConfig{
 		userAgent:                 "aaronellington/zendesk-go",
@@ -173,10 +173,10 @@ func NewService(
 					wsClient: &wsClient,
 					wsCache: &wsCache{
 						chat: &wsChatCache{
-							individualDepartments: &utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]{},
+							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
 						},
 						agent: &wsAgentCache{
-							individualDepartments: &utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]{},
+							individualDepartments: utils.NewMemoryCacheInstance[UserID, WebsocketAgentMetricData](),
 						},
 						metadata: &wsConnMetadata{
 							mutex: &sync.Mutex{},

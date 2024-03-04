@@ -6,14 +6,24 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk/internal/utils"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+)
+
+type WebsocketCloseCode int
+
+const (
+	WebsocketCloseCodeNormal          WebsocketCloseCode = 1000
+	WebsocketCloseCodeGoingAway       WebsocketCloseCode = 1001
+	WebsocketCloseCodeProtocolErr     WebsocketCloseCode = 1002
+	WebsocketCloseCodeUnsupportedData WebsocketCloseCode = 1003
+	WebsocketCloseCodeNoCodeReceived  WebsocketCloseCode = 1005
 )
 
 const RealTimeChatStreamingHost string = "wss://rtm.zopim.com/stream"
@@ -51,13 +61,15 @@ type wsChatCache struct {
 type wsAgentCache struct {
 	individualDepartments *utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]
 }
+
 type wsConnMetadata struct {
-	mutex           *sync.Mutex
-	connStarted     *time.Time
-	sentPing        *time.Time
-	sentData        *time.Time
-	receivedControl *time.Time
-	receivedData    *time.Time
+	mutex             *sync.Mutex
+	connStarted       *time.Time
+	connAuthenticated *time.Time
+	sentPing          *time.Time
+	sentData          *time.Time
+	receivedControl   *time.Time
+	receivedData      *time.Time
 }
 
 func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
@@ -155,10 +167,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 }
 
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
-	ctx, cancelHandler := context.WithCancel(parentCtx)
-	defer func() {
-		cancelHandler()
-	}()
+	ctx, cancelHandler := context.WithCancelCause(parentCtx)
 
 	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
@@ -167,17 +176,35 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 	errorChan := make(chan error)
 	go func() {
 		if err := s.ping(ctx); err != nil {
-			errorChan <- err
+			cancelHandler(err)
 		}
 	}()
 
 	go func() {
 		if err := s.read(); err != nil {
-			errorChan <- err
+			cancelHandler(err)
 		}
 	}()
 
 	return <-errorChan
+}
+
+func (s *RealTimeChatStreamingService) CloseConnection(closeStatusCode WebsocketCloseCode, closeReason string) error {
+	closeFrame := RealTimeChatStreamingCloseFrame{
+		Code:   closeStatusCode,
+		Reason: closeReason,
+	}
+
+	frameBytes, err := json.Marshal(closeFrame)
+	if err != nil {
+		return err
+	}
+
+	if err := s.write(frameBytes, ws.OpClose); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
@@ -223,8 +250,6 @@ func (s *RealTimeChatStreamingService) read() error {
 			ws.Cipher(payload, header.Mask, 0)
 		}
 
-		fmt.Println(string(payload))
-
 		if header.OpCode.IsControl() {
 			if err := s.handleControlFrame(payload, header.OpCode); err != nil {
 				return err
@@ -239,28 +264,6 @@ func (s *RealTimeChatStreamingService) read() error {
 
 		continue
 	}
-}
-
-func (s *RealTimeChatStreamingService) handleDataFrame(
-	data []byte,
-) error {
-	placeholder := RealTimeChatStreamingResponse{}
-	if err := json.Unmarshal(data, &placeholder); err != nil {
-		return err
-	}
-
-	status, ok := placeholder["status_code"]
-	if !ok {
-		return ErrRealTimeChatWebsocketUnsupportedIncomingMessage
-	}
-
-	if status == float64(401) {
-		return ErrRealTimeChatWebsocketUnauthenticated
-	}
-
-	log.Println(string(data))
-
-	return nil
 }
 
 func (s *RealTimeChatStreamingService) write(payload []byte, opCode ws.OpCode) error {
@@ -308,12 +311,42 @@ func (s *RealTimeChatStreamingService) handleControlFrame(
 	s.wsCache.metadata.receivedControl = &receivedTime
 
 	switch opCode {
-	case ws.OpClose:
-		return io.EOF
 	case ws.OpPing:
 		return s.write(payload, ws.OpPong)
 	case ws.OpPong:
 		return nil
+	case ws.OpClose:
+		if err := s.write(payload, ws.OpClose); err != nil {
+			return err
+		}
+
+		return io.EOF
+	}
+
+	return nil
+}
+
+func (s *RealTimeChatStreamingService) handleDataFrame(
+	data []byte,
+) error {
+	fmt.Println("From Server: ", string(data))
+
+	type status struct {
+		StatusCode int `json:"status_code"`
+	}
+
+	frame := status{}
+	if err := json.Unmarshal(data, &frame); err != nil {
+		return err
+	}
+
+	switch frame.StatusCode {
+	case http.StatusUnauthorized:
+		return ErrRealTimeChatWebsocketUnauthenticated
+	case http.StatusInternalServerError:
+		return errors.New("error, unsupported message sent to server: " + string(data))
+	case http.StatusOK:
+
 	}
 
 	return nil
@@ -339,10 +372,21 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Contex
 		return err
 	}
 
+	fmt.Println(string(bytes))
+
 	sentDataTime := time.Now()
 	s.wsCache.metadata.sentData = &sentDataTime
 
 	return nil
+}
+
+func (s *RealTimeChatStreamingService) GetAgentMetric(ctx context.Context) (map[UserID]WebsocketAgentMetricData, error) {
+	items, err := s.wsCache.agent.individualDepartments.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return items.Items, nil
 }
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {
@@ -370,4 +414,7 @@ type RealTimeChatStreamingContentAgentMetric struct {
 	DepartmentID *GroupID                        `json:"department_id"`
 }
 
-type RealTimeChatStreamingResponse map[string]any
+type RealTimeChatStreamingCloseFrame struct {
+	Code   WebsocketCloseCode `json:"code"`
+	Reason string             `json:"reason,omitempty"`
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -49,8 +48,8 @@ func main() {
 			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
 		},
 		zendesk.ChatCredentials{
-			ClientID:     os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_ID"),
-			ClientSecret: os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_SECRET"),
+			ClientID:     "Wk5j0ccq75pweqJfSeRQ9kj1eVTg9Bgl3XOBA7xYyVyQWBfAXN",
+			ClientSecret: "K876E97Gn5Aq8BIIXhnangOALtqM6jSN2mlDKmQFe7pc57TmojmFKOa4hoXYkHYE",
 		},
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
@@ -66,12 +65,9 @@ func main() {
 	t := time.NewTicker(time.Second * 10)
 	defer t.Stop()
 
-	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-		log.Fatalf(err.Error())
-		return
-	}
-
 	for range t.C {
-		fmt.Println("Time since last frame: ", z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetTimeSinceLastFrameSent())
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
+			log.Fatal(err)
+		}
 	}
 }

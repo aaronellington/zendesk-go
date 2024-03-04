@@ -2,57 +2,55 @@ package zendesk_test
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 	"time"
 
+	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
 
 type mockRealTimeChatWebsocketServer struct {
-	state        state
-	settings     settings
-	conn         net.Conn
-	handlers     frameHandlers
-	queuedFrames []queuedFrame
-	testError    chan error
+	state     state
+	settings  settings
+	conn      net.Conn
+	connError chan error
+	handlers  frameHandlers
+	history   struct {
+		receivedFrames []frame
+		sentFrames     []frame
+	}
+	queuedFrames struct {
+		subscribe   map[string][]queuedFrame
+		unsubscribe map[string][]queuedFrame
+	}
+	testError chan error
 }
 
 func newMockRealTimeChatWebsocketServer(
-	testErrorChan chan error,
-	customState *state,
-	customSettings *settings,
-	customHandlers *frameHandlers,
-) *mockRealTimeChatWebsocketServer {
-	defaultState := state{
-		successfulConnection: make(chan bool),
+	t *testing.T,
+	customSettings settings,
+) (*mockRealTimeChatWebsocketServer, string) {
+	mockserver := &mockRealTimeChatWebsocketServer{
+		state: state{
+			ValidOAuthToken: "Bearer fake-token",
+		},
+		settings:  customSettings,
+		testError: make(chan error),
+		connError: make(chan error),
 	}
 
-	if customState != nil {
-		defaultState = *customState
-	}
-
-	defaultSettings := settings{
-		ValidOAuthToken: "Bearer fake-token",
-	}
-
-	if customSettings != nil {
-		defaultSettings = *customSettings
-	}
-
-	return &mockRealTimeChatWebsocketServer{
-		state:     defaultState,
-		settings:  defaultSettings,
-		testError: testErrorChan,
-	}
+	return mockserver, mockserver.createDefaultServer(t)
 }
 
-func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server {
-	return httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (m *mockRealTimeChatWebsocketServer) createDefaultServer(t *testing.T) string {
+	svr := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mockServerError := make(chan error)
 
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
@@ -61,11 +59,13 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 			return
 		}
 
-		if r.Header.Get("Authorization") == m.settings.ValidOAuthToken {
-			m.settings.Authorized = true
+		if r.Header.Get("Authorization") == m.state.ValidOAuthToken {
+			m.state.Authorized = true
 		}
 
 		m.conn = conn
+
+		log.Println("Connected to Server!!")
 
 		go func() {
 			if err := m.handleAuth(); err != nil {
@@ -79,20 +79,56 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server
 			}
 		}()
 
+		go func() {
+
+			// for _, frame := range m.queuedFrames {
+			// 	time.Sleep(frame.delay)
+			// 	if err := m.write(frame.payload, frame.opCode); err != nil {
+			// 		mockServerError <- err
+			// 		return
+			// 	}
+			// }
+		}()
+
 		if err := <-mockServerError; err != nil {
-			m.testError <- err
+			log.Printf("Closing connection because of read/write error: %s", err)
+			m.conn.Close()
 			return
 		}
 	}))
+
+	svr.Start()
+	t.Cleanup(
+		svr.Close,
+	)
+
+	return svr.URL
 }
 
 func (m *mockRealTimeChatWebsocketServer) handleAuth() error {
-	if m.settings.Authorized {
-		m.state.successfulConnection <- m.settings.Authorized
+	if m.state.Authorized {
+		message := websocketServerMessage{
+			StatusCode: http.StatusOK,
+			Message: struct {
+				Authenticated bool `json:"authenticated"`
+			}{
+				Authenticated: true,
+			},
+		}
+
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			return err
+		}
+
+		if err := m.write(messageBytes, ws.OpText); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
-	message := testWebsocketServerMessage{
+	message := websocketServerMessage{
 		StatusCode: http.StatusUnauthorized,
 		Message:    "Unable to verify the identity of the client",
 	}
@@ -110,7 +146,7 @@ func (m *mockRealTimeChatWebsocketServer) handleAuth() error {
 		return err
 	}
 
-	// m.state.successfulConnection <- m.settings.Authorized
+	log.Println("Closing inside the handleAuth func!")
 
 	if err := m.conn.Close(); err != nil {
 		return err
@@ -126,6 +162,12 @@ func (m *mockRealTimeChatWebsocketServer) write(payload []byte, opCode ws.OpCode
 		return err
 	}
 
+	m.history.sentFrames = append(m.history.sentFrames, frame{
+		payload: payload,
+		opCode:  opCode,
+		time:    time.Now(),
+	})
+
 	return writer.Flush()
 }
 
@@ -136,9 +178,6 @@ func (m *mockRealTimeChatWebsocketServer) read() error {
 			return err
 		}
 
-		lastWriteFromClient := time.Now()
-		m.state.lastWriteFromClient = &lastWriteFromClient
-
 		payload := make([]byte, header.Length)
 		_, err = io.ReadFull(m.conn, payload)
 		if err != nil {
@@ -148,6 +187,12 @@ func (m *mockRealTimeChatWebsocketServer) read() error {
 		if header.Masked {
 			ws.Cipher(payload, header.Mask, 0)
 		}
+
+		m.history.receivedFrames = append(m.history.receivedFrames, frame{
+			payload: payload,
+			opCode:  header.OpCode,
+			time:    time.Now(),
+		})
 
 		if header.OpCode.IsControl() {
 			if err := m.handleControlFrame(payload, header.OpCode); err != nil {
@@ -168,7 +213,29 @@ func (m *mockRealTimeChatWebsocketServer) read() error {
 func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
 	data []byte,
 ) error {
-	log.Println(string(data))
+	target := zendesk.Subscription{}
+	if err := json.Unmarshal(data, &target); err != nil {
+		return err
+	}
+
+	if target.Action == "subscribe" {
+		go func() {
+			queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
+			if !ok {
+				s.connError <- errors.New("No queued frames to be sent for topic!")
+				return
+			}
+
+			for _, frame := range queuedFrames {
+				time.Sleep(frame.delay)
+
+				if err := s.write(frame.payload, frame.opCode); err != nil {
+					s.connError <- err
+					return
+				}
+			}
+		}()
+	}
 
 	return nil
 }
@@ -177,15 +244,14 @@ func (m *mockRealTimeChatWebsocketServer) handleControlFrame(
 	payload []byte,
 	opCode ws.OpCode,
 ) error {
-	receivedTime := time.Now()
-	m.state.lastWriteFromClient = &receivedTime
-
 	switch opCode {
 	case ws.OpClose:
 		return io.EOF
 	case ws.OpPing:
-		return m.handlers.ping(payload, ws.OpPong) // Something like this?
-		// return m.write(payload, ws.OpPong)
+		receivedTime := time.Now()
+		m.state.LastPingReceived = &receivedTime
+
+		return m.write(payload, ws.OpPong)
 	case ws.OpPong:
 		return nil
 	}
@@ -194,25 +260,30 @@ func (m *mockRealTimeChatWebsocketServer) handleControlFrame(
 }
 
 type state struct {
-	successfulConnection chan bool
-	lastWriteFromClient  *time.Time
+	Authorized       bool
+	ValidOAuthToken  string
+	LastPingReceived *time.Time
 }
 
 type settings struct {
-	ValidOAuthToken string
-	Authorized      bool
-	WriteTimeout    time.Duration
+	ShouldResponseToPing bool
 }
 
-type testWebsocketServerMessage struct {
-	StatusCode int    `json:"status_code"`
-	Message    string `json:"message"`
+type websocketServerMessage struct {
+	StatusCode int `json:"status_code"`
+	Message    any `json:"message"`
 }
 
 type queuedFrame struct {
 	payload []byte
 	opCode  ws.OpCode
 	delay   time.Duration
+}
+
+type frame struct {
+	payload []byte
+	opCode  ws.OpCode
+	time    time.Time
 }
 
 type frameHandlers struct {

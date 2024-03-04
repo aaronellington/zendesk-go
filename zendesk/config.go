@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
-type configOption func(s *internalConfig)
+type ConfigOption func(s *internalConfig)
 
 type RequestPreProcessor interface {
 	ProcessRequest(r *http.Request) error
@@ -26,47 +26,41 @@ type internalConfig struct {
 	userAgent                       string
 	timeout                         time.Duration
 	realTimeChatWebsocketHost       string
-	realTimeChatWebsocketConnection *net.Conn
 	requestPreProcessors            []RequestPreProcessor
 }
 
-func WithRoundTripper(roundTripper http.RoundTripper) configOption {
+func WithRoundTripper(roundTripper http.RoundTripper) ConfigOption {
 	return func(s *internalConfig) {
 		s.roundTripper = roundTripper
 	}
 }
 
-func WithUserAgent(userAgent string) configOption {
+func WithUserAgent(userAgent string) ConfigOption {
 	return func(s *internalConfig) {
 		s.userAgent = userAgent
 	}
 }
 
-func SetTimeout(timeout time.Duration) configOption {
+func SetTimeout(timeout time.Duration) ConfigOption {
 	return func(s *internalConfig) {
 		s.timeout = timeout
 	}
 }
 
-func SetRealTimeChatWebsocketConnection(websocketConnection *net.Conn) configOption {
+func SetRealTimeChatWebsocketHost(websocketHost string) ConfigOption {
 	return func(s *internalConfig) {
-		s.realTimeChatWebsocketConnection = websocketConnection
-	}
-}
-
-func SetRealTimeChatWebsocketHost(websocketHost string) configOption {
-	return func(s *internalConfig) {
+		websocketHost = strings.Replace(websocketHost, "http", "ws", 1)
 		s.realTimeChatWebsocketHost = websocketHost
 	}
 }
 
-func WithRequestPreProcessor(requestPreProcessor RequestPreProcessor) configOption {
+func WithRequestPreProcessor(requestPreProcessor RequestPreProcessor) ConfigOption {
 	return func(s *internalConfig) {
 		s.requestPreProcessors = append(s.requestPreProcessors, requestPreProcessor)
 	}
 }
 
-func WithLogger(logger *log.Logger) configOption {
+func WithLogger(logger *log.Logger) ConfigOption {
 	return WithRequestPreProcessor(&loggerWrapper{
 		logger: logger,
 	})
@@ -82,7 +76,7 @@ func (l *loggerWrapper) ProcessRequest(r *http.Request) error {
 	return nil
 }
 
-func WithSlogger(logger *slog.Logger) configOption {
+func WithSlogger(logger *slog.Logger) ConfigOption {
 	return WithRequestPreProcessor(&sloggerWrapper{
 		logger: logger,
 	})

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 )
@@ -69,6 +70,10 @@ func (cache *MemoryCacheInstance[Key, T]) GetAll() (CacheResponse[Key, T], error
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 
+	if cache.lastUpdated == nil {
+		return CacheResponse[Key, T]{}, errors.New("Not updated!")
+	}
+
 	target := map[Key]T{}
 
 	itemBytes, err := json.Marshal(cache.items)
@@ -104,4 +109,12 @@ func (cache *MemoryCacheInstance[Key, T]) GetCacheAge() *time.Duration {
 	}
 
 	return nil
+}
+
+func NewMemoryCacheInstance[Key comparable, T any]() *MemoryCacheInstance[Key, T] {
+	return &MemoryCacheInstance[Key, T]{
+		mutex:       &sync.Mutex{},
+		items:       map[Key]T{},
+		lastUpdated: nil,
+	}
 }

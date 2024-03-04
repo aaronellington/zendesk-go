@@ -1,6 +1,8 @@
 package zendesk_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +13,9 @@ import (
 	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
-func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Service {
+func createTestService(t *testing.T, queue []study.RoundTripFunc, opts ...zendesk.ConfigOption) *zendesk.Service {
+	opts = append(opts, zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)))
+
 	return zendesk.NewService(
 		"example",
 		zendesk.AuthenticationToken{
@@ -22,24 +26,27 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc) *zendesk.Servi
 			ClientID:     "fake-client-id",
 			ClientSecret: "fake-client-secret",
 		},
-		zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)),
+		opts...,
 	)
 }
 
-func createTestRealTimeChatWebsocketService(t *testing.T, queue []study.RoundTripFunc, wsHost string) *zendesk.Service {
-	return zendesk.NewService(
-		"example",
-		zendesk.AuthenticationToken{
-			Email: "example@example.com",
-			Token: "abc123",
-		},
-		zendesk.ChatCredentials{
-			ClientID:     "fake-client-id",
-			ClientSecret: "fake-client-secret",
-		},
-		zendesk.WithRoundTripper(study.RoundTripperQueue(t, queue)),
-		zendesk.SetRealTimeChatWebsocketHost(wsHost),
-	)
+func createTestRealTimeChatWebsocketService(t *testing.T, ctx context.Context, customSettings settings) (*zendesk.Service, *mockRealTimeChatWebsocketServer) {
+	x, wsHost := newMockRealTimeChatWebsocketServer(t, customSettings)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		createSuccessfulChatAuth(t),
+	}, zendesk.SetRealTimeChatWebsocketHost(wsHost))
+
+	go func() {
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				x.connError <- err
+				return
+			}
+		}
+	}()
+
+	return z, x
 }
 
 func createSuccessfulChatAuth(t *testing.T) study.RoundTripFunc {
