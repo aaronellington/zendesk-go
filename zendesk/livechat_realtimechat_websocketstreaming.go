@@ -37,8 +37,11 @@ type wsCache struct {
 }
 
 type wsClient struct {
-	client    *client //
-	rtcWSHost string  // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
+	client          *client //
+	conn            net.Conn
+	connEstablished chan bool
+	connMutex       *sync.Mutex
+	rtcWSHost       string // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
 }
 
 type wsChatCache struct {
@@ -65,16 +68,14 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 	var t2d time.Duration
 	if t1 == nil {
 		t2d = time.Since(*t2)
-		log.Print("return t2")
 		return &t2d
 	}
 
 	t1d := time.Since(*t1)
 	if t1d < t2d {
-		log.Print("return t2 t1 is less")
 		return &t2d
 	}
-	log.Print("return t1")
+
 	return &t1d
 }
 
@@ -127,9 +128,9 @@ type WebsocketAgentMetricSubscription struct {
 	AgentsInvisible bool `json:"agents_invisible"`
 }
 
-func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) (net.Conn, error) {
+func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
 	if err := s.wsClient.client.GetAccessToken(ctx); err != nil {
-		return nil, err
+		return err
 	}
 
 	headers := ws.HandshakeHeaderHTTP{}
@@ -141,14 +142,16 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 
 	conn, _, _, err := dialer.Dial(ctx, s.wsClient.rtcWSHost)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	connectionStartedTime := time.Now()
-
 	s.wsCache.metadata.connStarted = &connectionStartedTime
 
-	return conn, nil
+	s.wsClient.conn = conn
+	s.wsClient.connEstablished <- true
+
+	return nil
 }
 
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
@@ -157,21 +160,19 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 		cancelHandler()
 	}()
 
-	conn, err := s.initiateWebsocketConnection(ctx)
-	if err != nil {
+	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
 	}
 
 	errorChan := make(chan error)
 	go func() {
-
-		if err := s.ping(ctx, conn); err != nil {
+		if err := s.ping(ctx); err != nil {
 			errorChan <- err
 		}
 	}()
 
 	go func() {
-		if err := s.read(ctx, conn); err != nil {
+		if err := s.read(); err != nil {
 			errorChan <- err
 		}
 	}()
@@ -179,8 +180,8 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 	return <-errorChan
 }
 
-func (s *RealTimeChatStreamingService) ping(ctx context.Context, conn net.Conn) error {
-	if err := s.write(conn, nil, ws.OpPing); err != nil {
+func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
+	if err := s.write(nil, ws.OpPing); err != nil {
 		return err
 	}
 
@@ -193,7 +194,7 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context, conn net.Conn) 
 	for {
 		select {
 		case currentPingSentTime := <-ticker.C:
-			if err := s.write(conn, nil, ws.OpPing); err != nil {
+			if err := s.write(nil, ws.OpPing); err != nil {
 				return err
 			}
 
@@ -205,18 +206,15 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context, conn net.Conn) 
 	}
 }
 
-func (s *RealTimeChatStreamingService) read(ctx context.Context, conn net.Conn) error {
-	log.Println("Reading a frame")
+func (s *RealTimeChatStreamingService) read() error {
 	for {
-		header, err := ws.ReadHeader(conn)
+		header, err := ws.ReadHeader(s.wsClient.conn)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("header: %+v", header)
-
 		payload := make([]byte, header.Length)
-		_, err = io.ReadFull(conn, payload)
+		_, err = io.ReadFull(s.wsClient.conn, payload)
 		if err != nil {
 			return err
 		}
@@ -225,25 +223,29 @@ func (s *RealTimeChatStreamingService) read(ctx context.Context, conn net.Conn) 
 			ws.Cipher(payload, header.Mask, 0)
 		}
 
-		log.Println("Payload; ", string(payload))
+		fmt.Println(string(payload))
 
-		// Zendesk pings us sometimes.
-		if header.OpCode == ws.OpPing {
-			log.Println("Got a ping from Zendesk - replying with PONG and payload: ", payload)
-			if err := s.write(conn, payload, ws.OpPong); err != nil {
+		if header.OpCode.IsControl() {
+			if err := s.handleControlFrame(payload, header.OpCode); err != nil {
 				return err
 			}
 		}
+
+		if header.OpCode.IsData() {
+			if err := s.handleDataFrame(payload); err != nil {
+				return err
+			}
+		}
+
 		continue
 	}
 }
 
-func (s *RealTimeChatStreamingService) handleWebsocketMessage(
-	ctx context.Context,
-	messageBytes []byte,
+func (s *RealTimeChatStreamingService) handleDataFrame(
+	data []byte,
 ) error {
 	placeholder := RealTimeChatStreamingResponse{}
-	if err := json.Unmarshal(messageBytes, &placeholder); err != nil {
+	if err := json.Unmarshal(data, &placeholder); err != nil {
 		return err
 	}
 
@@ -256,40 +258,62 @@ func (s *RealTimeChatStreamingService) handleWebsocketMessage(
 		return ErrRealTimeChatWebsocketUnauthenticated
 	}
 
+	log.Println(string(data))
+
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) write(conn net.Conn, payload []byte, opCode ws.OpCode) error {
-	writer := wsutil.NewWriter(conn, ws.StateClientSide, opCode)
+func (s *RealTimeChatStreamingService) write(payload []byte, opCode ws.OpCode) error {
+	if err := s.connectionEstablished(); err != nil {
+		return err
+	}
 
-	written, err := writer.Write(payload)
+	writer := wsutil.NewWriter(s.wsClient.conn, ws.StateClientSide, opCode)
+	_, err := writer.Write(payload)
 	if err != nil {
 		return err
 	}
 
-	log.Println("Wrote X Bytes: ", written)
-
-	// if err := encoder.Encode(payload); err != nil {
-	// 	return err
-	// }
-
 	return writer.Flush()
 }
 
-func (s *RealTimeChatStreamingService) handleControlFrame(reader *wsutil.Reader, header ws.Header) error {
-	s.wsCache.metadata.mutex.Lock()
-	defer s.wsCache.metadata.mutex.Unlock()
+func (s *RealTimeChatStreamingService) connectionEstablished() error {
+	if s.wsClient.conn != nil {
+		return nil
+	}
 
+	s.wsClient.connMutex.Lock()
+	defer s.wsClient.connMutex.Unlock()
+
+	if s.wsClient.conn != nil {
+		return nil
+	}
+
+	timeout := time.NewTimer(time.Second * 15)
+	for {
+		select {
+		case <-timeout.C:
+			return fmt.Errorf("timeout reached")
+		case <-s.wsClient.connEstablished:
+			return nil
+		}
+	}
+}
+
+func (s *RealTimeChatStreamingService) handleControlFrame(
+	payload []byte,
+	opCode ws.OpCode,
+) error {
 	receivedTime := time.Now()
 	s.wsCache.metadata.receivedControl = &receivedTime
 
-	switch header.OpCode {
+	switch opCode {
 	case ws.OpClose:
 		return io.EOF
+	case ws.OpPing:
+		return s.write(payload, ws.OpPong)
 	case ws.OpPong:
-		if err := reader.Discard(); err != nil {
-			return err
-		}
+		return nil
 	}
 
 	return nil
@@ -300,21 +324,26 @@ type Subscription struct {
 	Action string `json:"action"`
 }
 
-// func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Context, conn net.Conn, metric LiveChatMetricKeyAgent) error {
-// 	payload := Subscription{
-// 		Topic:  fmt.Sprintf("agents.%s", metric),
-// 		Action: "subscribe",
-// 	}
+func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Context, metric LiveChatMetricKeyAgent) error {
+	payload := Subscription{
+		Topic:  fmt.Sprintf("agents.%s", metric),
+		Action: "subscribe",
+	}
 
-// 	if err := s.write(conn, payload, ws.OpText); err != nil {
-// 		return err
-// 	}
+	bytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
 
-// 	sentDataTime := time.Now()
-// 	s.wsCache.metadata.sentData = &sentDataTime
+	if err := s.write(bytes, ws.OpText); err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	sentDataTime := time.Now()
+	s.wsCache.metadata.sentData = &sentDataTime
+
+	return nil
+}
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {
 	return getMostRecentTime(s.wsCache.metadata.receivedControl, s.wsCache.metadata.receivedData)

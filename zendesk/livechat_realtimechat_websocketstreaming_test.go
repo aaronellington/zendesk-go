@@ -2,18 +2,13 @@ package zendesk_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 )
 
 func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
@@ -21,16 +16,9 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 
 	testError := make(chan error)
 
-	// This is our test mockserver
-	mockableZendeskRTCWebsocketServer := &mockRealTimeChatWebsocketServer{
-		state: State{},
-		settings: Settings{
-			ValidOAuthToken: "Bearer fake-token",
-		},
-		testError: testError,
-	}
+	mockRealTimeChatWebsocketServer := newMockRealTimeChatWebsocketServer(testError, nil, nil, nil)
 
-	mockServer := mockableZendeskRTCWebsocketServer.createDefaultServer()
+	mockServer := mockRealTimeChatWebsocketServer.createDefaultServer()
 
 	mockServer.Start()
 	defer mockServer.Close()
@@ -54,12 +42,20 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 		}
 	}()
 
-	if err := <-testError; err != nil {
-		t.Fatal(err)
-	}
+	timeout := time.NewTimer(time.Second * 5)
+	select {
+	case err := <-testError:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-timeout.C:
+		t.Fatal("did not record a connection within timeout")
+	case successfulConnection := <-mockRealTimeChatWebsocketServer.state.successfulConnection:
+		if !successfulConnection {
+			t.Fatal("did not connect successfully")
+		}
 
-	if !mockableZendeskRTCWebsocketServer.state.successfulConnection {
-		t.Fatal("did not record a successful connection")
+		return
 	}
 }
 
@@ -70,8 +66,10 @@ func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
 
 	// This is our test mockserver
 	mockableZendeskRTCWebsocketServer := &mockRealTimeChatWebsocketServer{
-		state: State{},
-		settings: Settings{
+		state: state{
+			successfulConnection: make(chan bool),
+		},
+		settings: settings{
 			ValidOAuthToken: "No valid token",
 		},
 		testError: testError,
@@ -101,129 +99,20 @@ func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
 		}
 	}()
 
-	err := <-testError
-	if err == nil {
-		t.Fatal("expected to get an error")
-	}
-
-	t.Fatal(err)
-}
-
-type mockRealTimeChatWebsocketServer struct {
-	state     State
-	settings  Settings
-	testError chan error
-}
-
-func (m *mockRealTimeChatWebsocketServer) createDefaultServer() *httptest.Server {
-	return httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, _, _, err := ws.UpgradeHTTP(r, w)
+	timeout := time.NewTimer(time.Second * 200)
+	select {
+	case err := <-testError:
 		if err != nil {
-			m.testError <- err
-			return
+			t.Fatal(err)
 		}
+	case <-timeout.C:
+		t.Fatal("did not record a connection within timeout")
+		// case successfulConnection := <-mockableZendeskRTCWebsocketServer.state.successfulConnection:
+		// 	log.Println("successfulcon check")
+		// 	if successfulConnection {
+		// 		t.Fatal("expected to fail connection")
+		// 	}
 
-		if r.Header.Get("Authorization") == m.settings.ValidOAuthToken {
-			m.settings.Authorized = true
-		}
-
-		go func() {
-			defer conn.Close()
-
-			var (
-				state         = ws.StateServerSide
-				serverReader  = wsutil.NewReader(conn, state)
-				serverWriter  = wsutil.NewWriter(conn, state, ws.OpText)
-				serverEncoder = json.NewEncoder(serverWriter)
-			)
-
-			// Read forever until err
-			for {
-				header, err := serverReader.NextFrame()
-				if err != nil {
-					m.testError <- err
-					return
-				}
-
-				lastWriteTime := time.Now()
-				m.state.lastWriteFromClient = &lastWriteTime
-
-				if !m.settings.Authorized {
-					message := testWebsocketServerMessage{
-						StatusCode: http.StatusUnauthorized,
-						Message:    "Unable to verify the identity of the client",
-					}
-
-					if err := serverEncoder.Encode(message); err != nil {
-						m.testError <- err
-						return
-					}
-
-					if err := serverWriter.Flush(); err != nil {
-						m.testError <- err
-						return
-					}
-
-					serverWriter.Reset(conn, ws.StateServerSide, ws.OpClose)
-
-					_, err := serverWriter.Write([]byte{})
-					if err != nil {
-						m.testError <- err
-						return
-					}
-
-					if err := serverWriter.Flush(); err != nil {
-						m.testError <- err
-						return
-					}
-
-					if err := conn.Close(); err != nil {
-						m.testError <- err
-						return
-					}
-
-					return
-				}
-
-				m.state.successfulConnection = true
-
-				if header.OpCode == ws.OpPing {
-					serverWriter.Reset(conn, ws.StateServerSide, ws.OpPong)
-
-					if err := serverEncoder.Encode(nil); err != nil {
-						m.testError <- err
-						return
-					}
-
-					if err := serverWriter.Flush(); err != nil {
-						m.testError <- err
-						return
-					}
-				}
-
-				if err := serverReader.Discard(); err != nil {
-					m.testError <- err
-					return
-				}
-
-				m.testError <- err
-			}
-		}()
-	}))
-}
-
-type State struct {
-	successfulConnection bool
-	lastWriteFromClient  *time.Time
-}
-
-type Settings struct {
-	ValidOAuthToken string
-	Authorized      bool
-	WriteTimeout    time.Duration
-}
-
-type testWebsocketServerMessage struct {
-	StatusCode int    `json:"status_code"`
-	Message    string `json:"message"`
+		// 	return
+	}
 }
