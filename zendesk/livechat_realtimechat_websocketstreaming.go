@@ -163,44 +163,42 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	s.wsClient.conn = conn
 	s.wsClient.connEstablished <- true
 
+	// go func() {
+	// 	time.Sleep(time.Second * 10)
+	// 	conn.Close()
+	// 	s.wsClient.conn.Close()
+	// }()
+
 	return nil
 }
 
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
-	ctx, _ := context.WithCancelCause(parentCtx)
+	ctx, cancelHandler := context.WithCancelCause(parentCtx)
 
 	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
 	}
 
-	pingErrorChan := make(chan error)
 	go func() {
 		if err := s.ping(ctx); err != nil {
 			cancelHandler(err)
 		}
 	}()
 
-	reader := wsutil.NewClientSideReader(s.wsConn)
-	decoder := json.NewDecoder(reader)
+	// go func() {
+	// 	time.Sleep(time.Second * 5)
+	// 	cancelHandler(errors.New("no pong received in a while"))
+	// }()
+
 	for {
 		select {
 		case <-ctx.Done():
-			if err := s.wsConn.Close(); err != nil {
-				return err
-			}
+			_ = s.wsClient.conn.Close()
 
-			return ctx.Err()
-		case pingErr := <-pingErrorChan:
-			if err := s.wsConn.Close(); err != nil {
-				return err
-			}
-
-			return pingErr
+			return context.Cause(ctx)
 		default:
-			if readErr := s.read(ctx, reader, decoder); readErr != nil {
-				if err := s.wsConn.Close(); err != nil {
-					return err
-				}
+			if readErr := s.read(); readErr != nil {
+				_ = s.wsClient.conn.Close()
 
 				return readErr
 			}
@@ -251,34 +249,33 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 	}
 }
 
-func (s *RealTimeChatStreamingService) read(
-	ctx context.Context,
-	reader *wsutil.Reader,
-	decoder *json.Decoder,
-) error {
+func (s *RealTimeChatStreamingService) read() error {
 
-	header, err := reader.NextFrame()
+	header, err := ws.ReadHeader(s.wsClient.conn)
 	if err != nil {
 		return err
 	}
 
+	payload := make([]byte, header.Length)
+	_, err = io.ReadFull(s.wsClient.conn, payload)
+	if err != nil {
+		return err
+	}
+
+	if header.Masked {
+		ws.Cipher(payload, header.Mask, 0)
+	}
+
 	if header.OpCode.IsControl() {
-		if err := s.handleControlFrame(reader, header); err != nil {
+		if err := s.handleControlFrame(payload, header.OpCode); err != nil {
 			return err
 		}
-
-		return nil
 	}
 
 	if header.OpCode.IsData() {
-		b := map[string]any{}
-		if err := decoder.Decode(&b); err != nil {
+		if err := s.handleDataFrame(payload); err != nil {
 			return err
 		}
-
-		fmt.Println(b)
-
-		return nil
 	}
 
 	return nil
