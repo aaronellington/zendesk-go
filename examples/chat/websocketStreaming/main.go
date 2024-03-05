@@ -48,8 +48,8 @@ func main() {
 			Token: os.Getenv("ZENDESK_DEMO_TOKEN"),
 		},
 		zendesk.ChatCredentials{
-			ClientID:     "Wk5j0ccq75pweqJfSeRQ9kj1eVTg9Bgl3XOBA7xYyVyQWBfAXN",
-			ClientSecret: "K876E97Gn5Aq8BIIXhnangOALtqM6jSN2mlDKmQFe7pc57TmojmFKOa4hoXYkHYE",
+			ClientID:     os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_ID"),
+			ClientSecret: os.Getenv("ZENDESK_DEMO_CHAT_CLIENT_SECRET"),
 		},
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
