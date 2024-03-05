@@ -179,16 +179,18 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 		return err
 	}
 
+	// Ping Sender
 	go func() {
 		if err := s.ping(ctx); err != nil {
 			cancelHandler(err)
 		}
 	}()
 
-	// go func() {
-	// 	time.Sleep(time.Second * 5)
-	// 	cancelHandler(errors.New("no pong received in a while"))
-	// }()
+	// Pong Monitor
+	go func() {
+		time.Sleep(time.Second * 5)
+		cancelHandler(errors.New("no pong received in a while"))
+	}()
 
 	for {
 		select {
