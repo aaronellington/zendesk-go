@@ -167,26 +167,45 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 }
 
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
-	ctx, cancelHandler := context.WithCancelCause(parentCtx)
+	ctx, _ := context.WithCancelCause(parentCtx)
 
 	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
 	}
 
-	errorChan := make(chan error)
+	pingErrorChan := make(chan error)
 	go func() {
 		if err := s.ping(ctx); err != nil {
 			cancelHandler(err)
 		}
 	}()
 
-	go func() {
-		if err := s.read(); err != nil {
-			cancelHandler(err)
-		}
-	}()
+	reader := wsutil.NewClientSideReader(s.wsConn)
+	decoder := json.NewDecoder(reader)
+	for {
+		select {
+		case <-ctx.Done():
+			if err := s.wsConn.Close(); err != nil {
+				return err
+			}
 
-	return <-errorChan
+			return ctx.Err()
+		case pingErr := <-pingErrorChan:
+			if err := s.wsConn.Close(); err != nil {
+				return err
+			}
+
+			return pingErr
+		default:
+			if readErr := s.read(ctx, reader, decoder); readErr != nil {
+				if err := s.wsConn.Close(); err != nil {
+					return err
+				}
+
+				return readErr
+			}
+		}
+	}
 }
 
 func (s *RealTimeChatStreamingService) CloseConnection(closeStatusCode WebsocketCloseCode, closeReason string) error {
@@ -220,50 +239,49 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 
 	for {
 		select {
+		case <-ctx.Done():
+			return nil
 		case currentPingSentTime := <-ticker.C:
 			if err := s.write(nil, ws.OpPing); err != nil {
 				return err
 			}
 
 			s.wsCache.metadata.sentPing = &currentPingSentTime
-
-		case <-ctx.Done():
-			return nil
 		}
 	}
 }
 
-func (s *RealTimeChatStreamingService) read() error {
-	for {
-		header, err := ws.ReadHeader(s.wsClient.conn)
-		if err != nil {
-			return err
-		}
+func (s *RealTimeChatStreamingService) read(
+	ctx context.Context,
+	reader *wsutil.Reader,
+	decoder *json.Decoder,
+) error {
 
-		payload := make([]byte, header.Length)
-		_, err = io.ReadFull(s.wsClient.conn, payload)
-		if err != nil {
-			return err
-		}
-
-		if header.Masked {
-			ws.Cipher(payload, header.Mask, 0)
-		}
-
-		if header.OpCode.IsControl() {
-			if err := s.handleControlFrame(payload, header.OpCode); err != nil {
-				return err
-			}
-		}
-
-		if header.OpCode.IsData() {
-			if err := s.handleDataFrame(payload); err != nil {
-				return err
-			}
-		}
-
-		continue
+	header, err := reader.NextFrame()
+	if err != nil {
+		return err
 	}
+
+	if header.OpCode.IsControl() {
+		if err := s.handleControlFrame(reader, header); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if header.OpCode.IsData() {
+		b := map[string]any{}
+		if err := decoder.Decode(&b); err != nil {
+			return err
+		}
+
+		fmt.Println(b)
+
+		return nil
+	}
+
+	return nil
 }
 
 func (s *RealTimeChatStreamingService) write(payload []byte, opCode ws.OpCode) error {

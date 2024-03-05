@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
@@ -39,6 +40,8 @@ func PrintErr(err error) {
 }
 
 func main() {
+	c1 := runtime.NumGoroutine()
+
 	ctx := context.Background()
 
 	z := zendesk.NewService(
@@ -54,20 +57,21 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
+	_ = ctx
+	_ = z
+
 	go func() {
 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
-			if !errors.Is(err, context.Canceled) {
-				log.Fatalf("Websocket exiting, restarting. Here is the error message: %s", err.Error())
-			}
+			log.Printf("Websocket exiting, restarting. Here is the error message: %s", err.Error())
 		}
 	}()
 
-	t := time.NewTicker(time.Second * 10)
-	defer t.Stop()
+	time.Sleep(time.Second * 20)
 
-	for range t.C {
-		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-			log.Fatal(err)
-		}
+	c2 := runtime.NumGoroutine()
+	if c2 > c1 {
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+
+		log.Printf("Error too many goroutines: %d extra", c2-c1)
 	}
 }
