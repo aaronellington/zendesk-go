@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aaronellington/zendesk-go/examples/chat/gibsonTest/concur"
 	"github.com/aaronellington/zendesk-go/zendesk/internal/utils"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -89,60 +90,6 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 	}
 
 	return &t1d
-}
-
-type Fetcher interface {
-	Fetch() (frames [][]byte, err error)
-}
-
-type ReadLooper interface {
-	Updates() <-chan []byte
-	Close() error
-}
-
-type reader struct {
-	fetcher Fetcher
-	closing chan chan error // This is a request / response structure
-	updates chan []byte
-}
-
-func (r *reader) Updates() <-chan []byte {
-	return r.updates
-}
-
-func (r *reader) Close() error {
-	errc := make(chan error)
-	r.closing <- errc
-	return <-errc
-}
-
-func (r *reader) progress(countPending int) <-chan bool {
-	var c chan bool
-	if countPending < 0 {
-		c <- true
-	}
-	return c
-}
-
-func (r *reader) loop() {
-	// Mutable state
-	//
-	var pendingMessage [][]byte
-	var err error
-	for {
-		if len(pendingMessage) > 0 {
-			time.After()
-		}
-		// Set up channels for cases
-		select {
-		case errc := <-r.closing:
-			errc <- err
-			close(r.updates)
-
-		case r.updates <- pendingMessage[0]:
-			pendingMessage = pendingMessage[:1]
-		}
-	}
 }
 
 type WebsocketChatMetricData struct {
@@ -227,46 +174,44 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 }
 
 func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
-	ctx, cancelHandler := context.WithCancelCause(parentCtx)
+	ctx, _ := context.WithCancelCause(parentCtx)
 
 	if err := s.initiateWebsocketConnection(ctx); err != nil {
 		return err
 	}
+	defer s.wsClient.conn.Close()
 
-	// Ping Sender
+	x := concur.New[[]byte](
+		func() ([]byte, error) {
+			return s.read()
+		},
+	)
+
+	pinger := time.NewTicker(time.Second)
+	defer pinger.Stop()
 	go func() {
-		if err := s.ping(ctx); err != nil {
-			cancelHandler(err)
-		}
-	}()
-
-	// Reader
-	go func() {
-		if err := s.ping(ctx); err != nil {
-			cancelHandler(err)
-		}
-	}()
-
-	// Pong Monitor
-	go func() {
-		time.Sleep(time.Second * 5)
-		cancelHandler(errors.New("no pong received in a while"))
-	}()
-
-	for {
-		select {
-		case <-ctx.Done():
-			_ = s.wsClient.conn.Close()
-
-			return context.Cause(ctx)
-		default:
-			if readErr := s.read(); readErr != nil {
-				_ = s.wsClient.conn.Close()
-
-				return readErr
+		for range pinger.C {
+			if err := s.ping(ctx); err != nil {
+				x.Close()
+				return
 			}
 		}
+	}()
+
+	// pongMonitor := time.NewTicker(time.Second)
+	// defer pongMonitor.Stop()
+	// go func() {
+	// 	for range pongMonitor.C {
+	// 		s.ping()
+	// 	}
+	// }()
+
+	go x.Loop(ctx)
+	for update := range x.Updates() {
+		fmt.Println(string(update))
 	}
+
+	return x.Close()
 }
 
 // func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
@@ -348,36 +293,38 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 	}
 }
 
-func (s *RealTimeChatStreamingService) read() error {
+func (s *RealTimeChatStreamingService) read() ([]byte, error) {
 
 	header, err := ws.ReadHeader(s.wsClient.conn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	payload := make([]byte, header.Length)
 	_, err = io.ReadFull(s.wsClient.conn, payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if header.Masked {
-		ws.Cipher(payload, header.Mask, 0)
-	}
+	return payload, nil
 
-	if header.OpCode.IsControl() {
-		if err := s.handleControlFrame(payload, header.OpCode); err != nil {
-			return err
-		}
-	}
+	// if header.Masked {
+	// 	ws.Cipher(payload, header.Mask, 0)
+	// }
 
-	if header.OpCode.IsData() {
-		if err := s.handleDataFrame(payload); err != nil {
-			return err
-		}
-	}
+	// if header.OpCode.IsControl() {
+	// 	if err := s.handleControlFrame(payload, header.OpCode); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
-	return nil
+	// if header.OpCode.IsData() {
+	// 	if err := s.handleDataFrame(payload); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	// return payload
 }
 
 func (s *RealTimeChatStreamingService) write(payload []byte, opCode ws.OpCode) error {

@@ -1,37 +1,50 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"math/rand"
+	"runtime"
 	"time"
+
+	"github.com/aaronellington/zendesk-go/examples/chat/gibsonTest/concur"
 )
 
-func sleep(seconds int, endSignal chan<- bool) {
-	time.Sleep(time.Duration(seconds) * time.Second)
-	endSignal <- true
+func main() {
+	ctx := context.Background()
+
+	c := runtime.NumGoroutine()
+	fmt.Printf("There are %d goroutines", c)
+	defer func() {
+		c2 := runtime.NumGoroutine()
+		if c != c2 {
+			fmt.Printf("There are %d / %d goroutines", c, c2)
+		}
+	}()
+
+	x := &fetchThing{}
+	myThing := concur.New[[]byte](
+		func() ([]byte, error) {
+			return x.Fetch()
+		},
+		concur.Custom{
+			Chan: time.NewTicker(time.Second * 5).C,
+		},
+	)
+
+	// timeDelay := time.After(time.Second * 20)
+
+	go myThing.Loop(ctx)
+	for update := range myThing.Updates() {
+		fmt.Println(string(update))
+	}
 }
 
-func main() {
-	endSignal := make(chan bool, 1)
-	go sleep(8, endSignal)
+type fetchThing struct{}
 
-	var next time.Time
-	next = time.Now().Add(time.Second * 15)
-	for {
-		var delay time.Duration
-		if now := time.Now(); next.After(now) {
-			delay = next.Sub(now)
-		}
-		startFetch := time.After(delay)
-		log.Println("I am not sleepy, because I got this message!")
+func (f *fetchThing) Fetch() ([]byte, error) {
+	random := rand.Int()
 
-		select {
-		case <-endSignal:
-			fmt.Println("The end!")
-		case <-startFetch:
-			next = time.Now().Add(time.Second * 2)
-			fmt.Println("There's no more time to this. Exiting!")
-
-		}
-	}
+	// Imagine that this is the net.Conn read io blocking action, that then returns a []byte
+	return []byte(fmt.Sprintf("Hello, %d", random)), nil
 }
