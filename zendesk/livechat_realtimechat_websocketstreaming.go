@@ -91,6 +91,60 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 	return &t1d
 }
 
+type Fetcher interface {
+	Fetch() (frames [][]byte, err error)
+}
+
+type ReadLooper interface {
+	Updates() <-chan []byte
+	Close() error
+}
+
+type reader struct {
+	fetcher Fetcher
+	closing chan chan error // This is a request / response structure
+	updates chan []byte
+}
+
+func (r *reader) Updates() <-chan []byte {
+	return r.updates
+}
+
+func (r *reader) Close() error {
+	errc := make(chan error)
+	r.closing <- errc
+	return <-errc
+}
+
+func (r *reader) progress(countPending int) <-chan bool {
+	var c chan bool
+	if countPending < 0 {
+		c <- true
+	}
+	return c
+}
+
+func (r *reader) loop() {
+	// Mutable state
+	//
+	var pendingMessage [][]byte
+	var err error
+	for {
+		if len(pendingMessage) > 0 {
+			time.After()
+		}
+		// Set up channels for cases
+		select {
+		case errc := <-r.closing:
+			errc <- err
+			close(r.updates)
+
+		case r.updates <- pendingMessage[0]:
+			pendingMessage = pendingMessage[:1]
+		}
+	}
+}
+
 type WebsocketChatMetricData struct {
 	MissedChats        *ChatMetricWindow               `json:"missed_chats"`
 	ChatDurationMax    *uint64                         `json:"chat_duration_max"`
@@ -161,7 +215,7 @@ func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.C
 	s.wsCache.metadata.connStarted = &connectionStartedTime
 
 	s.wsClient.conn = conn
-	s.wsClient.connEstablished <- true
+	// s.wsClient.connEstablished <- true
 
 	// go func() {
 	// 	time.Sleep(time.Second * 10)
@@ -180,6 +234,13 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 	}
 
 	// Ping Sender
+	go func() {
+		if err := s.ping(ctx); err != nil {
+			cancelHandler(err)
+		}
+	}()
+
+	// Reader
 	go func() {
 		if err := s.ping(ctx); err != nil {
 			cancelHandler(err)
@@ -207,6 +268,42 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 		}
 	}
 }
+
+// func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
+// 	ctx, cancelHandler := context.WithCancelCause(parentCtx)
+
+// 	if err := s.initiateWebsocketConnection(ctx); err != nil {
+// 		return err
+// 	}
+
+// 	// Ping Sender
+// 	go func() {
+// 		if err := s.ping(ctx); err != nil {
+// 			cancelHandler(err)
+// 		}
+// 	}()
+
+// 	// Pong Monitor
+// 	go func() {
+// 		time.Sleep(time.Second * 5)
+// 		cancelHandler(errors.New("no pong received in a while"))
+// 	}()
+
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			_ = s.wsClient.conn.Close()
+
+// 			return context.Cause(ctx)
+// 		default:
+// 			if readErr := s.read(); readErr != nil {
+// 				_ = s.wsClient.conn.Close()
+
+// 				return readErr
+// 			}
+// 		}
+// 	}
+// }
 
 func (s *RealTimeChatStreamingService) CloseConnection(closeStatusCode WebsocketCloseCode, closeReason string) error {
 	closeFrame := RealTimeChatStreamingCloseFrame{
