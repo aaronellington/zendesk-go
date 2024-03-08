@@ -21,7 +21,7 @@ func New[T any](fetcher func(context.Context) (T, error)) *Reader[T] {
 
 type Reader[T any] struct {
 	fetcher func(context.Context) (T, error)
-	closing chan chan error
+	closing chan bool
 	updates chan FetchResult[T]
 }
 
@@ -29,10 +29,10 @@ func (r *Reader[T]) Updates() <-chan FetchResult[T] {
 	return r.updates
 }
 
-func (r *Reader[T]) Close() error {
-	errc := make(chan error)
-	r.closing <- errc
-	return <-errc
+func (r *Reader[T]) Close() {
+	// errc := make(chan error)
+	r.closing <- true
+	// return <-errc
 }
 
 //
@@ -66,9 +66,9 @@ func (r *Reader[T]) Loop(ctx context.Context) {
 
 		// Set up channels for cases
 		select {
-		case errc := <-r.closing:
+		case <-r.closing:
 			log.Printf("!! -- This case was chosen for Loop %d, %s\n", counter, "closing")
-			errc <- err
+
 			close(r.updates)
 			return
 
