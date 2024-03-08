@@ -14,7 +14,7 @@ type FetchResult[T any] struct {
 func New[T any](fetcher func(context.Context) (T, error)) *Reader[T] {
 	return &Reader[T]{
 		fetcher: fetcher,
-		closing: make(chan chan error),
+		closing: make(chan bool),
 		updates: make(chan FetchResult[T]),
 	}
 }
@@ -30,12 +30,8 @@ func (r *Reader[T]) Updates() <-chan FetchResult[T] {
 }
 
 func (r *Reader[T]) Close() {
-	// errc := make(chan error)
 	r.closing <- true
-	// return <-errc
 }
-
-//
 
 func (r *Reader[T]) Loop(ctx context.Context) {
 	var fetchDone chan FetchResult[T]

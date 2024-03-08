@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
+	"runtime"
 
 	"time"
 
@@ -18,6 +18,17 @@ func sleep(seconds int, endSignal chan<- bool) {
 }
 
 func main() {
+
+	defer func() {
+		time.Sleep(time.Millisecond * 500)
+		c := runtime.NumGoroutine()
+
+		if c > 1 {
+
+			fmt.Printf("There are %d extra goroutines compared to beginning of run", c-1)
+		}
+	}()
+
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -36,7 +47,7 @@ func main() {
 			}
 			payload := payloads[0]
 			payloads = payloads[1:]
-			time.Sleep(time.Nanosecond * time.Duration(rand.Int31()))
+			// time.Sleep(time.Nanosecond * time.Duration(rand.Int31()))
 
 			return payload, nil
 		},
@@ -48,14 +59,37 @@ func main() {
 
 	go x.Loop(ctx)
 
-	for update := range x.Updates() {
-		if update.Err != nil {
-			fmt.Println("err: ", update.Err)
-			fmt.Println(x.Close())
+	// for update := range x.Updates() {
+	// 	if update.Err != nil {
+	// 		fmt.Println("err: ", update.Err)
+	// 		x.Close()
+	// 		panic("er")
+	// 	}
+
+	// 	log.Printf("From the main: %s\n", update.Item)
+	// }
+	// go func() {
+	// 	time.Sleep(time.Second * 100)
+	// }()
+
+	for {
+		select {
+		case update := <-x.Updates():
+			if update.Err != nil {
+				fmt.Println("err: ", update.Err)
+				x.Close()
+				panic("er")
+			}
+
+			log.Printf("From the main: %s\n", update.Item)
+
+		case <-ctx.Done():
+			log.Printf("context reason: %s\n", context.Cause(ctx))
+			x.Close()
 			panic("er")
+
 		}
 
-		log.Printf("From the main: %s\n", update.Item)
 	}
 
 }
