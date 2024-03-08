@@ -16,7 +16,7 @@
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/examples/chat/gibsonTest/main.go"
+            "program": "${workspaceFolder}/examples/chat/gibsonTest/concur/concurtest/main.go"
         }
     ]
 }
