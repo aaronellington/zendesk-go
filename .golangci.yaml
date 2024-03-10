@@ -1,8 +1,13 @@
+# https://golangci-lint.run/
 issues:
   max-issues-per-linter: 0
   new: false
   max-same-issues: 0
   fix: true
+  exclude-rules:
+    - path: '(.+)_test\.go'
+      linters:
+        - bodyclose
 
 output:
   print-issued-lines: false
