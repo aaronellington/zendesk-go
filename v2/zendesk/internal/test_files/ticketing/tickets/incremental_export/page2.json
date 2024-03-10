@@ -1,0 +1,13 @@
+{
+    "tickets": [
+        {
+            "id": 1
+        },
+        {
+            "id": 2
+        }
+    ],
+    "end_of_stream": true,
+    "next_page": "https://example.zendesk.com/api/v2/incremental/tickets.json?per_page=3&start_time=500",
+    "end_time": 500
+}
