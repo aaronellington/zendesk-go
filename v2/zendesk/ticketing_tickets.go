@@ -61,7 +61,7 @@ func (s *TicketingTicketsService) Show(
 	return showRequest[TicketID, TicketResponse](ctx, s.c, id)
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#show-ticket
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#list-tickets
 func (s *TicketingTicketsService) List(
 	ctx context.Context,
 	pageHandler func(response TicketsResponse) error,
@@ -79,7 +79,7 @@ func (s *TicketingTicketsService) Update(
 	return updateRequest[TicketID, TicketResponse](ctx, s.c, id, payload)
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#update-ticket
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#delete-ticket
 func (s *TicketingTicketsService) Delete(
 	ctx context.Context,
 	id TicketID,

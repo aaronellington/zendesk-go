@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
 
 type zendeskEntity interface {
 	zendeskEntityName() string
 }
 
-func showRequest[ID ~uint64, T zendeskEntity](
+func showRequest[ID constraints.Integer, T zendeskEntity](
 	ctx context.Context,
 	c *client,
 	id ID,
@@ -47,7 +49,7 @@ func createRequest[T zendeskEntity](
 	)
 }
 
-func updateRequest[ID ~uint64, T zendeskEntity](
+func updateRequest[ID constraints.Integer, T zendeskEntity](
 	ctx context.Context,
 	c *client,
 	id ID,
@@ -66,7 +68,7 @@ func updateRequest[ID ~uint64, T zendeskEntity](
 	)
 }
 
-func deleteRequest[ID ~uint64, T zendeskEntity](
+func deleteRequest[ID constraints.Integer, T zendeskEntity](
 	ctx context.Context,
 	c *client,
 	id ID,
