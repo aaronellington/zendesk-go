@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aaronellington/zendesk-go/examples/chat/gibsonTest/concur"
 	"github.com/aaronellington/zendesk-go/zendesk/internal/utils"
+	"github.com/equalsgibson/concur/concur"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
@@ -181,18 +181,18 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 	}
 	defer s.wsClient.conn.Close()
 
-	x := concur.New[[]byte](
-		func() ([]byte, error) {
+	reader := concur.NewAsyncReader[[]byte](
+		func(ctx context.Context) ([]byte, error) {
 			return s.read()
 		},
 	)
 
-	pinger := time.NewTicker(time.Second)
-	defer pinger.Stop()
+	keepalive := time.NewTicker(time.Second)
+	defer keepalive.Stop()
 	go func() {
-		for range pinger.C {
-			if err := s.ping(ctx); err != nil {
-				x.Close()
+		for range keepalive.C {
+			if err := s.ping(); err != nil {
+				reader.Close()
 				return
 			}
 		}
@@ -206,49 +206,31 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Cont
 	// 	}
 	// }()
 
-	go x.Loop(ctx)
-	for update := range x.Updates() {
-		fmt.Println(string(update))
+	go reader.Loop(ctx)
+
+	var err error
+	for update := range reader.Updates() {
+		if update.Err != nil {
+			err = update.Err
+			reader.Close()
+		}
+
+		// if header.OpCode.IsControl() {
+		// 	if err := s.handleControlFrame(payload, header.OpCode); err != nil {
+		// 		return nil, err
+		// 	}
+		// }
+
+		// if header.OpCode.IsData() {
+		// 	if err := s.handleDataFrame(payload); err != nil {
+		// 		return nil, err
+		// 	}
+		// }
+
 	}
 
-	return x.Close()
+	return err
 }
-
-// func (s *RealTimeChatStreamingService) ConnectToWebsocket(parentCtx context.Context) error {
-// 	ctx, cancelHandler := context.WithCancelCause(parentCtx)
-
-// 	if err := s.initiateWebsocketConnection(ctx); err != nil {
-// 		return err
-// 	}
-
-// 	// Ping Sender
-// 	go func() {
-// 		if err := s.ping(ctx); err != nil {
-// 			cancelHandler(err)
-// 		}
-// 	}()
-
-// 	// Pong Monitor
-// 	go func() {
-// 		time.Sleep(time.Second * 5)
-// 		cancelHandler(errors.New("no pong received in a while"))
-// 	}()
-
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			_ = s.wsClient.conn.Close()
-
-// 			return context.Cause(ctx)
-// 		default:
-// 			if readErr := s.read(); readErr != nil {
-// 				_ = s.wsClient.conn.Close()
-
-// 				return readErr
-// 			}
-// 		}
-// 	}
-// }
 
 func (s *RealTimeChatStreamingService) CloseConnection(closeStatusCode WebsocketCloseCode, closeReason string) error {
 	closeFrame := RealTimeChatStreamingCloseFrame{
@@ -268,7 +250,7 @@ func (s *RealTimeChatStreamingService) CloseConnection(closeStatusCode Websocket
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
+func (s *RealTimeChatStreamingService) ping() error {
 	if err := s.write(nil, ws.OpPing); err != nil {
 		return err
 	}
@@ -276,25 +258,10 @@ func (s *RealTimeChatStreamingService) ping(ctx context.Context) error {
 	firstPing := time.Now()
 	s.wsCache.metadata.sentPing = &firstPing
 
-	ticker := time.NewTicker(time.Second * 5)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case currentPingSentTime := <-ticker.C:
-			if err := s.write(nil, ws.OpPing); err != nil {
-				return err
-			}
-
-			s.wsCache.metadata.sentPing = &currentPingSentTime
-		}
-	}
+	return nil
 }
 
 func (s *RealTimeChatStreamingService) read() ([]byte, error) {
-
 	header, err := ws.ReadHeader(s.wsClient.conn)
 	if err != nil {
 		return nil, err
@@ -306,23 +273,11 @@ func (s *RealTimeChatStreamingService) read() ([]byte, error) {
 		return nil, err
 	}
 
+	if header.Masked {
+		ws.Cipher(payload, header.Mask, 0)
+	}
+
 	return payload, nil
-
-	// if header.Masked {
-	// 	ws.Cipher(payload, header.Mask, 0)
-	// }
-
-	// if header.OpCode.IsControl() {
-	// 	if err := s.handleControlFrame(payload, header.OpCode); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
-	// if header.OpCode.IsData() {
-	// 	if err := s.handleDataFrame(payload); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
 
 	// return payload
 }

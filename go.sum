@@ -1,3 +1,5 @@
+github.com/equalsgibson/concur v0.0.1 h1:9Tw0YTfEtHwdTl85bJFP8QG0yc49XLHmghQnHeIrh9w=
+github.com/equalsgibson/concur v0.0.1/go.mod h1:03SVNgaFh3J0VAJs9swtEy9DclBhZPIem/eKB4jymWg=
 github.com/go-test/deep v1.1.0 h1:WOcxcdHcvdgThNXjw0t76K42FXTU7HpNQWHpA2HHNlg=
 github.com/go-test/deep v1.1.0/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
 github.com/gobwas/httphead v0.1.0 h1:exrUm0f4YX0L7EBwZHuCF4GDp8aJfVeBrlLQrs6NqWU=
