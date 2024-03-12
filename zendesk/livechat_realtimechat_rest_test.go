@@ -129,6 +129,65 @@ func TestRealTimeChatRest_GetAllChatMetricsForDepartment_200(t *testing.T) {
 	}
 }
 
+func TestRealTimeChatRest_GetAllChatMetricsForDepartment_WithNegativeValue_200(t *testing.T) {
+	ctx := context.Background()
+
+	departmentID := zendesk.GroupID(9000)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		createSuccessfulChatAuth(t),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/livechat/realtimechat/get_all_chat_metrics_for_department_200_With_Negative_Response.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   "/stream/chats",
+				Query: url.Values{
+					"department_id": []string{strconv.FormatUint(uint64(departmentID), 10)},
+				},
+			},
+		),
+	})
+
+	actual, err := z.LiveChat().RealTimeChat().RealTimeChatRestService().GetAllChatMetricsForDepartment(ctx, departmentID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := zendesk.ChatsStreamResponse{
+		StatusCode: 200,
+		Content: zendesk.ChatsStreamResponseContent{
+			Topic: "chats",
+			Type:  "update",
+			Data: zendesk.ChatMetrics{
+				MissedChats: &zendesk.ChatMetricWindow{
+					ThirtyMinuteWindow: 0,
+					SixtyMinuteWindow:  0,
+				},
+				ActiveChats:   -1,
+				IncomingChats: 0,
+				AssignedChats: 0,
+				SatisfactionBad: &zendesk.ChatMetricWindow{
+					ThirtyMinuteWindow: 0,
+					SixtyMinuteWindow:  0,
+				},
+				SatisfactionGood: &zendesk.ChatMetricWindow{
+					ThirtyMinuteWindow: 0,
+					SixtyMinuteWindow:  0,
+				},
+			},
+			DepartmentID: &departmentID,
+		},
+	}
+
+	if err := study.Assert(expected, actual); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestRealTimeChatRest_GetAllChatMetricsForSpecificTimeWindow_200(t *testing.T) {
 	ctx := context.Background()
 
