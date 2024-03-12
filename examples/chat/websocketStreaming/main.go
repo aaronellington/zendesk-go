@@ -4,27 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
-	"runtime/pprof"
-	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
 
 func main() {
-
-	ctx, _ := context.WithCancel(context.Background())
-
-	// initalGoroutineCount := runtime.NumGoroutine()
-
-	defer func() {
-
-		time.Sleep(time.Millisecond * 250)
-		// finalGoroutineCount := runtime.NumGoroutine()
-		// if finalGoroutineCount > initalGoroutineCount {
-		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
-		// }
-
-	}()
+	ctx := context.Background()
 
 	z := zendesk.NewService(
 		os.Getenv("ZENDESK_DEMO_SUBDOMAIN"),
@@ -39,8 +24,11 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
+	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
 	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline)
 
+	// NOTE: Connecting to the WebSocket will consume frames from the Zendesk API until an error occurs. It also handles checking for a stale connection and sending keepalive messages
+	// to the Zendesk Server.
 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
 		log.Printf("Websocket exiting. Here is the error message: %s", err.Error())
 	}
