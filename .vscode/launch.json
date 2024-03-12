@@ -9,14 +9,6 @@
             "envFile": "${workspaceFolder}/.env.local",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/examples/chat/websocketStreaming/main.go"
-        },
-        {
-            "name": "Launch GibsonTest",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/examples/chat/gibsonTest/concur/concurtest/main.go"
         }
     ]
 }

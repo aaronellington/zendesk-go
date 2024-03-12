@@ -2,29 +2,29 @@ package main
 
 import (
 	"context"
-	"io"
 	"log"
 	"os"
+	"runtime/pprof"
+	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
 
-func PrintErr(err error) {
-	if err == nil {
-		return
-	}
-
-	zdErr, ok := err.(*zendesk.Error)
-	if ok {
-		errBytes, _ := io.ReadAll(zdErr.Response.Body)
-		log.Fatalf("Zendesk Error: [%d] %s", zdErr.Response.StatusCode, string(errBytes))
-	}
-
-	log.Fatal(err)
-}
-
 func main() {
-	ctx := context.Background()
+
+	ctx, _ := context.WithCancel(context.Background())
+
+	// initalGoroutineCount := runtime.NumGoroutine()
+
+	defer func() {
+
+		time.Sleep(time.Millisecond * 250)
+		// finalGoroutineCount := runtime.NumGoroutine()
+		// if finalGoroutineCount > initalGoroutineCount {
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
+		// }
+
+	}()
 
 	z := zendesk.NewService(
 		os.Getenv("ZENDESK_DEMO_SUBDOMAIN"),
@@ -39,7 +39,9 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline)
+
 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
-		log.Printf("Websocket exiting, restarting. Here is the error message: %s", err.Error())
+		log.Printf("Websocket exiting. Here is the error message: %s", err.Error())
 	}
 }
