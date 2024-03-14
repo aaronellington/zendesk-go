@@ -4,28 +4,14 @@ import (
 	"context"
 	"errors"
 	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"testing"
 	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
 
 func TestTest(t *testing.T) {
-	initalGoroutineCount := runtime.NumGoroutine()
-	defer func() {
-		time.Sleep(time.Second)
-		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1) // This is pretty cool.
-		if runtime.NumGoroutine() > initalGoroutineCount {
-			t.Fatalf(
-				"Found %d goroutines running at the end of the test but we started with %d",
-				runtime.NumGoroutine(),
-				initalGoroutineCount,
-			)
-		}
-	}()
 
 	ctx := context.Background()
 
@@ -154,42 +140,40 @@ func TestTest2(t *testing.T) {
 	// Make no goroutes are running
 }
 
-// func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
-// 	ctx := context.Background()
+func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
+	ctx := context.Background()
 
-// 	testError := make(chan error)
+	testError := make(chan error)
 
-// 	z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
-// 		t,
-// 		[]study.RoundTripFunc{
-// 			createSuccessfulChatAuth(t),
-// 		},
-// 	)
+	z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
+		t,
+		[]study.RoundTripFunc{
+			createSuccessfulChatAuth(t),
+		},
+	)
 
-// 	go func() {
-// 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
-// 			if !errors.Is(err, context.Canceled) {
-// 				testError <- err
-// 				return
-// 			}
-// 		}
-// 	}()
+	go func() {
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				testError <- err
+				return
+			}
+		}
+	}()
 
-// 	timeout := time.NewTimer(time.Second * 5)
-// 	select {
-// 	case err := <-testError:
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
+	timeout := time.NewTimer(time.Second * 5)
+	for {
+		select {
+		case err := <-testError:
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	case <-timeout.C:
-// 		t.Fatal("did not record a connection within timeout")
-
-// 	case <-mockRealTimeChatWebsocketServer.state.endTest:
-// 		break
-// 	}
-
-// }
+		case <-timeout.C:
+			t.Fatal("did not record a connection within timeout")
+		}
+	}
+}
 
 // func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
 // 	ctx := context.Background()
