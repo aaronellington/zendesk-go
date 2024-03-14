@@ -176,6 +176,9 @@ func NewService(
 							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
 						},
 						agent: &wsAgentCache{
+							globalData: WebsocketAgentMetricData{
+								Subscriptions: map[LiveChatMetricKeyAgent]bool{},
+							},
 							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketAgentMetricData](),
 						},
 						metadata: &wsConnMetadata{
