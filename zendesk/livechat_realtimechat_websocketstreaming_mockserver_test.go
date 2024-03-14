@@ -25,14 +25,16 @@ type mockRealTimeChatWebsocketServer struct {
 	connError chan error
 	handlers  frameHandlers
 	history   struct {
-		receivedFrames []frame
-		sentFrames     []frame
+		receivedFrames []realTimeChatStreamingFrameHistory
+		sentFrames     []realTimeChatStreamingFrameHistory
 	}
-	queuedFrames struct {
-		subscribe   map[string][]queuedFrame
-		unsubscribe map[string][]queuedFrame
-	}
-	testError chan error
+	queuedFrames queuedFrames
+	testError    chan error
+}
+
+type queuedFrames struct {
+	subscribe   map[string][]queuedFrame
+	unsubscribe map[string][]queuedFrame
 }
 
 func newMockRealTimeChatWebsocketServer(
@@ -43,9 +45,11 @@ func newMockRealTimeChatWebsocketServer(
 		state: state{
 			ValidOAuthToken: "Bearer fake-token",
 		},
-		settings:  customSettings,
-		testError: make(chan error),
-		connError: make(chan error),
+		settings: customSettings,
+		queuedFrames: queuedFrames{
+			subscribe:   map[string][]queuedFrame{},
+			unsubscribe: map[string][]queuedFrame{},
+		},
 	}
 
 	return mockserver, mockserver.createDefaultServer(t)
@@ -67,15 +71,13 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer(t *testing.T) stri
 
 		m.conn = conn
 
-		log.Println("Connected to Server!!")
-
 		if err := m.handleAuth(); err != nil {
 			log.Printf("Unauthenticated: %s", err)
 			m.conn.Close()
 			return
 		}
 
-		serverReader := concur.NewAsyncReader(func(ctx context.Context) ([]byte, error) {
+		serverReader := concur.NewAsyncReader(func(ctx context.Context) (realTimeChatStreamingFrame, error) {
 			return m.read()
 		})
 
@@ -91,54 +93,12 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer(t *testing.T) stri
 					return
 				}
 
-				if err := s.handleFrame(update.Item); err != nil {
+				if err := m.handleFrame(update.Item); err != nil {
 					log.Printf("Handle update error: %s", err)
 					m.conn.Close()
 					return
 				}
 			}
-		}
-
-		// 	if header.OpCode.IsControl() {
-		// 		if err := m.handleControlFrame(payload, header.OpCode); err != nil {
-		// 			return nil, err
-		// 		}
-		// 	}
-
-		// 	if header.OpCode.IsData() {
-		// 		if err := m.handleDataFrame(payload); err != nil {
-		// 			return nil, err
-		// 		}
-		// 	}
-		// }
-
-		// if header.OpCode.IsControl() {
-		// 	if err := m.handleControlFrame(payload, header.OpCode); err != nil {
-		// 		return nil, err
-		// 	}
-		// }
-
-		// if header.OpCode.IsData() {
-		// 	if err := m.handleDataFrame(payload); err != nil {
-		// 		return nil, err
-		// 	}
-		// }
-
-		// go func() {
-
-		// 	// for _, frame := range m.queuedFrames {
-		// 	// 	time.Sleep(frame.delay)
-		// 	// 	if err := m.write(frame.payload, frame.opCode); err != nil {
-		// 	// 		mockServerError <- err
-		// 	// 		return
-		// 	// 	}
-		// 	// }
-		// }()
-
-		if err := <-mockServerError; err != nil {
-			log.Printf("Closing connection because of read/write error: %s", err)
-			m.conn.Close()
-			return
 		}
 	}))
 
@@ -150,15 +110,15 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer(t *testing.T) stri
 	return svr.URL
 }
 
-func (s *RealTimeChatStreamingService) handleFrame(frame realTimeChatStreamingFrame) error {
+func (m *mockRealTimeChatWebsocketServer) handleFrame(frame realTimeChatStreamingFrame) error {
 	if frame.opCode.IsControl() {
-		if err := s.handleControlFrame(frame); err != nil {
+		if err := m.handleControlFrame(frame.payload, frame.opCode); err != nil {
 			return err
 		}
 	}
 
 	if frame.opCode.IsData() {
-		if err := s.handleDataFrame(frame); err != nil {
+		if err := m.handleDataFrame(frame.payload); err != nil {
 			return err
 		}
 	}
@@ -207,13 +167,11 @@ func (m *mockRealTimeChatWebsocketServer) handleAuth() error {
 		return err
 	}
 
-	log.Println("Closing inside the handleAuth func!")
-
 	if err := m.conn.Close(); err != nil {
 		return err
 	}
 
-	return nil
+	return errors.New("unauthenticated")
 }
 
 func (m *mockRealTimeChatWebsocketServer) write(payload []byte, opCode ws.OpCode) error {
@@ -223,7 +181,7 @@ func (m *mockRealTimeChatWebsocketServer) write(payload []byte, opCode ws.OpCode
 		return err
 	}
 
-	m.history.sentFrames = append(m.history.sentFrames, frame{
+	m.history.sentFrames = append(m.history.sentFrames, realTimeChatStreamingFrameHistory{
 		payload: payload,
 		opCode:  opCode,
 		time:    time.Now(),
@@ -232,29 +190,32 @@ func (m *mockRealTimeChatWebsocketServer) write(payload []byte, opCode ws.OpCode
 	return writer.Flush()
 }
 
-func (m *mockRealTimeChatWebsocketServer) read() ([]byte, error) {
+func (m *mockRealTimeChatWebsocketServer) read() (realTimeChatStreamingFrame, error) {
 	header, err := ws.ReadHeader(m.conn)
 	if err != nil {
-		return nil, err
+		return realTimeChatStreamingFrame{}, err
 	}
 
 	payload := make([]byte, header.Length)
 	_, err = io.ReadFull(m.conn, payload)
 	if err != nil {
-		return nil, err
+		return realTimeChatStreamingFrame{}, err
 	}
 
 	if header.Masked {
 		ws.Cipher(payload, header.Mask, 0)
 	}
 
-	m.history.receivedFrames = append(m.history.receivedFrames, frame{
+	m.history.receivedFrames = append(m.history.receivedFrames, realTimeChatStreamingFrameHistory{
 		payload: payload,
 		opCode:  header.OpCode,
 		time:    time.Now(),
 	})
 
-	return payload, nil
+	return realTimeChatStreamingFrame{
+		opCode:  header.OpCode,
+		payload: payload,
+	}, nil
 }
 
 func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
@@ -266,22 +227,17 @@ func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
 	}
 
 	if target.Action == "subscribe" {
-		go func() {
-			queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
-			if !ok {
-				s.connError <- errors.New("No queued frames to be sent for topic!")
-				return
-			}
+		queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
+		if !ok {
+			return errors.New("No queued frames to be sent for topic!")
+		}
 
-			for _, frame := range queuedFrames {
-				time.Sleep(frame.delay)
-
-				if err := s.write(frame.payload, frame.opCode); err != nil {
-					s.connError <- err
-					return
-				}
+		for _, frame := range queuedFrames {
+			time.Sleep(frame.delay)
+			if err := s.write(frame.payload, frame.opCode); err != nil {
+				return err
 			}
-		}()
+		}
 	}
 
 	return nil
@@ -328,8 +284,9 @@ type queuedFrame struct {
 }
 
 type realTimeChatStreamingFrameHistory struct {
-	realTimeChatStreamingFrame
-	time time.Time
+	opCode  ws.OpCode
+	payload []byte
+	time    time.Time
 }
 
 type realTimeChatStreamingFrame struct {

@@ -23,7 +23,6 @@ func (cache *MemoryCacheInstance[Key, T]) Reset() {
 	defer cache.mutex.Unlock()
 
 	cache.lastUpdated = nil
-
 	cache.items = map[Key]T{}
 }
 
@@ -33,7 +32,6 @@ func (cache *MemoryCacheInstance[Key, T]) Update(key Key, item T) {
 
 	now := time.Now()
 	cache.lastUpdated = &now
-
 	cache.items[key] = item
 }
 

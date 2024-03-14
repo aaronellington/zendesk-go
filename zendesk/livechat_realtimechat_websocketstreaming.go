@@ -61,7 +61,8 @@ type wsChatCache struct {
 }
 
 type wsAgentCache struct {
-	individualDepartments *utils.MemoryCacheInstance[UserID, WebsocketAgentMetricData]
+	individualDepartments *utils.MemoryCacheInstance[GroupID, WebsocketAgentMetricData]
+	globalData            WebsocketAgentMetricData
 }
 
 type wsConnMetadata struct {
@@ -94,20 +95,20 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 }
 
 type WebsocketChatMetricData struct {
-	MissedChats        *ChatMetricWindow               `json:"missed_chats"`
-	ChatDurationMax    *uint64                         `json:"chat_duration_max"`
-	SatisfactionBad    *ChatMetricWindow               `json:"satisfaction_bad"`
-	ActiveChats        uint64                          `json:"active_chats"`
-	SatisfactionGood   *ChatMetricWindow               `json:"satisfaction_good"`
-	IncomingChats      uint64                          `json:"incoming_chats"`
-	AssignedChats      uint64                          `json:"assigned_chats"`
-	ChatDurationAvg    *uint64                         `json:"chat_duration_avg"`
-	WaitingTimeAvg     *uint64                         `json:"waiting_time_avg"`
-	ResponseTimeAvg    *uint64                         `json:"response_time_avg"`
-	WaitingTimeMax     *uint64                         `json:"waiting_time_max"`
-	ResponseTimeMax    *uint64                         `json:"response_time_max"`
-	Subscriptions      WebsocketChatMetricSubscription `json:"subscriptions"`
-	LastUpdateReceived *time.Time                      `json:"last_update_received"`
+	MissedChats        *ChatMetricWindow              `json:"missed_chats"`
+	ChatDurationMax    *uint64                        `json:"chat_duration_max"`
+	SatisfactionBad    *ChatMetricWindow              `json:"satisfaction_bad"`
+	ActiveChats        uint64                         `json:"active_chats"`
+	SatisfactionGood   *ChatMetricWindow              `json:"satisfaction_good"`
+	IncomingChats      uint64                         `json:"incoming_chats"`
+	AssignedChats      uint64                         `json:"assigned_chats"`
+	ChatDurationAvg    *uint64                        `json:"chat_duration_avg"`
+	WaitingTimeAvg     *uint64                        `json:"waiting_time_avg"`
+	ResponseTimeAvg    *uint64                        `json:"response_time_avg"`
+	WaitingTimeMax     *uint64                        `json:"waiting_time_max"`
+	ResponseTimeMax    *uint64                        `json:"response_time_max"`
+	Subscriptions      map[LiveChatMetricKeyChat]bool `json:"subscriptions"`
+	LastUpdateReceived *time.Time                     `json:"last_update_received"`
 }
 
 type WebsocketChatMetricSubscription struct {
@@ -129,17 +130,11 @@ type WebsocketChatMetricSubscription struct {
 }
 
 type WebsocketAgentMetricData struct {
-	AgentsOnline       *uint64                          `json:"agents_online"`
-	AgentsAway         *uint64                          `json:"agents_away"`
-	AgentsInvisible    *uint64                          `json:"agents_invisible"`
-	Subscriptions      WebsocketAgentMetricSubscription `json:"subscriptions"`
-	LastUpdateReceived *time.Time                       `json:"last_update_received"`
-}
-
-type WebsocketAgentMetricSubscription struct {
-	AgentsOnline    bool `json:"agents_online"`
-	AgentsAway      bool `json:"agents_away"`
-	AgentsInvisible bool `json:"agents_invisible"`
+	AgentsOnline       *uint64                         `json:"agents_online"`
+	AgentsAway         *uint64                         `json:"agents_away"`
+	AgentsInvisible    *uint64                         `json:"agents_invisible"`
+	Subscriptions      map[LiveChatMetricKeyAgent]bool `json:"subscriptions"`
+	LastUpdateReceived *time.Time                      `json:"last_update_received"`
 }
 
 func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
@@ -386,7 +381,19 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 	case http.StatusInternalServerError:
 		return errors.New("error, unsupported message sent to server: " + string(frame.payload))
 	case http.StatusOK:
-		log.Println(string(frame.payload))
+		t := map[string]any{}
+		if err := json.Unmarshal(frame.payload, &t); err != nil {
+			return err
+		}
+
+		if content, ok := t["content"]; ok {
+			log.Println("This is the content: ", content)
+			return nil
+		}
+
+		if message, ok := t["message"]; ok {
+			log.Println("Couldn't find content key, here is messsage: ", message)
+		}
 	}
 
 	return nil
@@ -415,21 +422,37 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Contex
 		return err
 	}
 
-	fmt.Println(string(payloadBytes))
-
 	sentDataTime := time.Now()
 	s.wsCache.metadata.sentData = &sentDataTime
+	s.wsCache.agent.globalData.Subscriptions[metric] = true
 
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) GetAgentMetric(ctx context.Context) (map[UserID]WebsocketAgentMetricData, error) {
+func (s *RealTimeChatStreamingService) GetAllAgentMetricsForDepartments(ctx context.Context) (map[GroupID]WebsocketAgentMetricData, error) {
 	items, err := s.wsCache.agent.individualDepartments.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
 	return items.Items, nil
+}
+
+func (s *RealTimeChatStreamingService) GetAllAgentMetricsByDepartmentID(ctx context.Context, departmentID GroupID) (WebsocketAgentMetricData, error) {
+	item, ok := s.wsCache.agent.individualDepartments.Get(departmentID)
+	if !ok {
+		return WebsocketAgentMetricData{}, errors.New("could not find data for Department")
+	}
+
+	return item, nil
+}
+
+func (s *RealTimeChatStreamingService) GetAllAgentMetricsGlobal(ctx context.Context) (WebsocketAgentMetricData, error) {
+	if s.wsCache.agent.globalData.LastUpdateReceived == nil {
+		return WebsocketAgentMetricData{}, errors.New("no update received from Zendesk for metric")
+	}
+
+	return s.wsCache.agent.globalData, nil
 }
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {

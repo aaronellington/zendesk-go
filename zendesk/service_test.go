@@ -31,22 +31,22 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc, opts ...zendes
 }
 
 func createTestRealTimeChatWebsocketService(t *testing.T, ctx context.Context, customSettings settings) (*zendesk.Service, *mockRealTimeChatWebsocketServer) {
-	x, wsHost := newMockRealTimeChatWebsocketServer(t, customSettings)
+	mockZendeskWSServer, wsHost := newMockRealTimeChatWebsocketServer(t, customSettings)
 
-	z := createTestService(t, []study.RoundTripFunc{
+	zendeskService := createTestService(t, []study.RoundTripFunc{
 		createSuccessfulChatAuth(t),
 	}, zendesk.SetRealTimeChatWebsocketHost(wsHost))
 
 	go func() {
-		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
+		if err := zendeskService.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				x.connError <- err
+				mockZendeskWSServer.connError <- err
 				return
 			}
 		}
 	}()
 
-	return z, x
+	return zendeskService, mockZendeskWSServer
 }
 
 func createSuccessfulChatAuth(t *testing.T) study.RoundTripFunc {

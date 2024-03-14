@@ -176,7 +176,7 @@ func NewService(
 							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
 						},
 						agent: &wsAgentCache{
-							individualDepartments: utils.NewMemoryCacheInstance[UserID, WebsocketAgentMetricData](),
+							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketAgentMetricData](),
 						},
 						metadata: &wsConnMetadata{
 							mutex: &sync.Mutex{},
