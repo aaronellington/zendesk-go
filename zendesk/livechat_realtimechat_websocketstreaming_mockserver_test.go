@@ -221,7 +221,7 @@ func (m *mockRealTimeChatWebsocketServer) read() (realTimeChatStreamingFrame, er
 func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
 	data []byte,
 ) error {
-	target := zendesk.Subscription{}
+	target := zendesk.GlobalSubscription{}
 	if err := json.Unmarshal(data, &target); err != nil {
 		return err
 	}

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -130,11 +129,9 @@ type WebsocketChatMetricSubscription struct {
 }
 
 type WebsocketAgentMetricData struct {
-	AgentsOnline       *uint64                         `json:"agents_online"`
-	AgentsAway         *uint64                         `json:"agents_away"`
-	AgentsInvisible    *uint64                         `json:"agents_invisible"`
-	Subscriptions      map[LiveChatMetricKeyAgent]bool `json:"subscriptions"`
-	LastUpdateReceived *time.Time                      `json:"last_update_received"`
+	Data               map[LiveChatMetricKeyAgent]uint64 `json:"data"`
+	Subscriptions      map[LiveChatMetricKeyAgent]bool   `json:"subscriptions"`
+	LastUpdateReceived *time.Time                        `json:"last_update_received"`
 }
 
 func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
@@ -381,33 +378,117 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 	case http.StatusInternalServerError:
 		return errors.New("error, unsupported message sent to server: " + string(frame.payload))
 	case http.StatusOK:
+		// Determine what kind of data frame was sent
 		t := map[string]any{}
 		if err := json.Unmarshal(frame.payload, &t); err != nil {
 			return err
 		}
 
 		if content, ok := t["content"]; ok {
-			log.Println("This is the content: ", content)
+			contentBytes, err := json.Marshal(content)
+			if err != nil {
+				return err
+			}
+
+			c := RealTimeChatStreamingContent{}
+			if err := json.Unmarshal(contentBytes, &c); err != nil {
+				return err
+			}
+
+			if c.Topic == "agents" {
+				data := RealTimeChatStreamingContentAgentMetric{}
+
+				if err := json.Unmarshal(contentBytes, &data); err != nil {
+					return err
+				}
+
+				if data.DepartmentID != nil {
+					oldData, ok := s.wsCache.agent.individualDepartments.Get(*data.DepartmentID)
+					if !ok {
+						// s.wsCache.agent.individualDepartments.Update(
+						// 	*data.DepartmentID, WebsocketAgentMetricData{
+						// 		Subscriptions: make(map[LiveChatMetricKeyAgent]bool),
+						// 		Data:          data.Data,
+						// 	},
+						// )
+
+						return errors.New("Ahhh!")
+					}
+
+					for k, v := range data.Data {
+						oldData.Data[k] = v
+					}
+
+					s.wsCache.agent.individualDepartments.Update(*data.DepartmentID, oldData)
+
+				}
+			}
+
 			return nil
 		}
 
-		if message, ok := t["message"]; ok {
-			log.Println("Couldn't find content key, here is messsage: ", message)
-		}
 	}
 
 	return nil
 }
 
-type Subscription struct {
+type GlobalSubscription struct {
 	Topic  string `json:"topic"`
 	Action string `json:"action"`
 }
 
-func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(ctx context.Context, metric LiveChatMetricKeyAgent) error {
-	payload := Subscription{
-		Topic:  fmt.Sprintf("agents.%s", metric),
-		Action: "subscribe",
+type DepartmentSubscription struct {
+	Topic        string  `json:"topic"`
+	Action       string  `json:"action"`
+	DepartmentID GroupID `json:"department_id"`
+}
+
+func (s *RealTimeChatStreamingService) SubscribeToAgentMetricByDepartment(ctx context.Context, metric LiveChatMetricKeyAgent, departmentID GroupID) error {
+	payload := DepartmentSubscription{
+		Topic:        fmt.Sprintf("agents.%s", metric),
+		Action:       "subscribe",
+		DepartmentID: departmentID,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	if err := s.write(realTimeChatStreamingFrame{
+		opCode:  ws.OpText,
+		payload: payloadBytes,
+	}); err != nil {
+		return err
+	}
+
+	sentDataTime := time.Now()
+	s.wsCache.metadata.sentData = &sentDataTime
+
+	oldData, ok := s.wsCache.agent.individualDepartments.Get(departmentID)
+	if !ok {
+		s.wsCache.agent.individualDepartments.Update(
+			departmentID, WebsocketAgentMetricData{
+				Subscriptions: map[LiveChatMetricKeyAgent]bool{
+					metric: true,
+				},
+				Data: make(map[LiveChatMetricKeyAgent]uint64),
+			},
+		)
+
+		return nil
+	}
+
+	oldData.Subscriptions[metric] = true
+
+	return nil
+}
+
+func (s *RealTimeChatStreamingService) SubscribeToAgentMetricGlobal(ctx context.Context, metric LiveChatMetricKeyAgent) error {
+	payload := DepartmentSubscription{
+		Topic:        fmt.Sprintf("agents.%s", metric),
+		Action:       "subscribe",
+		DepartmentID: GroupID(13388700431505),
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -468,16 +549,23 @@ type RealTimeChatStreamingMessage struct {
 	Message    string `json:"message"`
 }
 
-type RealTimeChatStreamingContent[payload any] struct {
-	StatusCode int     `json:"status_code"`
-	Content    payload `json:"content"`
+type RealTimeChatStreamingContent struct {
+	Topic string `json:"topic"`
+	Type  string `json:"type"`
 }
 
 type RealTimeChatStreamingContentAgentMetric struct {
-	Topic        string                          `json:"topic"`
-	Data         map[LiveChatMetricKeyAgent]uint `json:"data"`
-	Type         string                          `json:"type"`
-	DepartmentID *GroupID                        `json:"department_id"`
+	Topic        string                            `json:"topic"`
+	Data         map[LiveChatMetricKeyAgent]uint64 `json:"data"`
+	Type         string                            `json:"type"`
+	DepartmentID *GroupID                          `json:"department_id"`
+}
+
+type RealTimeChatStreamingContentChatMetric struct {
+	Topic        string                           `json:"topic"`
+	Data         map[LiveChatMetricKeyChat]uint64 `json:"data"`
+	Type         string                           `json:"type"`
+	DepartmentID *GroupID                         `json:"department_id"`
 }
 
 type RealTimeChatStreamingCloseFrame struct {
