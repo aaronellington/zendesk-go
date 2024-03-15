@@ -429,6 +429,8 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 
 	}
 
+	allData, _ := s.wsCache.agent.individualDepartments.GetAll()
+
 	return nil
 }
 
