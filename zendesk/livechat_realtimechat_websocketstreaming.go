@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -363,6 +364,7 @@ func (s *RealTimeChatStreamingService) handleControlFrame(
 func (s *RealTimeChatStreamingService) handleDataFrame(
 	frame realTimeChatStreamingFrame,
 ) error {
+	log.Println(string(frame.payload))
 	type status struct {
 		StatusCode int `json:"status_code"`
 	}
@@ -430,6 +432,7 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 	}
 
 	allData, _ := s.wsCache.agent.individualDepartments.GetAll()
+	log.Println(allData)
 
 	return nil
 }
@@ -487,10 +490,9 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetricByDepartment(ctx co
 }
 
 func (s *RealTimeChatStreamingService) SubscribeToAgentMetricGlobal(ctx context.Context, metric LiveChatMetricKeyAgent) error {
-	payload := DepartmentSubscription{
-		Topic:        fmt.Sprintf("agents.%s", metric),
-		Action:       "subscribe",
-		DepartmentID: GroupID(13388700431505),
+	payload := GlobalSubscription{
+		Topic:  fmt.Sprintf("agents.%s", metric),
+		Action: "subscribe",
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -508,6 +510,30 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetricGlobal(ctx context.
 	sentDataTime := time.Now()
 	s.wsCache.metadata.sentData = &sentDataTime
 	s.wsCache.agent.globalData.Subscriptions[metric] = true
+
+	return nil
+}
+
+func (s *RealTimeChatStreamingService) SubscribeToChatMetricGlobal(ctx context.Context, metric LiveChatMetricKeyChat) error {
+	payload := GlobalSubscription{
+		Topic:  fmt.Sprintf("chats.%s", metric),
+		Action: "subscribe",
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	if err := s.write(realTimeChatStreamingFrame{
+		opCode:  ws.OpText,
+		payload: payloadBytes,
+	}); err != nil {
+		return err
+	}
+
+	sentDataTime := time.Now()
+	s.wsCache.metadata.sentData = &sentDataTime
 
 	return nil
 }

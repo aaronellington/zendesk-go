@@ -26,6 +26,9 @@ func main() {
 
 	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
 	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsOnline, 13388700431505)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsInvisible, 13388700431505)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsAway, 13388700431505)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToChatMetricGlobal(ctx, zendesk.LiveChatMetricKeyActiveChats)
 
 	// NOTE: Connecting to the WebSocket will consume frames from the Zendesk API until an error occurs. It also handles checking for a stale connection and sending keepalive messages
 	// to the Zendesk Server.
