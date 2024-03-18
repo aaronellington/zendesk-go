@@ -23,6 +23,7 @@ type GroupResponse struct {
 
 type Group struct {
 	ID        GroupID   `json:"id"`
+	Default   bool      `json:"default"`
 	IsPublic  bool      `json:"is_public"`
 	Name      string    `json:"name"`
 	Deleted   bool      `json:"deleted"`
