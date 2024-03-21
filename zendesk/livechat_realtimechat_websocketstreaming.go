@@ -86,11 +86,11 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 }
 
 type WebsocketChatMetricData struct {
-	MissedChats        *ChatMetricWindow               `json:"missed_chats"`
+	MissedChats        ChatMetricWindow                `json:"missed_chats"`
 	ChatDurationMax    *uint64                         `json:"chat_duration_max"`
-	SatisfactionBad    *ChatMetricWindow               `json:"satisfaction_bad"`
+	SatisfactionBad    ChatMetricWindow                `json:"satisfaction_bad"`
 	ActiveChats        uint64                          `json:"active_chats"`
-	SatisfactionGood   *ChatMetricWindow               `json:"satisfaction_good"`
+	SatisfactionGood   ChatMetricWindow                `json:"satisfaction_good"`
 	IncomingChats      uint64                          `json:"incoming_chats"`
 	AssignedChats      uint64                          `json:"assigned_chats"`
 	ChatDurationAvg    *uint64                         `json:"chat_duration_avg"`
@@ -103,12 +103,95 @@ type WebsocketChatMetricData struct {
 }
 
 func (w *WebsocketChatMetricData) patchData(update map[LiveChatMetricKeyChat]any) error {
-	// for dataPointKey, rawData := range update {
-	// 	data, ok := rawData.(float64)
-	// 	if !ok {
+	updated := time.Now()
 
-	// 	}
-	// }
+	log.Println("Patching data for Chat Metric")
+	log.Println(update)
+
+	for dataPointKey, rawData := range update {
+		if dataPointKey == LiveChatMetricKeyMissedChats ||
+			dataPointKey == LiveChatMetricKeySatisfactionBad ||
+			dataPointKey == LiveChatMetricKeySatisfactionGood {
+
+			windowMetric := map[string]int64{}
+			rawDataBytes, err := json.Marshal(rawData)
+			if err != nil {
+				return err
+			}
+
+			if err := json.Unmarshal(rawDataBytes, &windowMetric); err != nil {
+				return err
+			}
+
+			log.Println("Got into the window check: Data -> ", windowMetric)
+
+			switch dataPointKey {
+			case LiveChatMetricKeyMissedChats:
+				if data, ok := windowMetric["30"]; ok {
+					w.MissedChats.ThirtyMinuteWindow = data
+				}
+				if data, ok := windowMetric["60"]; ok {
+					w.MissedChats.SixtyMinuteWindow = data
+				}
+
+			case LiveChatMetricKeySatisfactionBad:
+				if data, ok := windowMetric["30"]; ok {
+					w.SatisfactionBad.ThirtyMinuteWindow = data
+				}
+				if data, ok := windowMetric["60"]; ok {
+					w.SatisfactionBad.SixtyMinuteWindow = data
+				}
+
+			case LiveChatMetricKeySatisfactionGood:
+				if data, ok := windowMetric["30"]; ok {
+					w.SatisfactionGood.ThirtyMinuteWindow = data
+				}
+				if data, ok := windowMetric["60"]; ok {
+					w.SatisfactionGood.SixtyMinuteWindow = data
+				}
+			}
+		} else {
+			// Default for JSON is to return float64 for numbers.
+			dataFloat, ok := rawData.(float64)
+			if !ok {
+				return errors.New("could not convert data to float64")
+			}
+
+			data := uint64(dataFloat)
+
+			switch dataPointKey {
+			case LiveChatMetricKeyChatDurationMax:
+				w.ChatDurationMax = &data
+
+			case LiveChatMetricKeyActiveChats:
+				w.ActiveChats = data
+
+			case LiveChatMetricKeyIncomingChats:
+				w.IncomingChats = data
+
+			case LiveChatMetricKeyAssignedChats:
+				w.AssignedChats = data
+
+			case LiveChatMetricKeyChatDurationAvg:
+				w.ChatDurationAvg = &data
+
+			case LiveChatMetricKeyWaitingTimeAvg:
+				w.WaitingTimeAvg = &data
+
+			case LiveChatMetricKeyResponseTimeAvg:
+				w.ResponseTimeAvg = &data
+
+			case LiveChatMetricKeyWaitingTimeMax:
+				w.WaitingTimeMax = &data
+
+			case LiveChatMetricKeyResponseTimeMax:
+				w.ResponseTimeMax = &data
+			}
+		}
+
+	}
+
+	w.LastUpdateReceived = &updated
 
 	return nil
 }
@@ -485,8 +568,6 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 				return err
 			}
 
-			log.Println(string(contentBytes))
-
 			if c.Topic == "agents" {
 				data := RealTimeChatStreamingContentAgentMetric{}
 
@@ -506,11 +587,9 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 				existingItem.patchData(data.Data)
 
 				s.wsCache.agent.Update(groupID, existingItem)
-
-				log.Println(data)
 			}
 
-			if c.Topic == "chat" {
+			if c.Topic == "chats" {
 				data := RealTimeChatStreamingContentChatMetric{}
 
 				if err := json.Unmarshal(contentBytes, &data); err != nil {
@@ -529,8 +608,6 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 				existingItem.patchData(data.Data)
 
 				s.wsCache.chat.Update(groupID, existingItem)
-
-				log.Println(data)
 			}
 
 			return nil
@@ -606,8 +683,6 @@ func (s *RealTimeChatStreamingService) SubscribeToChatWindowMetric(
 		return err
 	}
 
-	log.Println(string(payloadBytes))
-
 	if err := s.write(realTimeChatStreamingFrame{
 		opCode:  ws.OpText,
 		payload: payloadBytes,
@@ -623,9 +698,14 @@ func (s *RealTimeChatStreamingService) SubscribeToChatWindowMetric(
 		groupID = *departmentID
 	}
 
+	subscriptionKey := string(metric)
+	if window != nil {
+		subscriptionKey = fmt.Sprintf("%s%d", subscriptionKey, *window)
+	}
+
 	existingItem, _ := s.wsCache.chat.Get(groupID)
 	existingItem.patchSubscription(map[string]bool{
-		string(metric): true,
+		subscriptionKey: true,
 	})
 
 	s.wsCache.chat.Update(groupID, existingItem)
@@ -643,6 +723,15 @@ func (s *RealTimeChatStreamingService) SubscribeToChatMetric(
 
 func (s *RealTimeChatStreamingService) GetAllAgentMetricsForDepartments(ctx context.Context) (map[GroupID]WebsocketAgentMetricData, error) {
 	items, err := s.wsCache.agent.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return items.Items, nil
+}
+
+func (s *RealTimeChatStreamingService) GetAllChatMetricsForDepartments(ctx context.Context) (map[GroupID]WebsocketChatMetricData, error) {
+	items, err := s.wsCache.chat.GetAll()
 	if err != nil {
 		return nil, err
 	}
