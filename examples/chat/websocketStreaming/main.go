@@ -24,11 +24,14 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
+	departmentID := zendesk.GroupID(13388700431505)
+	timeWindow := zendesk.LiveChatTimeWindow30Minutes
+
 	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsOnline, 13388700431505)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsInvisible, 13388700431505)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetricByDepartment(ctx, zendesk.LiveChatMetricKeyAgentsAway, 13388700431505)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToChatMetricGlobal(ctx, zendesk.LiveChatMetricKeyActiveChats)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline, &departmentID)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsInvisible, &departmentID)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsAway, &departmentID)
+	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToChatWindowMetric(ctx, zendesk.LiveChatMetricKeyMissedChats, &timeWindow, nil)
 
 	// NOTE: Connecting to the WebSocket will consume frames from the Zendesk API until an error occurs. It also handles checking for a stale connection and sending keepalive messages
 	// to the Zendesk Server.

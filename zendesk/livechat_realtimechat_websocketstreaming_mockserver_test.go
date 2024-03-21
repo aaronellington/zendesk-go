@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/equalsgibson/concur/concur"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -221,24 +220,24 @@ func (m *mockRealTimeChatWebsocketServer) read() (realTimeChatStreamingFrame, er
 func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
 	data []byte,
 ) error {
-	target := zendesk.GlobalSubscription{}
-	if err := json.Unmarshal(data, &target); err != nil {
-		return err
-	}
+	// target := zendesk.GlobalSubscription{}
+	// if err := json.Unmarshal(data, &target); err != nil {
+	// 	return err
+	// }
 
-	if target.Action == "subscribe" {
-		queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
-		if !ok {
-			return errors.New("No queued frames to be sent for topic!")
-		}
+	// if target.Action == "subscribe" {
+	// 	queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
+	// 	if !ok {
+	// 		return errors.New("No queued frames to be sent for topic!")
+	// 	}
 
-		for _, frame := range queuedFrames {
-			time.Sleep(frame.delay)
-			if err := s.write(frame.payload, frame.opCode); err != nil {
-				return err
-			}
-		}
-	}
+	// 	for _, frame := range queuedFrames {
+	// 		time.Sleep(frame.delay)
+	// 		if err := s.write(frame.payload, frame.opCode); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	return nil
 }

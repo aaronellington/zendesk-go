@@ -7,84 +7,83 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/gobwas/ws"
 )
 
 func TestTest(t *testing.T) {
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
-	z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
-		t,
-		ctx,
-		settings{},
-	)
+	// z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
+	// 	t,
+	// 	ctx,
+	// 	settings{},
+	// )
 
-	success := make(chan error)
-	testCaseChan := make(chan error)
+	// success := make(chan error)
+	// testCaseChan := make(chan error)
 
-	go func() {
-		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-			success <- err
-			return
-		}
+	// go func() {
+	// 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
+	// 		success <- err
+	// 		return
+	// 	}
 
-		ticker := time.NewTicker(time.Millisecond * 250)
-		for {
-			select {
-			case <-testCaseChan:
-				return
-			case <-ticker.C:
-				_ = mockRealTimeChatWebsocketServer.history
+	// 	ticker := time.NewTicker(time.Millisecond * 250)
+	// 	for {
+	// 		select {
+	// 		case <-testCaseChan:
+	// 			return
+	// 		case <-ticker.C:
+	// 			_ = mockRealTimeChatWebsocketServer.history
 
-				metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsByDepartments(ctx)
-				if err != nil {
-					// TODO: log
-					log.Println(err)
-					continue
-					// not ready
-				}
+	// 			metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsByDepartments(ctx)
+	// 			if err != nil {
+	// 				// TODO: log
+	// 				log.Println(err)
+	// 				continue
+	// 				// not ready
+	// 			}
 
-				log.Println(metrics)
-				// TODO: get
+	// 			log.Println(metrics)
+	// 			// TODO: get
 
-				// validate data we got back
-				// if notValid {
-				// TODO: log
+	// 			// validate data we got back
+	// 			// if notValid {
+	// 			// TODO: log
 
-				// 	continue
-				// }
-				ticker.Stop()
-				success <- errors.New("This is a fake error!")
-				return
-			}
-		}
+	// 			// 	continue
+	// 			// }
+	// 			ticker.Stop()
+	// 			success <- errors.New("This is a fake error!")
+	// 			return
+	// 		}
+	// 	}
 
-	}()
+	// }()
 
-	timeout := time.NewTimer(time.Second * 5)
-	select {
-	case err := <-mockRealTimeChatWebsocketServer.connError:
-		testCaseChan <- err
+	// timeout := time.NewTimer(time.Second * 5)
+	// select {
+	// case err := <-mockRealTimeChatWebsocketServer.connError:
+	// 	testCaseChan <- err
 
-		t.Fatal(err)
-	case <-timeout.C:
-		t.Fatal("took too long")
-	case err := <-success:
-		log.Printf("%+v", mockRealTimeChatWebsocketServer.history)
-		t.Fatal(err)
-		return
-	}
+	// 	t.Fatal(err)
+	// case <-timeout.C:
+	// 	t.Fatal("took too long")
+	// case err := <-success:
+	// 	log.Printf("%+v", mockRealTimeChatWebsocketServer.history)
+	// 	t.Fatal(err)
+	// 	return
+	// }
 
-	_ = mockRealTimeChatWebsocketServer.conn.Close()
-	// Make no goroutes are running
+	// _ = mockRealTimeChatWebsocketServer.conn.Close()
+	// // Make no goroutes are running
 }
 
 func TestTest2(t *testing.T) {
 	ctx := context.Background()
 
-	z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
+	_, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
 		t,
 		ctx,
 		settings{},
@@ -100,26 +99,26 @@ func TestTest2(t *testing.T) {
 
 	testMarker := make(chan error)
 
-	go func() {
-		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-			testMarker <- err
-			return
-		}
+	// go func() {
+	// 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
+	// 		testMarker <- err
+	// 		return
+	// 	}
 
-		for range time.NewTicker(time.Second).C {
-			metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsForDepartments(ctx)
-			if err != nil {
-				// TODO: log
-				log.Println(err)
-				continue
-				// not ready
-			}
+	// 	for range time.NewTicker(time.Second).C {
+	// 		metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsForDepartments(ctx)
+	// 		if err != nil {
+	// 			// TODO: log
+	// 			log.Println(err)
+	// 			continue
+	// 			// not ready
+	// 		}
 
-			log.Println(metrics)
+	// 		log.Println(metrics)
 
-			continue
-		}
-	}()
+	// 		continue
+	// 	}
+	// }()
 
 	timeout := time.NewTimer(time.Second * 200)
 

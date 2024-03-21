@@ -2,14 +2,21 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"sync"
 	"time"
 )
 
+type Cache[Key comparable, T any] interface {
+	Get(key Key) (T, bool)
+	GetAll() (CacheResponse[Key, T], error)
+	Update(key Key, item T)
+	Delete(key Key)
+	GetCacheAge() *time.Duration
+	Reset()
+}
+
 type CacheResponse[Key comparable, T any] struct {
-	LastUpdated *time.Time `json:"lastUpdated"`
-	Items       map[Key]T  `json:"items"`
+	Items map[Key]T `json:"items"`
 }
 
 type MemoryCacheInstance[Key comparable, T any] struct {
@@ -26,13 +33,17 @@ func (cache *MemoryCacheInstance[Key, T]) Reset() {
 	cache.items = map[Key]T{}
 }
 
-func (cache *MemoryCacheInstance[Key, T]) Update(key Key, item T) {
+func (cache *MemoryCacheInstance[Key, T]) Update(
+	key Key,
+	update T,
+) {
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 
 	now := time.Now()
 	cache.lastUpdated = &now
-	cache.items[key] = item
+
+	cache.items[key] = update
 }
 
 func (cache *MemoryCacheInstance[Key, T]) Delete(key Key) {
@@ -68,10 +79,6 @@ func (cache *MemoryCacheInstance[Key, T]) GetAll() (CacheResponse[Key, T], error
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 
-	if cache.lastUpdated == nil {
-		return CacheResponse[Key, T]{}, errors.New("Not updated!")
-	}
-
 	target := map[Key]T{}
 
 	itemBytes, err := json.Marshal(cache.items)
@@ -84,8 +91,7 @@ func (cache *MemoryCacheInstance[Key, T]) GetAll() (CacheResponse[Key, T], error
 	}
 
 	return CacheResponse[Key, T]{
-		LastUpdated: cache.lastUpdated,
-		Items:       target,
+		Items: target,
 	}, nil
 }
 

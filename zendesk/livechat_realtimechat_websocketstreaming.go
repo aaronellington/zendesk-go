@@ -36,6 +36,8 @@ var (
 	ErrRealTimeChatWebsocketConnectionIsNil            error = errors.New("realtimechat websocket connection is nil")
 )
 
+const realTimeChatStreamingGlobalDepartmentID GroupID = 0
+
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/streaming/
 type RealTimeChatStreamingService struct {
 	wsClient *wsClient
@@ -43,36 +45,25 @@ type RealTimeChatStreamingService struct {
 }
 
 type wsCache struct {
-	chat     *wsChatCache
-	agent    *wsAgentCache
+	chat     *utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]
+	agent    *utils.MemoryCacheInstance[GroupID, WebsocketAgentMetricData]
 	metadata *wsConnMetadata
 }
 
 type wsClient struct {
-	client          *client //
-	conn            net.Conn
-	connEstablished chan bool
-	connMutex       *sync.Mutex
-	rtcWSHost       string // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
-}
-
-type wsChatCache struct {
-	individualDepartments *utils.MemoryCacheInstance[GroupID, WebsocketChatMetricData]
-}
-
-type wsAgentCache struct {
-	individualDepartments *utils.MemoryCacheInstance[GroupID, WebsocketAgentMetricData]
-	globalData            WebsocketAgentMetricData
+	client    *client
+	conn      net.Conn
+	connMutex *sync.Mutex
+	rtcWSHost string // The host for the LiveChat RealTimeChat Websocket server - present here so that it can be overridden in tests
 }
 
 type wsConnMetadata struct {
-	mutex             *sync.Mutex
-	connStarted       *time.Time
-	connAuthenticated *time.Time
-	sentPing          *time.Time
-	sentData          *time.Time
-	receivedControl   *time.Time
-	receivedData      *time.Time
+	mutex           *sync.Mutex
+	connStarted     *time.Time
+	sentPing        *time.Time
+	sentData        *time.Time
+	receivedControl *time.Time
+	receivedData    *time.Time
 }
 
 func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
@@ -95,20 +86,80 @@ func getMostRecentTime(t1, t2 *time.Time) *time.Duration {
 }
 
 type WebsocketChatMetricData struct {
-	MissedChats        *ChatMetricWindow              `json:"missed_chats"`
-	ChatDurationMax    *uint64                        `json:"chat_duration_max"`
-	SatisfactionBad    *ChatMetricWindow              `json:"satisfaction_bad"`
-	ActiveChats        uint64                         `json:"active_chats"`
-	SatisfactionGood   *ChatMetricWindow              `json:"satisfaction_good"`
-	IncomingChats      uint64                         `json:"incoming_chats"`
-	AssignedChats      uint64                         `json:"assigned_chats"`
-	ChatDurationAvg    *uint64                        `json:"chat_duration_avg"`
-	WaitingTimeAvg     *uint64                        `json:"waiting_time_avg"`
-	ResponseTimeAvg    *uint64                        `json:"response_time_avg"`
-	WaitingTimeMax     *uint64                        `json:"waiting_time_max"`
-	ResponseTimeMax    *uint64                        `json:"response_time_max"`
-	Subscriptions      map[LiveChatMetricKeyChat]bool `json:"subscriptions"`
-	LastUpdateReceived *time.Time                     `json:"last_update_received"`
+	MissedChats        *ChatMetricWindow               `json:"missed_chats"`
+	ChatDurationMax    *uint64                         `json:"chat_duration_max"`
+	SatisfactionBad    *ChatMetricWindow               `json:"satisfaction_bad"`
+	ActiveChats        uint64                          `json:"active_chats"`
+	SatisfactionGood   *ChatMetricWindow               `json:"satisfaction_good"`
+	IncomingChats      uint64                          `json:"incoming_chats"`
+	AssignedChats      uint64                          `json:"assigned_chats"`
+	ChatDurationAvg    *uint64                         `json:"chat_duration_avg"`
+	WaitingTimeAvg     *uint64                         `json:"waiting_time_avg"`
+	ResponseTimeAvg    *uint64                         `json:"response_time_avg"`
+	WaitingTimeMax     *uint64                         `json:"waiting_time_max"`
+	ResponseTimeMax    *uint64                         `json:"response_time_max"`
+	Subscriptions      WebsocketChatMetricSubscription `json:"subscriptions"`
+	LastUpdateReceived *time.Time                      `json:"last_update_received"`
+}
+
+func (w *WebsocketChatMetricData) patchData(update map[LiveChatMetricKeyChat]any) error {
+	// for dataPointKey, rawData := range update {
+	// 	data, ok := rawData.(float64)
+	// 	if !ok {
+
+	// 	}
+	// }
+
+	return nil
+}
+
+// NOTE: map[string]bool is to account for ChatMetricWindow subs.
+func (w *WebsocketChatMetricData) patchSubscription(update map[string]bool) {
+	for dataPointKey, data := range update {
+		switch dataPointKey {
+		case fmt.Sprintf("%s30", LiveChatMetricKeyMissedChats):
+			w.Subscriptions.MissedChats30 = data
+		case fmt.Sprintf("%s60", LiveChatMetricKeyMissedChats):
+			w.Subscriptions.MissedChats60 = data
+
+		case string(LiveChatMetricKeyChatDurationMax):
+			w.Subscriptions.ChatDurationMax = data
+
+		case fmt.Sprintf("%s30", LiveChatMetricKeySatisfactionBad):
+			w.Subscriptions.SatisfactionBad30 = data
+		case fmt.Sprintf("%s60", LiveChatMetricKeySatisfactionBad):
+			w.Subscriptions.SatisfactionBad60 = data
+
+		case string(LiveChatMetricKeyActiveChats):
+			w.Subscriptions.ActiveChats = data
+
+		case fmt.Sprintf("%s30", LiveChatMetricKeySatisfactionGood):
+			w.Subscriptions.SatisfactionGood30 = data
+		case fmt.Sprintf("%s60", LiveChatMetricKeySatisfactionGood):
+			w.Subscriptions.SatisfactionGood60 = data
+
+		case string(LiveChatMetricKeyIncomingChats):
+			w.Subscriptions.IncomingChats = data
+
+		case string(LiveChatMetricKeyAssignedChats):
+			w.Subscriptions.AssignedChats = data
+
+		case string(LiveChatMetricKeyChatDurationAvg):
+			w.Subscriptions.ChatDurationAvg = data
+
+		case string(LiveChatMetricKeyWaitingTimeAvg):
+			w.Subscriptions.WaitingTimeAvg = data
+
+		case string(LiveChatMetricKeyResponseTimeAvg):
+			w.Subscriptions.ResponseTimeAvg = data
+
+		case string(LiveChatMetricKeyWaitingTimeMax):
+			w.Subscriptions.WaitingTimeMax = data
+
+		case string(LiveChatMetricKeyResponseTimeMax):
+			w.Subscriptions.ResponseTimeMax = data
+		}
+	}
 }
 
 type WebsocketChatMetricSubscription struct {
@@ -130,9 +181,47 @@ type WebsocketChatMetricSubscription struct {
 }
 
 type WebsocketAgentMetricData struct {
-	Data               map[LiveChatMetricKeyAgent]uint64 `json:"data"`
-	Subscriptions      map[LiveChatMetricKeyAgent]bool   `json:"subscriptions"`
-	LastUpdateReceived *time.Time                        `json:"last_update_received"`
+	AgentsOnline       uint64                           `json:"agents_online"`
+	AgentsAway         uint64                           `json:"agents_away"`
+	AgentsInvisible    uint64                           `json:"agents_invisible"`
+	Subscriptions      WebsocketAgentMetricSubscription `json:"subscriptions"`
+	LastUpdateReceived *time.Time                       `json:"last_update_received"`
+}
+
+type WebsocketAgentMetricSubscription struct {
+	AgentsOnline    bool `json:"agents_online"`
+	AgentsAway      bool `json:"agents_away"`
+	AgentsInvisible bool `json:"agents_invisible"`
+}
+
+func (w *WebsocketAgentMetricData) patchData(update map[LiveChatMetricKeyAgent]uint64) {
+	updated := time.Now()
+
+	for dataPointKey, data := range update {
+		switch dataPointKey {
+		case LiveChatMetricKeyAgentsOnline:
+			w.AgentsOnline = data
+		case LiveChatMetricKeyAgentsAway:
+			w.AgentsAway = data
+		case LiveChatMetricKeyAgentsInvisible:
+			w.AgentsInvisible = data
+		}
+	}
+
+	w.LastUpdateReceived = &updated
+}
+
+func (w *WebsocketAgentMetricData) patchSubscription(update map[LiveChatMetricKeyAgent]bool) {
+	for dataPointKey, data := range update {
+		switch dataPointKey {
+		case LiveChatMetricKeyAgentsOnline:
+			w.Subscriptions.AgentsOnline = data
+		case LiveChatMetricKeyAgentsAway:
+			w.Subscriptions.AgentsAway = data
+		case LiveChatMetricKeyAgentsInvisible:
+			w.Subscriptions.AgentsInvisible = data
+		}
+	}
 }
 
 func (s *RealTimeChatStreamingService) initiateWebsocketConnection(ctx context.Context) error {
@@ -175,7 +264,7 @@ func (s *RealTimeChatStreamingService) ConnectToWebsocket(ctx context.Context) e
 	go reader.Loop(ctx)
 	defer reader.Close()
 
-	keepalive := time.NewTicker(time.Second * 1)
+	keepalive := time.NewTicker(time.Second * 15)
 	pongMonitor := time.NewTicker(time.Second * 30)
 
 	for {
@@ -364,7 +453,6 @@ func (s *RealTimeChatStreamingService) handleControlFrame(
 func (s *RealTimeChatStreamingService) handleDataFrame(
 	frame realTimeChatStreamingFrame,
 ) error {
-	log.Println(string(frame.payload))
 	type status struct {
 		StatusCode int `json:"status_code"`
 	}
@@ -397,6 +485,8 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 				return err
 			}
 
+			log.Println(string(contentBytes))
+
 			if c.Topic == "agents" {
 				data := RealTimeChatStreamingContentAgentMetric{}
 
@@ -404,52 +494,65 @@ func (s *RealTimeChatStreamingService) handleDataFrame(
 					return err
 				}
 
+				groupID := realTimeChatStreamingGlobalDepartmentID
 				if data.DepartmentID != nil {
-					oldData, ok := s.wsCache.agent.individualDepartments.Get(*data.DepartmentID)
-					if !ok {
-						// s.wsCache.agent.individualDepartments.Update(
-						// 	*data.DepartmentID, WebsocketAgentMetricData{
-						// 		Subscriptions: make(map[LiveChatMetricKeyAgent]bool),
-						// 		Data:          data.Data,
-						// 	},
-						// )
-
-						return errors.New("Ahhh!")
-					}
-
-					for k, v := range data.Data {
-						oldData.Data[k] = v
-					}
-
-					s.wsCache.agent.individualDepartments.Update(*data.DepartmentID, oldData)
-
+					groupID = *data.DepartmentID
 				}
+
+				// NOTE: As we are patching the data, it is acceptable to throw away the "ok" value here.
+				// The effect is the same - we update a single item on the object and insert it to the cache.
+				existingItem, _ := s.wsCache.agent.Get(groupID)
+
+				existingItem.patchData(data.Data)
+
+				s.wsCache.agent.Update(groupID, existingItem)
+
+				log.Println(data)
+			}
+
+			if c.Topic == "chat" {
+				data := RealTimeChatStreamingContentChatMetric{}
+
+				if err := json.Unmarshal(contentBytes, &data); err != nil {
+					return err
+				}
+
+				groupID := realTimeChatStreamingGlobalDepartmentID
+				if data.DepartmentID != nil {
+					groupID = *data.DepartmentID
+				}
+
+				// NOTE: As we are patching the data, it is acceptable to throw away the "ok" value here.
+				// The effect is the same - we update a single item on the object and insert it to the cache.
+				existingItem, _ := s.wsCache.chat.Get(groupID)
+
+				existingItem.patchData(data.Data)
+
+				s.wsCache.chat.Update(groupID, existingItem)
+
+				log.Println(data)
 			}
 
 			return nil
 		}
-
 	}
-
-	allData, _ := s.wsCache.agent.individualDepartments.GetAll()
-	log.Println(allData)
 
 	return nil
 }
 
-type GlobalSubscription struct {
-	Topic  string `json:"topic"`
-	Action string `json:"action"`
+type Subscription struct {
+	Topic        string              `json:"topic"`
+	Action       string              `json:"action"`
+	Window       *LiveChatTimeWindow `json:"window,omitempty"`
+	DepartmentID *GroupID            `json:"department_id,omitempty"`
 }
 
-type DepartmentSubscription struct {
-	Topic        string  `json:"topic"`
-	Action       string  `json:"action"`
-	DepartmentID GroupID `json:"department_id"`
-}
-
-func (s *RealTimeChatStreamingService) SubscribeToAgentMetricByDepartment(ctx context.Context, metric LiveChatMetricKeyAgent, departmentID GroupID) error {
-	payload := DepartmentSubscription{
+func (s *RealTimeChatStreamingService) SubscribeToAgentMetric(
+	ctx context.Context,
+	metric LiveChatMetricKeyAgent,
+	departmentID *GroupID,
+) error {
+	payload := Subscription{
 		Topic:        fmt.Sprintf("agents.%s", metric),
 		Action:       "subscribe",
 		DepartmentID: departmentID,
@@ -470,29 +573,32 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetricByDepartment(ctx co
 	sentDataTime := time.Now()
 	s.wsCache.metadata.sentData = &sentDataTime
 
-	oldData, ok := s.wsCache.agent.individualDepartments.Get(departmentID)
-	if !ok {
-		s.wsCache.agent.individualDepartments.Update(
-			departmentID, WebsocketAgentMetricData{
-				Subscriptions: map[LiveChatMetricKeyAgent]bool{
-					metric: true,
-				},
-				Data: make(map[LiveChatMetricKeyAgent]uint64),
-			},
-		)
-
-		return nil
+	groupID := realTimeChatStreamingGlobalDepartmentID
+	if departmentID != nil {
+		groupID = *departmentID
 	}
 
-	oldData.Subscriptions[metric] = true
+	existingItem, _ := s.wsCache.agent.Get(groupID)
+	existingItem.patchSubscription(map[LiveChatMetricKeyAgent]bool{
+		metric: true,
+	})
+
+	s.wsCache.agent.Update(groupID, existingItem)
 
 	return nil
 }
 
-func (s *RealTimeChatStreamingService) SubscribeToAgentMetricGlobal(ctx context.Context, metric LiveChatMetricKeyAgent) error {
-	payload := GlobalSubscription{
-		Topic:  fmt.Sprintf("agents.%s", metric),
-		Action: "subscribe",
+func (s *RealTimeChatStreamingService) SubscribeToChatWindowMetric(
+	ctx context.Context,
+	metric LiveChatMetricKeyChat,
+	window *LiveChatTimeWindow,
+	departmentID *GroupID,
+) error {
+	payload := Subscription{
+		Topic:        fmt.Sprintf("chats.%s", metric),
+		Action:       "subscribe",
+		Window:       window,
+		DepartmentID: departmentID,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -500,30 +606,7 @@ func (s *RealTimeChatStreamingService) SubscribeToAgentMetricGlobal(ctx context.
 		return err
 	}
 
-	if err := s.write(realTimeChatStreamingFrame{
-		opCode:  ws.OpText,
-		payload: payloadBytes,
-	}); err != nil {
-		return err
-	}
-
-	sentDataTime := time.Now()
-	s.wsCache.metadata.sentData = &sentDataTime
-	s.wsCache.agent.globalData.Subscriptions[metric] = true
-
-	return nil
-}
-
-func (s *RealTimeChatStreamingService) SubscribeToChatMetricGlobal(ctx context.Context, metric LiveChatMetricKeyChat) error {
-	payload := GlobalSubscription{
-		Topic:  fmt.Sprintf("chats.%s", metric),
-		Action: "subscribe",
-	}
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
+	log.Println(string(payloadBytes))
 
 	if err := s.write(realTimeChatStreamingFrame{
 		opCode:  ws.OpText,
@@ -535,11 +618,31 @@ func (s *RealTimeChatStreamingService) SubscribeToChatMetricGlobal(ctx context.C
 	sentDataTime := time.Now()
 	s.wsCache.metadata.sentData = &sentDataTime
 
+	groupID := realTimeChatStreamingGlobalDepartmentID
+	if departmentID != nil {
+		groupID = *departmentID
+	}
+
+	existingItem, _ := s.wsCache.chat.Get(groupID)
+	existingItem.patchSubscription(map[string]bool{
+		string(metric): true,
+	})
+
+	s.wsCache.chat.Update(groupID, existingItem)
+
 	return nil
+}
+
+func (s *RealTimeChatStreamingService) SubscribeToChatMetric(
+	ctx context.Context,
+	metric LiveChatMetricKeyChat,
+	departmentID *GroupID,
+) error {
+	return s.SubscribeToChatWindowMetric(ctx, metric, nil, departmentID)
 }
 
 func (s *RealTimeChatStreamingService) GetAllAgentMetricsForDepartments(ctx context.Context) (map[GroupID]WebsocketAgentMetricData, error) {
-	items, err := s.wsCache.agent.individualDepartments.GetAll()
+	items, err := s.wsCache.agent.GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -548,20 +651,12 @@ func (s *RealTimeChatStreamingService) GetAllAgentMetricsForDepartments(ctx cont
 }
 
 func (s *RealTimeChatStreamingService) GetAllAgentMetricsByDepartmentID(ctx context.Context, departmentID GroupID) (WebsocketAgentMetricData, error) {
-	item, ok := s.wsCache.agent.individualDepartments.Get(departmentID)
+	item, ok := s.wsCache.agent.Get(departmentID)
 	if !ok {
 		return WebsocketAgentMetricData{}, errors.New("could not find data for Department")
 	}
 
 	return item, nil
-}
-
-func (s *RealTimeChatStreamingService) GetAllAgentMetricsGlobal(ctx context.Context) (WebsocketAgentMetricData, error) {
-	if s.wsCache.agent.globalData.LastUpdateReceived == nil {
-		return WebsocketAgentMetricData{}, errors.New("no update received from Zendesk for metric")
-	}
-
-	return s.wsCache.agent.globalData, nil
 }
 
 func (s *RealTimeChatStreamingService) GetTimeSinceLastFrameReceived() *time.Duration {
@@ -590,10 +685,10 @@ type RealTimeChatStreamingContentAgentMetric struct {
 }
 
 type RealTimeChatStreamingContentChatMetric struct {
-	Topic        string                           `json:"topic"`
-	Data         map[LiveChatMetricKeyChat]uint64 `json:"data"`
-	Type         string                           `json:"type"`
-	DepartmentID *GroupID                         `json:"department_id"`
+	Topic        string                        `json:"topic"`
+	Data         map[LiveChatMetricKeyChat]any `json:"data"`
+	Type         string                        `json:"type"`
+	DepartmentID *GroupID                      `json:"department_id"`
 }
 
 type RealTimeChatStreamingCloseFrame struct {

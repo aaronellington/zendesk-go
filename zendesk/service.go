@@ -43,11 +43,11 @@ func NewService(
 	}
 
 	wsClient := wsClient{
-		client:          c,
-		conn:            nil,
-		connEstablished: make(chan bool, 1),
-		connMutex:       &sync.Mutex{},
-		rtcWSHost:       config.realTimeChatWebsocketHost,
+		client: c,
+		conn:   nil,
+		// connEstablished: make(chan bool, 1),
+		connMutex: &sync.Mutex{},
+		rtcWSHost: config.realTimeChatWebsocketHost,
 	}
 
 	return &Service{
@@ -172,15 +172,8 @@ func NewService(
 				realTimeChatStreamingService: &RealTimeChatStreamingService{
 					wsClient: &wsClient,
 					wsCache: &wsCache{
-						chat: &wsChatCache{
-							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
-						},
-						agent: &wsAgentCache{
-							globalData: WebsocketAgentMetricData{
-								Subscriptions: map[LiveChatMetricKeyAgent]bool{},
-							},
-							individualDepartments: utils.NewMemoryCacheInstance[GroupID, WebsocketAgentMetricData](),
-						},
+						chat:  utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
+						agent: utils.NewMemoryCacheInstance[GroupID, WebsocketAgentMetricData](),
 						metadata: &wsConnMetadata{
 							mutex: &sync.Mutex{},
 						},
