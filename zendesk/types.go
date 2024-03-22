@@ -97,18 +97,23 @@ type LiveChatMetricKeyChat string
 
 // https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/metrics/#chat-metrics
 const (
-	LiveChatMetricKeyIncomingChats    LiveChatMetricKeyChat = "incoming_chats"
-	LiveChatMetricKeyAssignedChats    LiveChatMetricKeyChat = "assigned_chats"
-	LiveChatMetricKeyMissedChats      LiveChatMetricKeyChat = "missed_chats"
-	LiveChatMetricKeyActiveChats      LiveChatMetricKeyChat = "active_chats"
-	LiveChatMetricKeyWaitingTimeAvg   LiveChatMetricKeyChat = "waiting_time_avg"
-	LiveChatMetricKeyWaitingTimeMax   LiveChatMetricKeyChat = "waiting_time_max"
-	LiveChatMetricKeyChatDurationAvg  LiveChatMetricKeyChat = "chat_duration_avg"
-	LiveChatMetricKeyChatDurationMax  LiveChatMetricKeyChat = "chat_duration_max"
-	LiveChatMetricKeyResponseTimeAvg  LiveChatMetricKeyChat = "response_time_avg"
-	LiveChatMetricKeyResponseTimeMax  LiveChatMetricKeyChat = "response_time_max"
-	LiveChatMetricKeySatisfactionGood LiveChatMetricKeyChat = "satisfaction_good"
-	LiveChatMetricKeySatisfactionBad  LiveChatMetricKeyChat = "satisfaction_bad"
+	LiveChatMetricKeyIncomingChats   LiveChatMetricKeyChat = "incoming_chats"
+	LiveChatMetricKeyAssignedChats   LiveChatMetricKeyChat = "assigned_chats"
+	LiveChatMetricKeyActiveChats     LiveChatMetricKeyChat = "active_chats"
+	LiveChatMetricKeyWaitingTimeAvg  LiveChatMetricKeyChat = "waiting_time_avg"
+	LiveChatMetricKeyWaitingTimeMax  LiveChatMetricKeyChat = "waiting_time_max"
+	LiveChatMetricKeyChatDurationAvg LiveChatMetricKeyChat = "chat_duration_avg"
+	LiveChatMetricKeyChatDurationMax LiveChatMetricKeyChat = "chat_duration_max"
+	LiveChatMetricKeyResponseTimeAvg LiveChatMetricKeyChat = "response_time_avg"
+	LiveChatMetricKeyResponseTimeMax LiveChatMetricKeyChat = "response_time_max"
+)
+
+type LiveChatMetricKeyChatWindow string
+
+const (
+	LiveChatMetricKeyMissedChats      LiveChatMetricKeyChatWindow = "missed_chats"
+	LiveChatMetricKeySatisfactionGood LiveChatMetricKeyChatWindow = "satisfaction_good"
+	LiveChatMetricKeySatisfactionBad  LiveChatMetricKeyChatWindow = "satisfaction_bad"
 )
 
 type LiveChatMetricKeyAgent string

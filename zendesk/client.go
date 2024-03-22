@@ -203,7 +203,7 @@ func (c *client) RealTimeChatRequest(request *http.Request, target any) error {
 	for attempts < maxAttempts {
 		attempts++
 
-		if err := c.getAccessToken(request.Context()); err != nil {
+		if err := c.GetAccessToken(request.Context()); err != nil {
 			return err
 		}
 
@@ -255,7 +255,7 @@ func (c *client) ChatRequest(request *http.Request, target any) error {
 	for attempts < maxAttempts {
 		attempts++
 
-		if err := c.getAccessToken(request.Context()); err != nil {
+		if err := c.GetAccessToken(request.Context()); err != nil {
 			return err
 		}
 
@@ -302,7 +302,7 @@ https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#impl
 
 https://developer.zendesk.com/documentation/live-chat/getting-started/auth/#confidential-grant-types
 */
-func (c *client) getAccessToken(ctx context.Context) error {
+func (c *client) GetAccessToken(ctx context.Context) error {
 	if c.chatToken != nil {
 		return nil
 	}

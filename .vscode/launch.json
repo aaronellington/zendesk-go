@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Websocket Stream",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "envFile": "${workspaceFolder}/.env.local",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/examples/chat/websocketStreaming/main.go"
+        }
+    ]
+}

@@ -4,18 +4,22 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/aaronellington/zendesk-go/zendesk/internal/utils"
 )
 
 func NewService(
 	subDomain string,
 	zendeskAuth authentication,
 	chatCredentials ChatCredentials,
-	opts ...configOption,
+	opts ...ConfigOption,
 ) *Service {
 	config := &internalConfig{
-		userAgent: "aaronellington/zendesk-go",
-		timeout:   time.Second * 15,
+		userAgent:                 "aaronellington/zendesk-go",
+		timeout:                   time.Second * 15,
+		realTimeChatWebsocketHost: RealTimeChatStreamingHost,
 	}
+
 	for _, opt := range opts {
 		opt(config)
 	}
@@ -36,6 +40,13 @@ func NewService(
 		chatMutex:            &sync.Mutex{},
 		chatToken:            nil,
 		requestPreProcessors: config.requestPreProcessors,
+	}
+
+	wsClient := wsClient{
+		client:    c,
+		conn:      nil,
+		connMutex: &sync.Mutex{},
+		rtcWSHost: config.realTimeChatWebsocketHost,
 	}
 
 	return &Service{
@@ -158,7 +169,14 @@ func NewService(
 					client: c,
 				},
 				realTimeChatStreamingService: &RealTimeChatStreamingService{
-					client: c,
+					wsClient: &wsClient,
+					wsCache: &wsCache{
+						chat:  utils.NewMemoryCacheInstance[GroupID, WebsocketChatMetricData](),
+						agent: utils.NewMemoryCacheInstance[GroupID, WebsocketAgentMetricData](),
+						metadata: &wsConnMetadata{
+							mutex: &sync.Mutex{},
+						},
+					},
 				},
 			},
 			chatConversationsService: &ChatConversationsService{
