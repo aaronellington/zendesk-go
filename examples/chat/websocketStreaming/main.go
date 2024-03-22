@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -38,37 +39,40 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	// departmentID := zendesk.GroupID(13388700431505)
-	timeWindow := zendesk.LiveChatTimeWindow30Minutes
-
-	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
-	departments, err := z.LiveChat().Chat().Department().List(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to the Websocket to be established, and then perform any queued writes
 	go func() {
+		departments, err := z.LiveChat().Chat().Department().List(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		for _, department := range departments {
+			if !department.Enabled {
+				continue
+			}
+
 			if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(&department.ID); err != nil {
 				log.Fatal(err)
 			}
+
+			if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllChatMetrics(&department.ID); err != nil {
+				log.Fatal(err)
+			}
 		}
+
 		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(nil)
-		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToSingleChatWindowMetric(zendesk.LiveChatMetricKeyMissedChats, &timeWindow, nil)
-		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToSingleChatMetric(zendesk.LiveChatMetricKeyIncomingChats, nil)
+		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllChatMetrics(nil)
 	}()
 
-	// NOTE: Connecting to the WebSocket will consume frames from the Zendesk API until an error occurs. It also handles checking for a stale connection and sending keepalive messages
-	// to the Zendesk Server.
 	go func() {
 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
 			log.Printf("Websocket exiting. Here is the error message: %s", err.Error())
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second * 5)
-	for range ticker.C {
-		log.Println("==Report==")
+	// Every 15 seconds pull the state from the Internal Memory Cache and prettyPrint this to the console.
+	ticker := time.NewTicker(time.Second * 15)
+	for t := range ticker.C {
 		agent, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsForDepartments()
 		if err != nil {
 			log.Println(err)
@@ -81,7 +85,11 @@ func main() {
 			continue
 		}
 
-		prettyPrint(chat[0].MissedChats.ThirtyMinuteWindow)
+		fmt.Println(t.String())
+		fmt.Println("=== Chat  Data ===")
+		prettyPrint(chat)
+		fmt.Println("=== Agent Data ===")
 		prettyPrint(agent)
+		fmt.Println("=== ========== ===")
 	}
 }
