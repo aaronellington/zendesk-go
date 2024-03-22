@@ -43,9 +43,8 @@ func NewService(
 	}
 
 	wsClient := wsClient{
-		client: c,
-		conn:   nil,
-		// connEstablished: make(chan bool, 1),
+		client:    c,
+		conn:      nil,
 		connMutex: &sync.Mutex{},
 		rtcWSHost: config.realTimeChatWebsocketHost,
 	}

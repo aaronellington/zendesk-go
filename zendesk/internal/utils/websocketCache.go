@@ -6,15 +6,6 @@ import (
 	"time"
 )
 
-type Cache[Key comparable, T any] interface {
-	Get(key Key) (T, bool)
-	GetAll() (CacheResponse[Key, T], error)
-	Update(key Key, item T)
-	Delete(key Key)
-	GetCacheAge() *time.Duration
-	Reset()
-}
-
 type CacheResponse[Key comparable, T any] struct {
 	Items map[Key]T `json:"items"`
 }
