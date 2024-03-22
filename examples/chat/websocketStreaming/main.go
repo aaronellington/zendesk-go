@@ -2,12 +2,25 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"time"
 
 	"github.com/aaronellington/zendesk-go/zendesk"
 )
+
+func prettyPrint(v any) error {
+	bytes, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	os.Stdout.Write(bytes)
+	os.Stdout.WriteString("\n")
+
+	return nil
+}
 
 func main() {
 	ctx := context.Background()
@@ -25,6 +38,26 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
+	// departmentID := zendesk.GroupID(13388700431505)
+	timeWindow := zendesk.LiveChatTimeWindow30Minutes
+
+	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
+	departments, err := z.LiveChat().Chat().Department().List(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		for _, department := range departments {
+			if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(&department.ID); err != nil {
+				log.Fatal(err)
+			}
+		}
+		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(nil)
+		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToSingleChatWindowMetric(zendesk.LiveChatMetricKeyMissedChats, &timeWindow, nil)
+		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToSingleChatMetric(zendesk.LiveChatMetricKeyIncomingChats, nil)
+	}()
+
 	// NOTE: Connecting to the WebSocket will consume frames from the Zendesk API until an error occurs. It also handles checking for a stale connection and sending keepalive messages
 	// to the Zendesk Server.
 	go func() {
@@ -33,27 +66,22 @@ func main() {
 		}
 	}()
 
-	departmentID := zendesk.GroupID(13388700431505)
-	timeWindow := zendesk.LiveChatTimeWindow30Minutes
-
-	// NOTE: This is fine to do before initiating a connection. The library will wait up to 15 seconds for a connection to be established, and then perform any queued writes
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline, &departmentID)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsInvisible, &departmentID)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsAway, &departmentID)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToChatWindowMetric(ctx, zendesk.LiveChatMetricKeyMissedChats, &timeWindow, nil)
-	go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToChatMetric(ctx, zendesk.LiveChatMetricKeyIncomingChats, nil)
-
-	ticker := time.NewTicker(time.Second * 3)
+	ticker := time.NewTicker(time.Second * 5)
 	for range ticker.C {
-
-		// subs, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().
-		chat, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllChatMetricsForDepartments(ctx)
+		log.Println("==Report==")
+		agent, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsForDepartments()
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
-		log.Printf("%+v\n", chat[0].MissedChats)
-		log.Printf("%+v\n", chat[0].Subscriptions)
+		chat, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllChatMetricsForDepartments()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		prettyPrint(chat[0].MissedChats.ThirtyMinuteWindow)
+		prettyPrint(agent)
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/equalsgibson/concur/concur"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -22,13 +23,11 @@ type mockRealTimeChatWebsocketServer struct {
 	settings  settings
 	conn      net.Conn
 	connError chan error
-	handlers  frameHandlers
 	history   struct {
 		receivedFrames []realTimeChatStreamingFrameHistory
 		sentFrames     []realTimeChatStreamingFrameHistory
 	}
 	queuedFrames queuedFrames
-	testError    chan error
 }
 
 type queuedFrames struct {
@@ -83,22 +82,20 @@ func (m *mockRealTimeChatWebsocketServer) createDefaultServer(t *testing.T) stri
 		go serverReader.Loop(r.Context())
 		defer serverReader.Close()
 
-		for {
-			select {
-			case update := <-serverReader.Updates():
-				if update.Err != nil {
-					log.Printf("Update error: %s", err)
-					m.conn.Close()
-					return
-				}
+		for update := range serverReader.Updates() {
+			if update.Err != nil {
+				log.Printf("Update error: %s", err)
+				m.conn.Close()
+				return
+			}
 
-				if err := m.handleFrame(update.Item); err != nil {
-					log.Printf("Handle update error: %s", err)
-					m.conn.Close()
-					return
-				}
+			if err := m.handleFrame(update.Item); err != nil {
+				log.Printf("Handle update error: %s", err)
+				m.conn.Close()
+				return
 			}
 		}
+
 	}))
 
 	svr.Start()
@@ -220,24 +217,53 @@ func (m *mockRealTimeChatWebsocketServer) read() (realTimeChatStreamingFrame, er
 func (s *mockRealTimeChatWebsocketServer) handleDataFrame(
 	data []byte,
 ) error {
-	// target := zendesk.GlobalSubscription{}
-	// if err := json.Unmarshal(data, &target); err != nil {
-	// 	return err
-	// }
+	type frame struct {
+		Topic        string           `json:"topic"`
+		Action       string           `json:"action"`
+		Window       *uint64          `json:"window"`
+		DepartmentID *zendesk.GroupID `json:"department_id"`
+	}
 
-	// if target.Action == "subscribe" {
-	// 	queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]
-	// 	if !ok {
-	// 		return errors.New("No queued frames to be sent for topic!")
-	// 	}
+	target := frame{}
 
-	// 	for _, frame := range queuedFrames {
-	// 		time.Sleep(frame.delay)
-	// 		if err := s.write(frame.payload, frame.opCode); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
+	if err := json.Unmarshal(data, &target); err != nil {
+		return err
+	}
+
+	switch target.Action {
+	case "subscribe":
+		if queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]; ok {
+			for _, queuedFrame := range queuedFrames {
+				time.Sleep(queuedFrame.delay)
+				if err := s.write(queuedFrame.payload, queuedFrame.opCode); err != nil {
+					return err
+				}
+			}
+		}
+	case "unsubscribe":
+		if queuedFrames, ok := s.queuedFrames.subscribe[target.Topic]; ok {
+			for _, queuedFrame := range queuedFrames {
+				time.Sleep(queuedFrame.delay)
+				if err := s.write(queuedFrame.payload, queuedFrame.opCode); err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		message := websocketServerMessage{
+			StatusCode: 500,
+			Message:    "Server Error!",
+		}
+
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			return err
+		}
+
+		if err := s.write(messageBytes, ws.OpText); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -292,10 +318,3 @@ type realTimeChatStreamingFrame struct {
 	opCode  ws.OpCode
 	payload []byte
 }
-
-type frameHandlers struct {
-	ping frameHandler
-	pong frameHandler
-}
-
-type frameHandler func(payload []byte, opCode ws.OpCode) error

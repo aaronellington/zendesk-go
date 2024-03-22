@@ -7,7 +7,8 @@ import (
 )
 
 type CacheResponse[Key comparable, T any] struct {
-	Items map[Key]T `json:"items"`
+	Items       map[Key]T  `json:"items"`
+	LastUpdated *time.Time `json:"lastUpdated"`
 }
 
 type MemoryCacheInstance[Key comparable, T any] struct {
@@ -82,7 +83,8 @@ func (cache *MemoryCacheInstance[Key, T]) GetAll() (CacheResponse[Key, T], error
 	}
 
 	return CacheResponse[Key, T]{
-		Items: target,
+		Items:       target,
+		LastUpdated: cache.lastUpdated,
 	}, nil
 }
 

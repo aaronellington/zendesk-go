@@ -3,136 +3,9 @@ package zendesk_test
 import (
 	"context"
 	"errors"
-	"log"
 	"testing"
 	"time"
-
-	"github.com/gobwas/ws"
 )
-
-func TestTest(t *testing.T) {
-
-	// ctx := context.Background()
-
-	// z, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
-	// 	t,
-	// 	ctx,
-	// 	settings{},
-	// )
-
-	// success := make(chan error)
-	// testCaseChan := make(chan error)
-
-	// go func() {
-	// 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-	// 		success <- err
-	// 		return
-	// 	}
-
-	// 	ticker := time.NewTicker(time.Millisecond * 250)
-	// 	for {
-	// 		select {
-	// 		case <-testCaseChan:
-	// 			return
-	// 		case <-ticker.C:
-	// 			_ = mockRealTimeChatWebsocketServer.history
-
-	// 			metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsByDepartments(ctx)
-	// 			if err != nil {
-	// 				// TODO: log
-	// 				log.Println(err)
-	// 				continue
-	// 				// not ready
-	// 			}
-
-	// 			log.Println(metrics)
-	// 			// TODO: get
-
-	// 			// validate data we got back
-	// 			// if notValid {
-	// 			// TODO: log
-
-	// 			// 	continue
-	// 			// }
-	// 			ticker.Stop()
-	// 			success <- errors.New("This is a fake error!")
-	// 			return
-	// 		}
-	// 	}
-
-	// }()
-
-	// timeout := time.NewTimer(time.Second * 5)
-	// select {
-	// case err := <-mockRealTimeChatWebsocketServer.connError:
-	// 	testCaseChan <- err
-
-	// 	t.Fatal(err)
-	// case <-timeout.C:
-	// 	t.Fatal("took too long")
-	// case err := <-success:
-	// 	log.Printf("%+v", mockRealTimeChatWebsocketServer.history)
-	// 	t.Fatal(err)
-	// 	return
-	// }
-
-	// _ = mockRealTimeChatWebsocketServer.conn.Close()
-	// // Make no goroutes are running
-}
-
-func TestTest2(t *testing.T) {
-	ctx := context.Background()
-
-	_, mockRealTimeChatWebsocketServer := createTestRealTimeChatWebsocketService(
-		t,
-		ctx,
-		settings{},
-	)
-
-	mockRealTimeChatWebsocketServer.queuedFrames.subscribe["agents.agents_online"] = []queuedFrame{
-		{
-			payload: []byte("hello"),
-			opCode:  ws.OpText,
-			delay:   time.Millisecond,
-		},
-	}
-
-	testMarker := make(chan error)
-
-	// go func() {
-	// 	if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAgentMetric(ctx, zendesk.LiveChatMetricKeyAgentsOnline); err != nil {
-	// 		testMarker <- err
-	// 		return
-	// 	}
-
-	// 	for range time.NewTicker(time.Second).C {
-	// 		metrics, err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetAllAgentMetricsForDepartments(ctx)
-	// 		if err != nil {
-	// 			// TODO: log
-	// 			log.Println(err)
-	// 			continue
-	// 			// not ready
-	// 		}
-
-	// 		log.Println(metrics)
-
-	// 		continue
-	// 	}
-	// }()
-
-	timeout := time.NewTimer(time.Second * 200)
-
-	select {
-	case err := <-mockRealTimeChatWebsocketServer.connError:
-		t.Fatal(err)
-	case <-timeout.C:
-		t.Fatal("took too long")
-	case err := <-testMarker:
-		log.Printf("%+v", mockRealTimeChatWebsocketServer.history)
-		t.Fatal(err)
-		return
-	}
-}
 
 func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 	ctx := context.Background()
@@ -155,6 +28,7 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 	}()
 
 	timeout := time.NewTimer(time.Second * 5)
+	interval := time.NewTicker(time.Millisecond * 250)
 	for {
 		select {
 		case err := <-testError:
@@ -164,61 +38,15 @@ func TestRealTimeChatWebsocketStreaming_Connect_200(t *testing.T) {
 
 		case <-timeout.C:
 			t.Fatal("did not record a connection within timeout")
+
+		case <-interval.C:
+			startedTime := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().GetConnectionStartedTime()
+			if startedTime != nil {
+				return
+			}
 		}
 	}
 }
-
-// func TestRealTimeChatWebsocketStreaming_Connect_401(t *testing.T) {
-// 	ctx := context.Background()
-
-// 	testError := make(chan error)
-
-// 	mockRealTimeChatWebsocketServer := newMockRealTimeChatWebsocketServer(
-// 		testError,
-// 		nil,
-// 		&settings{
-// 			ValidOAuthToken: "No Valid Token",
-// 		},
-// 		frameHandlers{},
-// 	)
-
-// 	mockServer := mockRealTimeChatWebsocketServer.createDefaultServer()
-
-// 	mockServer.Start()
-// 	defer mockServer.Close()
-
-// 	rtcWSHost := strings.Replace(mockServer.URL, "http", "ws", 1)
-
-// 	z := createTestRealTimeChatWebsocketService(
-// 		t,
-// 		[]study.RoundTripFunc{
-// 			createSuccessfulChatAuth(t),
-// 		},
-// 		rtcWSHost,
-// 	)
-
-// 	go func() {
-// 		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
-// 			if !errors.Is(err, context.Canceled) {
-// 				testError <- err
-// 				return
-// 			}
-// 		}
-// 	}()
-
-// 	timeout := time.NewTimer(time.Second * 2)
-// 	select {
-// 	case err := <-testError:
-// 		if err == nil {
-// 			t.Fatal("expected to receive an error")
-// 		}
-// 		for _, message := range mockRealTimeChatWebsocketServer.history.sentFrames {
-// 			fmt.Printf("%s\n", string(message.payload))
-// 		}
-// 	case <-timeout.C:
-// 		t.Fatal("did not record a connection within timeout")
-// 	}
-// }
 
 func TestService_SessionExpiring(t *testing.T) {
 }

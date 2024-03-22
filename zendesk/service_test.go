@@ -2,7 +2,6 @@ package zendesk_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,7 +29,11 @@ func createTestService(t *testing.T, queue []study.RoundTripFunc, opts ...zendes
 	)
 }
 
-func createTestRealTimeChatWebsocketService(t *testing.T, ctx context.Context, customSettings settings) (*zendesk.Service, *mockRealTimeChatWebsocketServer) {
+func createTestRealTimeChatWebsocketService(
+	t *testing.T,
+	ctx context.Context,
+	customSettings settings,
+) (*zendesk.Service, *mockRealTimeChatWebsocketServer) {
 	mockZendeskWSServer, wsHost := newMockRealTimeChatWebsocketServer(t, customSettings)
 
 	zendeskService := createTestService(t, []study.RoundTripFunc{
@@ -39,10 +42,8 @@ func createTestRealTimeChatWebsocketService(t *testing.T, ctx context.Context, c
 
 	go func() {
 		if err := zendeskService.LiveChat().RealTimeChat().RealTimeChatStreamingService().ConnectToWebsocket(ctx); err != nil {
-			if !errors.Is(err, context.Canceled) {
-				mockZendeskWSServer.connError <- err
-				return
-			}
+			mockZendeskWSServer.connError <- err
+			return
 		}
 	}()
 
