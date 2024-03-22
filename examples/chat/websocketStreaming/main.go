@@ -60,8 +60,12 @@ func main() {
 			}
 		}
 
-		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(nil)
-		go z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllChatMetrics(nil)
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllAgentMetrics(nil); err != nil {
+			log.Fatal(err)
+		}
+		if err := z.LiveChat().RealTimeChat().RealTimeChatStreamingService().SubscribeToAllChatMetrics(nil); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	go func() {
