@@ -317,11 +317,19 @@ func New(
 			incrementalExports: &LiveChatIncrementalExportsService{
 				c: c,
 			},
-			oauthClients: &LiveChatOauthClientsService{
+			oauthClients: &LiveChatOAuthClientsService{
 				c: c,
 			},
-			oauthTokens: &LiveChatOauthTokensService{
+			oauthTokens: &LiveChatOAuthTokensService{
 				c: c,
+			},
+			realTime: &LiveChatRealTimeService{
+				restService: &LiveChatRealTimeRESTService{
+					c: c,
+				},
+				streamingService: &LiveChatRealTimeStreamingService{
+					c: c,
+				},
 			},
 			roles: &LiveChatRolesService{
 				c: c,

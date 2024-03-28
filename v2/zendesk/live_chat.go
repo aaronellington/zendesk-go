@@ -9,8 +9,9 @@ type LiveChatService struct {
 	goals                  *LiveChatGoalsService
 	incrementalAgentEvents *LiveChatIncrementalAgentEventsService
 	incrementalExports     *LiveChatIncrementalExportsService
-	oauthClients           *LiveChatOauthClientsService
-	oauthTokens            *LiveChatOauthTokensService
+	oauthClients           *LiveChatOAuthClientsService
+	oauthTokens            *LiveChatOAuthTokensService
+	realTime               *LiveChatRealTimeService
 	roles                  *LiveChatRolesService
 	routingSettings        *LiveChatRoutingSettingsService
 	shortcuts              *LiveChatShortcutsService
@@ -60,13 +61,18 @@ func (s *LiveChatService) IncrementalExports() *LiveChatIncrementalExportsServic
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/oauth_clients/
-func (s *LiveChatService) OauthClients() *LiveChatOauthClientsService {
+func (s *LiveChatService) OAuthClients() *LiveChatOAuthClientsService {
 	return s.oauthClients
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/oauth_tokens/
-func (s *LiveChatService) OauthTokens() *LiveChatOauthTokensService {
+func (s *LiveChatService) OAuthTokens() *LiveChatOAuthTokensService {
 	return s.oauthTokens
+}
+
+// https://developer.zendesk.com/api-reference/live-chat/real-time-chat-api/introduction/
+func (s *LiveChatService) RealTime() *LiveChatRealTimeService {
+	return s.realTime
 }
 
 // https://developer.zendesk.com/api-reference/live-chat/chat-api/roles/
