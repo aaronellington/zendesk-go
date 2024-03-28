@@ -13,8 +13,39 @@ func (r ticketingOrganizationObject) zendeskEntityName() string {
 
 type OrganizationID int64
 
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/#json-format
 type Organization struct {
 	ID OrganizationID `json:"id"`
+}
+
+type OrganizationFieldValues map[string]any
+
+func (fields OrganizationFieldValues) GetString(key string) string {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return ""
+	}
+
+	value, ok := rawValue.(string)
+	if !ok {
+		return ""
+	}
+
+	return value
+}
+
+func (fields OrganizationFieldValues) GetBool(key string) bool {
+	rawValue, ok := fields[key]
+	if !ok || rawValue == nil {
+		return false
+	}
+
+	value, ok := rawValue.(bool)
+	if !ok {
+		return false
+	}
+
+	return value
 }
 
 type OrganizationResponse struct {
