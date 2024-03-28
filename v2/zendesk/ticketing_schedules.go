@@ -2,6 +2,7 @@ package zendesk
 
 import (
 	"context"
+	"time"
 )
 
 type ticketingScheduleObject struct{}
@@ -10,10 +11,20 @@ func (r ticketingScheduleObject) zendeskEntityName() string {
 	return "business_hours/schedules"
 }
 
-type ScheduleID int64
+type ScheduleID uint64
 
 type Schedule struct {
-	ID ScheduleID `json:"id"`
+	ID        ScheduleID         `json:"id"`
+	Name      string             `json:"name"`
+	TimeZone  string             `json:"time_zone"`
+	CreatedAt time.Time          `json:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	Intervals []ScheduleInterval `json:"intervals"`
+}
+
+type ScheduleInterval struct {
+	StartTime int `json:"start_time"`
+	EndTime   int `json:"end_time"`
 }
 
 type ScheduleResponse struct {
