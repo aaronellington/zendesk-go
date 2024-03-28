@@ -15,8 +15,59 @@ func (r ticketsTicketObject) zendeskEntityName() string {
 
 type TicketID uint64
 
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#json-format
 type Ticket struct {
-	ID TicketID `json:"id"`
+	AssigneeID         *UserID                  `json:"assignee_id"`
+	CreatedAt          time.Time                `json:"created_at"`
+	CollaboratorIDs    []UserID                 `json:"collaborator_ids"`
+	CustomFields       TicketFieldValues        `json:"custom_fields"`
+	Description        string                   `json:"description"`
+	DueAt              *time.Time               `json:"due_at"`
+	ExternalID         *string                  `json:"external_id"`
+	Fields             TicketFieldValues        `json:"fields"`
+	FollowerIDs        []UserID                 `json:"follower_ids"`
+	GroupID            *GroupID                 `json:"group_id"`
+	HasIncidents       bool                     `json:"has_incidents"`
+	ID                 TicketID                 `json:"id"`
+	IsPublic           bool                     `json:"is_public"`
+	OrganizationID     *OrganizationID          `json:"organization_id"`
+	Priority           string                   `json:"priority"`
+	ProblemID          *TicketID                `json:"problem_id"`
+	RequesterID        UserID                   `json:"requester_id"`
+	SatisfactionRating TicketSatisfactionRating `json:"satisfaction_rating"`
+	Status             string                   `json:"status"`
+	Subject            string                   `json:"subject"`
+	SubmitterID        UserID                   `json:"submitter_id"`
+	Tags               Tags                     `json:"tags"`
+	TicketFormID       TicketFormID             `json:"ticket_form_id"`
+	Type               *string                  `json:"type"`
+	UpdatedAt          time.Time                `json:"updated_at"`
+	URL                string                   `json:"url"`
+	Via                TicketVia                `json:"via"`
+}
+
+type TicketFieldValue struct {
+	ID    TicketFieldID `json:"id"`
+	Value any           `json:"value"`
+}
+
+type TicketFieldValues []TicketFieldValue
+
+func (fields TicketFieldValues) CreateMap() map[TicketFieldID]any {
+	fieldMap := map[TicketFieldID]any{}
+	for _, field := range fields {
+		fieldMap[field.ID] = field.Value
+	}
+
+	return fieldMap
+}
+
+type TicketSatisfactionRating struct {
+	Score string `json:"score"`
+}
+
+type TicketVia struct {
+	Channel string `json:"channel"`
 }
 
 type TicketResponse struct {

@@ -29,7 +29,7 @@ func (c *client) request(
 	if body != nil && body != http.NoBody {
 		payloadBytes, err := json.MarshalIndent(body, "", "\t")
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		bodyReader = bytes.NewReader(payloadBytes)

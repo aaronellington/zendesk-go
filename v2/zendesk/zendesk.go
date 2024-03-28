@@ -370,3 +370,7 @@ func (s *Service) HelpCenter() *HelpCenterService {
 func (s *Service) LiveChat() *LiveChatService {
 	return s.liveChat
 }
+
+func (s *Service) SubDomain() string {
+	return s.ticketing.accountSettings.c.subDomain
+}

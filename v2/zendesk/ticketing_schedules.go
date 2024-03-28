@@ -2,6 +2,7 @@ package zendesk
 
 import (
 	"context"
+	"math"
 	"time"
 )
 
@@ -20,6 +21,46 @@ type Schedule struct {
 	CreatedAt time.Time          `json:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at"`
 	Intervals []ScheduleInterval `json:"intervals"`
+}
+
+func (schedule Schedule) Location() (*time.Location, error) {
+	timeZoneLabel := schedule.TimeZone
+
+	switch schedule.TimeZone {
+	case "Eastern Time (US & Canada)":
+		timeZoneLabel = "America/New_York"
+	case "Central Time (US & Canada)":
+		timeZoneLabel = "America/Chicago"
+	case "Pacific Time (US & Canada)":
+		timeZoneLabel = "America/Los_Angeles"
+	}
+
+	loc, err := time.LoadLocation(timeZoneLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	return loc, nil
+}
+
+func (schedule Schedule) Active(now time.Time) (bool, error) {
+	loc, err := schedule.Location()
+	if err != nil {
+		return false, err
+	}
+
+	localTime := now.In(loc)
+	sunday := localTime.Add(time.Hour * -24 * time.Duration(localTime.Weekday()))
+	beginningOfWeek := time.Date(sunday.Year(), sunday.Month(), sunday.Day(), 0, 0, 0, 0, loc)
+	minutesIntoTheWeek := int(math.Floor(now.Sub(beginningOfWeek).Minutes()))
+
+	for _, interval := range schedule.Intervals {
+		if minutesIntoTheWeek >= interval.StartTime && minutesIntoTheWeek < interval.EndTime {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 type ScheduleInterval struct {

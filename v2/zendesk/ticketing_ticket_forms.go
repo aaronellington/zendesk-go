@@ -2,6 +2,7 @@ package zendesk
 
 import (
 	"context"
+	"time"
 )
 
 type ticketingTicketFormObject struct{}
@@ -12,8 +13,22 @@ func (r ticketingTicketFormObject) zendeskEntityName() string {
 
 type TicketFormID int64
 
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/#json-format
 type TicketForm struct {
-	ID TicketFormID `json:"id"`
+	URL            string          `json:"url"`
+	Name           string          `json:"name"`
+	DisplayName    string          `json:"display_name"`
+	ID             TicketFormID    `json:"id"`
+	RawName        string          `json:"raw_name"`
+	RawDisplayName string          `json:"raw_display_name"`
+	EndUserVisible bool            `json:"end_user_visible"`
+	Position       int             `json:"position"`
+	TicketFieldIds []TicketFieldID `json:"ticket_field_ids"`
+	Active         bool            `json:"active"`
+	Default        bool            `json:"default"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
+	InAllBrands    bool            `json:"in_all_brands"`
 }
 
 type TicketFormResponse struct {

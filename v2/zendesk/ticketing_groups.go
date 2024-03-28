@@ -2,6 +2,7 @@ package zendesk
 
 import (
 	"context"
+	"time"
 )
 
 type ticketingGroupObject struct{}
@@ -12,8 +13,15 @@ func (r ticketingGroupObject) zendeskEntityName() string {
 
 type GroupID int64
 
+// https://developer.zendesk.com/api-reference/ticketing/groups/groups/#json-format
 type Group struct {
-	ID GroupID `json:"id"`
+	ID        GroupID   `json:"id"`
+	Default   bool      `json:"default"`
+	IsPublic  bool      `json:"is_public"`
+	Name      string    `json:"name"`
+	Deleted   bool      `json:"deleted"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type GroupResponse struct {
