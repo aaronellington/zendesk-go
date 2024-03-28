@@ -11,10 +11,17 @@ func (r ticketingUserObject) zendeskEntityName() string {
 	return "users"
 }
 
-type UserID int64
+type (
+	UserID   int64
+	UserRole string
+)
 
 type User struct {
 	ID UserID `json:"id"`
+}
+
+type UserPhoto struct {
+	ContentURL string `json:"content_url"`
 }
 
 type UserResponse struct {
