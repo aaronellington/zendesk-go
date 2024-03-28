@@ -33,6 +33,8 @@ func New(
 	}
 
 	return &Service{
+		subDomain: subDomain,
+		webhook:   &WebhookService{},
 		ticketing: &TicketingService{
 			accountSettings: &TicketingAccountSettingsService{
 				c: c,
@@ -354,13 +356,11 @@ func New(
 }
 
 type Service struct {
-	ticketing  *TicketingService
 	helpCenter *HelpCenterService
 	liveChat   *LiveChatService
-}
-
-func (s *Service) Ticketing() *TicketingService {
-	return s.ticketing
+	subDomain  string
+	ticketing  *TicketingService
+	webhook    *WebhookService
 }
 
 func (s *Service) HelpCenter() *HelpCenterService {
@@ -372,5 +372,13 @@ func (s *Service) LiveChat() *LiveChatService {
 }
 
 func (s *Service) SubDomain() string {
-	return s.ticketing.accountSettings.c.subDomain
+	return s.subDomain
+}
+
+func (s *Service) Ticketing() *TicketingService {
+	return s.ticketing
+}
+
+func (s *Service) Webhook() *WebhookService {
+	return s.webhook
 }
