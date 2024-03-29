@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/aaronellington/zendesk-go/v2/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk"
 )
 
 func main() {

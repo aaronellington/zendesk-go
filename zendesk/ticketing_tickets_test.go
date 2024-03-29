@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aaronellington/zendesk-go/v2/zendesk"
-	"github.com/aaronellington/zendesk-go/v2/zendesk/internal/testy"
+	"github.com/aaronellington/zendesk-go/zendesk"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/testy"
 )
 
 func TestTicketingTicketsShowSuccess(t *testing.T) {

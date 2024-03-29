@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/aaronellington/zendesk-go/v2/zendesk/internal/testy"
+	"github.com/aaronellington/zendesk-go/zendesk/internal/testy"
 )
 
 func TestTicketingUsersShowSuccess(t *testing.T) {
