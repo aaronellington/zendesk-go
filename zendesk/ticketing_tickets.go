@@ -46,51 +46,6 @@ type Ticket struct {
 	Via                TicketVia                `json:"via"`
 }
 
-type TicketFieldValue struct {
-	ID    TicketFieldID `json:"id"`
-	Value any           `json:"value"`
-}
-
-type TicketFieldValues []TicketFieldValue
-
-func (fields TicketFieldValues) CreateMap() map[TicketFieldID]any {
-	fieldMap := map[TicketFieldID]any{}
-	for _, field := range fields {
-		fieldMap[field.ID] = field.Value
-	}
-
-	return fieldMap
-}
-
-type TicketSatisfactionRating struct {
-	Score string `json:"score"`
-}
-
-type TicketVia struct {
-	Channel string `json:"channel"`
-}
-
-type TicketResponse struct {
-	Ticket Ticket `json:"ticket"`
-	ticketsTicketObject
-}
-
-type TicketsResponse struct {
-	Tickets []Ticket `json:"tickets"`
-	ticketsTicketObject
-	cursorPaginationResponse
-}
-
-type TicketPayload struct {
-	Ticket any `json:"ticket"`
-}
-
-type TicketsIncrementalExportResponse struct {
-	Tickets []Ticket `json:"tickets"`
-	ticketsTicketObject
-	incrementalExportResponse
-}
-
 // https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
 type TicketingTicketsService struct {
 	c *client
@@ -213,4 +168,72 @@ func (s *TicketingTicketsService) SetTags(
 			Tags: tags,
 		},
 	)
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/#merge-tickets-into-target-ticket
+func (s *TicketingTicketsService) Merge(
+	ctx context.Context,
+	destination TicketID,
+	payload MergeRequestPayload,
+) (JobStatusResponse, error) {
+	return genericRequest[JobStatusResponse](
+		s.c,
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("/api/v2/tickets/%d/merge", destination),
+		payload,
+	)
+}
+
+type TicketFieldValue struct {
+	ID    TicketFieldID `json:"id"`
+	Value any           `json:"value"`
+}
+
+type TicketFieldValues []TicketFieldValue
+
+func (fields TicketFieldValues) CreateMap() map[TicketFieldID]any {
+	fieldMap := map[TicketFieldID]any{}
+	for _, field := range fields {
+		fieldMap[field.ID] = field.Value
+	}
+
+	return fieldMap
+}
+
+type TicketSatisfactionRating struct {
+	Score string `json:"score"`
+}
+
+type TicketVia struct {
+	Channel string `json:"channel"`
+}
+
+type TicketResponse struct {
+	Ticket Ticket `json:"ticket"`
+	ticketsTicketObject
+}
+
+type TicketsResponse struct {
+	Tickets []Ticket `json:"tickets"`
+	ticketsTicketObject
+	cursorPaginationResponse
+}
+
+type TicketPayload struct {
+	Ticket any `json:"ticket"`
+}
+
+type TicketsIncrementalExportResponse struct {
+	Tickets []Ticket `json:"tickets"`
+	ticketsTicketObject
+	incrementalExportResponse
+}
+
+type MergeRequestPayload struct {
+	IDs                   []TicketID `json:"ids"`
+	SourceComment         string     `json:"source_comment"`
+	SourceCommentIsPublic bool       `json:"source_comment_is_public"`
+	TargetComment         string     `json:"target_comment"`
+	TargetCommentIsPublic bool       `json:"target_comment_is_public"`
 }
