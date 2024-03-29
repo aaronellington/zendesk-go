@@ -5,12 +5,6 @@ import (
 	"time"
 )
 
-type ticketingGroupObject struct{}
-
-func (r ticketingGroupObject) zendeskEntityName() string {
-	return "groups"
-}
-
 type GroupID int64
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/groups/#json-format
@@ -22,27 +16,6 @@ type Group struct {
 	Deleted   bool      `json:"deleted"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type GroupResponse struct {
-	Group Group `json:"group"`
-	ticketingGroupObject
-}
-
-type GroupsResponse struct {
-	Groups []Group `json:"groups"`
-	ticketingGroupObject
-	cursorPaginationResponse
-}
-
-type GroupPayload struct {
-	Group any `json:"group"`
-}
-
-type GroupsIncrementalExportResponse struct {
-	Groups []Group `json:"groups"`
-	ticketingGroupObject
-	incrementalExportResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/groups/groups/
@@ -90,4 +63,31 @@ func (s *TicketingGroupsService) Delete(
 	id GroupID,
 ) error {
 	return deleteRequest[GroupID, GroupResponse](ctx, s.c, id)
+}
+
+type GroupResponse struct {
+	Group Group `json:"group"`
+	ticketingGroupObject
+}
+
+type GroupsResponse struct {
+	Groups []Group `json:"groups"`
+	ticketingGroupObject
+	cursorPaginationResponse
+}
+
+type GroupsIncrementalExportResponse struct {
+	Groups []Group `json:"groups"`
+	ticketingGroupObject
+	incrementalExportResponse
+}
+
+type GroupPayload struct {
+	Group any `json:"group"`
+}
+
+type ticketingGroupObject struct{}
+
+func (r ticketingGroupObject) zendeskEntityName() string {
+	return "groups"
 }

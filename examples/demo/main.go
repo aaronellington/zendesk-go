@@ -20,10 +20,16 @@ func main() {
 		zendesk.WithLogger(log.New(os.Stdout, "Zendesk API - ", log.LstdFlags)),
 	)
 
-	ticketResponse, err := z.Ticketing().Tickets().Show(ctx, 2)
+	ticketResponse, err := z.Ticketing().AccountSettings().Update(ctx, zendesk.AccountSettingsPayload{
+		Settings: map[string]any{
+			"branding": map[string]any{
+				"header_color": "50C878",
+			},
+		},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(ticketResponse.Ticket.ID)
+	log.Println(ticketResponse.Settings.Branding.HeaderColor)
 }
