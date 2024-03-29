@@ -1,6 +1,0 @@
-{
-    "error": {
-        "title": "No help desk at example.zendesk.com",
-        "message": "There is no help desk configured at this address. This means that the address is available and that you can claim it at http://www.zendesk.com/signup"
-    }
-}

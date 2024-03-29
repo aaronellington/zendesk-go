@@ -1,8 +1,0 @@
-{
-	"upload": {
-		"token": "FakeUploadToken",
-		"expires_at": "2023-11-17T10:30:01Z",
-		"attachments": [],
-		"attachment": {}
-	}
-}

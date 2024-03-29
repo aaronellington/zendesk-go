@@ -1,1 +1,0 @@
-client_id=fake-client-id&client_secret=fake-client-secret&grant_type=client_credentials

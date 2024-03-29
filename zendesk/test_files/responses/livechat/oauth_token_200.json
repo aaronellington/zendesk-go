@@ -1,5 +1,0 @@
-{
-	"access_token": "fake-token",
-	"token_type": "Bearer",
-	"scope": "read write"
-}
