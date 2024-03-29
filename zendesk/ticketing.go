@@ -2,7 +2,7 @@ package zendesk
 
 type TicketingService struct {
 	accountSettings              *TicketingAccountSettingsService
-	activityStream               *TicketingActivityStreamService
+	activityStream               *TicketingActivitiesService
 	appLocationInstallations     *TicketingAppLocationInstallationsService
 	appLocations                 *TicketingAppLocationsService
 	apps                         *TicketingAppsService
@@ -70,7 +70,7 @@ func (s *TicketingService) AccountSettings() *TicketingAccountSettingsService {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/activity_stream/
-func (s *TicketingService) ActivityStream() *TicketingActivityStreamService {
+func (s *TicketingService) ActivityStream() *TicketingActivitiesService {
 	return s.activityStream
 }
 

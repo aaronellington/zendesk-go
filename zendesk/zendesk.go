@@ -39,7 +39,7 @@ func New(
 			accountSettings: &TicketingAccountSettingsService{
 				c: c,
 			},
-			activityStream: &TicketingActivityStreamService{
+			activityStream: &TicketingActivitiesService{
 				c: c,
 			},
 			appLocationInstallations: &TicketingAppLocationInstallationsService{

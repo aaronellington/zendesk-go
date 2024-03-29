@@ -29,3 +29,19 @@ func (tags Tags) HasTag(targetTag Tag) bool {
 
 	return false
 }
+
+type BusinessRuleConditions struct {
+	All []BusinessRuleCondition `json:"all"`
+	Any []BusinessRuleCondition `json:"any"`
+}
+
+type BusinessRuleCondition struct {
+	Field    string `json:"field"`
+	Operator string `json:"operator"`
+	Value    any    `json:"value"`
+}
+
+type BusinessRuleAction struct {
+	Field string `json:"field"`
+	Value any    `json:"value"`
+}
