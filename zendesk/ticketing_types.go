@@ -1,10 +1,22 @@
 package zendesk
 
+const timeFormat = "2006-01-02T15:04:05Z"
+
 const (
 	PriorityUrgent = "urgent"
 	PriorityHigh   = "high"
 	PriorityNormal = "normal"
 	PriorityLow    = "low"
+)
+
+const (
+	StatusNew     = "new"
+	StatusOpen    = "open"
+	StatusPending = "pending"
+	StatusHold    = "hold"
+	StatusSolved  = "solved"
+	StatusClosed  = "closed"
+	StatusDeleted = "deleted"
 )
 
 type CustomFieldOptionID uint64
