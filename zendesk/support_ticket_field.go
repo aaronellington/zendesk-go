@@ -129,3 +129,28 @@ func (s TicketFieldService) List(
 
 	return nil
 }
+
+type TicketFieldPayload struct {
+	TicketField any `json:"ticket_field"`
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/#update-ticket-field
+func (s TicketFieldService) Update(ctx context.Context, id TicketFieldID, payload TicketFieldPayload) (TicketFieldConfigurationResponse, error) {
+	target := TicketFieldConfigurationResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPut,
+		fmt.Sprintf("/api/v2/ticket_fields/%d", id),
+		structToReader(payload),
+	)
+	if err != nil {
+		return TicketFieldConfigurationResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return TicketFieldConfigurationResponse{}, err
+	}
+
+	return target, nil
+}
