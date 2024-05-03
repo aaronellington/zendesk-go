@@ -362,3 +362,27 @@ func (s UserService) Update(
 
 	return target, nil
 }
+
+func (s UserService) DeleteSession(
+	ctx context.Context,
+	id UserID,
+	payload UserPayload,
+) (UserResponse, error) {
+	target := UserResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v2/users/%d/sessions", id),
+		nil,
+	)
+	if err != nil {
+		return UserResponse{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return UserResponse{}, err
+	}
+
+	return target, nil
+}
