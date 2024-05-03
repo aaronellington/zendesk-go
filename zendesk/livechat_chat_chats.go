@@ -47,11 +47,11 @@ type IncrementalExportChat struct {
 }
 
 type Chat struct {
-	ID              ChatID           `json:"id"`
-	Visitor         ChatVisitor      `json:"visitor"`
-	StartedBy       string           `json:"started_by"`
-	Session         ChatSession      `json:"session"`
-	WebPath         []ChatWebPath    `json:"webpath"`
+	ID        ChatID      `json:"id"`
+	Visitor   ChatVisitor `json:"visitor"`
+	StartedBy string      `json:"started_by"`
+	Session   ChatSession `json:"session"`
+	// WebPath         []ChatWebPath    `json:"webpath"`
 	Timestamp       time.Time        `json:"timestamp"`
 	Count           ChatCount        `json:"count"`
 	Duration        uint64           `json:"duration"`

@@ -1,0 +1,41 @@
+{
+	"department_name": "A Product",
+	"session": {
+		"end_date": "2024-05-02T21:02:21Z",
+		"country_code": "US",
+		"city": "Somewhere",
+		"ip": "1.2.3.4",
+		"browser": "Chrome",
+		"country_name": "United States",
+		"id": "240502.414345.7qtwhFZUyaasdXb9a",
+		"region": "Wisconsin",
+		"platform": "Windows",
+		"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+		"start_date": "2024-05-02T20:41:26Z"
+	},
+	"update_timestamp": "2024-05-03T15:18:49Z",
+	"webpath": [
+		[
+			1714682486,
+			"https://helpdesk.subdomain.com/hc/en-gb",
+			"https://subdomain.com/",
+			"Subdomain"
+		]
+	],
+	"unread": true,
+	"visitor": {
+		"name": "Oliver Twist",
+		"notes": "",
+		"id": "413325.1LZmgnDmT6WDkpw",
+		"phone": "12345678",
+		"email": "Oliver.Twist@somewhere.com"
+	},
+	"id": "2404.414245.UBeYXcP7w7otJ",
+	"timestamp": "2024-05-02T21:02:22Z",
+	"message": "A Message.",
+	"tags": ["subdomain"],
+	"deleted": false,
+	"department_id": 871646516123,
+	"type": "offline_msg",
+	"zendesk_ticket_id": 1234756
+}
