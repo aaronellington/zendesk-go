@@ -366,7 +366,6 @@ func (s UserService) Update(
 func (s UserService) DeleteSession(
 	ctx context.Context,
 	id UserID,
-	payload UserPayload,
 ) (UserResponse, error) {
 	target := UserResponse{}
 
