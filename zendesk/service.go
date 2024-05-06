@@ -50,6 +50,9 @@ func NewService(
 			customRoleService: &CustomRoleService{
 				client: c,
 			},
+			sessionService: &SessionService{
+				client: c,
+			},
 		},
 		supportService: &SupportService{
 			customStatusService: &CustomStatusService{
