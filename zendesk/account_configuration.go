@@ -5,6 +5,7 @@ type AccountConfigurationService struct {
 	auditLogService   *AuditLogService
 	brandService      *BrandService
 	customRoleService *CustomRoleService
+	sessionService    *SessionService
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/audit_logs/
@@ -20,4 +21,9 @@ func (s *AccountConfigurationService) Brands() *BrandService {
 // https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/
 func (s *AccountConfigurationService) CustomRoles() *CustomRoleService {
 	return s.customRoleService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/account-configuration/sessions/
+func (s *AccountConfigurationService) Sessions() *SessionService {
+	return s.sessionService
 }
