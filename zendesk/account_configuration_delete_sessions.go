@@ -11,8 +11,8 @@ type SessionService struct {
 	client *client
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/account-configuration/sessions/#delete-session
-func (s SessionService) DeleteSession(
+// https://developer.zendesk.com/api-reference/ticketing/account-configuration/sessions/#bulk-delete-sessions
+func (s SessionService) BulkDelete(
 	ctx context.Context,
 	id UserID,
 ) error {

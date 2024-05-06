@@ -31,7 +31,7 @@ func Test_DeleteSession(t *testing.T) {
 		),
 	})
 
-	err := z.AccountConfiguration().Sessions().DeleteSession(ctx, userID)
+	err := z.AccountConfiguration().Sessions().BulkDelete(ctx, userID)
 	if err != nil {
 		t.Fatal(err)
 	}
