@@ -37,6 +37,7 @@ type Ticket struct {
 	CustomFields       []TicketField            `json:"custom_fields"`
 	Description        string                   `json:"description"`
 	DueAt              *time.Time               `json:"due_at"`
+	EmailCCIDs         []UserID                 `json:"email_cc_ids"`
 	ExternalID         *string                  `json:"external_id"`
 	Fields             []TicketField            `json:"fields"`
 	FollowerIDs        []UserID                 `json:"follower_ids"`
