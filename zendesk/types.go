@@ -123,6 +123,9 @@ const (
 type (
 	AccountID                uint64
 	ActorID                  int64
+	AppID                    uint64
+	AppDeveloperID           uint64
+	AppOrganizationID        uint64
 	ArticleID                uint64
 	AttachmentID             uint64
 	AuditID                  uint64

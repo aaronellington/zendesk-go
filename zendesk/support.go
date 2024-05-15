@@ -2,6 +2,7 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 type SupportService struct {
+	appsService                   *AppService
 	customStatusService           *CustomStatusService
 	groupMembershipService        *GroupMembershipService
 	groupService                  *GroupsService
@@ -28,17 +29,17 @@ type SupportService struct {
 	macroService                  *MacroService
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+// https://developer.zendesk.com/api-reference/ticketing/tickets/custom_ticket_statuses/
 func (s *SupportService) CustomStatuses() *CustomStatusService {
 	return s.customStatusService
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/
 func (s *SupportService) OrganizationFields() *OrganizationFieldService {
 	return s.organizationFieldService
 }
 
-// https://developer.zendesk.com/api-reference/ticketing/organizations/organizations/
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organization_memberships/
 func (s *SupportService) OrganizationMemberships() *OrganizationMembershipService {
 	return s.organizationMembershipService
 }
@@ -145,5 +146,10 @@ func (s *SupportService) SideConversations() *SideConversationService {
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/schedules/
 func (s *SupportService) Schedules() *ScheduleService {
+	return s.scheduleService
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/apps/apps/
+func (s *SupportService) Apps() *AppsService {
 	return s.scheduleService
 }
