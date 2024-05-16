@@ -2,7 +2,7 @@ package zendesk
 
 // https://developer.zendesk.com/api-reference/ticketing/introduction/
 type SupportService struct {
-	appsService                   *AppService
+	appService                    *AppService
 	customStatusService           *CustomStatusService
 	groupMembershipService        *GroupMembershipService
 	groupService                  *GroupsService
@@ -150,6 +150,6 @@ func (s *SupportService) Schedules() *ScheduleService {
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/apps/apps/
-func (s *SupportService) Apps() *AppsService {
-	return s.scheduleService
+func (s *SupportService) Apps() *AppService {
+	return s.appService
 }
