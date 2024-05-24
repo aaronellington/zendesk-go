@@ -243,11 +243,10 @@ func Test_SupportTickets_SearchTags_TermShorterThanAllowed(t *testing.T) {
 		t.Fatal("expected to get an error")
 	}
 
-	if err.Error() != "invalid searchterm - 'searchTerm' must be at least 2 characters" {
-		t.Fatalf(
-			"did not get expected error - expected: '%s', got: '%s'",
-			"invalid searchterm - searchterm must be at least 2 characters",
+	if err.Error() != "invalid request - 'searchTerm' must be at least 2 characters" {
+		t.Fatalf("did not get expected error - got: '%s', expected: '%s'",
 			err.Error(),
+			"invalid searchterm - searchterm must be at least 2 characters",
 		)
 	}
 }
