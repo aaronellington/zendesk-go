@@ -22,11 +22,8 @@ func (err *Error) Error() string {
 }
 
 func (err *Error) ImmutableRecord() bool {
-	if err.Message == "RecordInvalid" {
-		return true
-	}
-
-	if err.Message == "RecordNotFound" {
+	if strings.HasPrefix(err.Message, "RecordInvalid") ||
+		strings.HasPrefix(err.Message, "RecordNotFound") {
 		return true
 	}
 

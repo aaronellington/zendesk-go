@@ -1,13 +1,17 @@
 package zendesk
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"unicode/utf8"
 )
+
+const minimumTagNameForSearch = int(2)
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags
 type TicketTagService struct {
@@ -16,19 +20,34 @@ type TicketTagService struct {
 
 type Tag string
 
+type TagsPayload struct {
+	Tags Tags `json:"tags"`
+}
+
+type Tags []Tag
+
+func (tags Tags) HasTag(targetTag Tag) bool {
+	for _, tag := range tags {
+		if tag == targetTag {
+			return true
+		}
+	}
+
+	return false
+}
+
 type TagMeta struct {
 	Name  Tag    `json:"name"`
 	Count uint64 `json:"count"`
 }
 
+type TagsSearchResponse struct {
+	Tags Tags `json:"tags"`
+}
+
 type TagsResponse struct {
 	Tags []TagMeta `json:"tags"`
 	CursorPaginationResponse
-}
-
-type TagSearchResponse struct {
-	Tags []Tag `json:"tags"`
-	OffsetPaginationResponse
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#list-tags
@@ -74,18 +93,15 @@ func (s TicketTagService) List(
 	return nil
 }
 
-/*
-https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#search-tags
-
-Does not support cursor pagination.
-*/
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#search-tags
 func (s TicketTagService) Search(
 	ctx context.Context,
 	searchTerm string,
-	pageHandler func(response TagSearchResponse) error,
-) error {
-	if utf8.RuneCountInString(searchTerm) < 3 {
-		return errors.New("invalid searchterm - searchterm must be at least 2 characters")
+) (Tags, error) {
+	target := TagsSearchResponse{}
+
+	if validSearchTermSize := utf8.RuneCountInString(searchTerm) >= minimumTagNameForSearch; !validSearchTermSize {
+		return Tags{}, errors.New("invalid request - 'searchTerm' must be at least 2 characters")
 	}
 
 	query := url.Values{}
@@ -95,35 +111,106 @@ func (s TicketTagService) Search(
 		query.Encode(),
 	)
 
-	for {
-		target := TagSearchResponse{}
-
-		request, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			endpoint,
-			http.NoBody,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := s.client.ZendeskRequest(request, &target); err != nil {
-			return err
-		}
-
-		if err := pageHandler(target); err != nil {
-			return err
-		}
-
-		if target.NextPage != nil {
-			endpoint = *target.NextPage
-
-			continue
-		}
-
-		break
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		endpoint,
+		http.NoBody,
+	)
+	if err != nil {
+		return Tags{}, err
 	}
 
-	return nil
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return Tags{}, err
+	}
+
+	return target.Tags, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#set-tags
+func (s TicketService) SetTags(ctx context.Context, ticketID TicketID, tags Tags) (Tags, error) {
+	target := TagsPayload{}
+
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(TagsPayload{
+		Tags: tags,
+	}); err != nil {
+		return Tags{}, err
+	}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
+		payloadBuf,
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return Tags{}, err
+	}
+
+	return target.Tags, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#add-tags
+func (s TicketService) AddTags(ctx context.Context, ticketID TicketID, tags Tags) (Tags, error) {
+	target := TagsPayload{}
+
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(TagsPayload{
+		Tags: tags,
+	}); err != nil {
+		return Tags{}, err
+	}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPut,
+		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
+		payloadBuf,
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return Tags{}, err
+	}
+
+	return target.Tags, nil
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/#remove-tags
+func (s TicketService) RemoveTags(ctx context.Context, ticketID TicketID, tags Tags) (Tags, error) {
+	target := TagsPayload{}
+
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(TagsPayload{
+		Tags: tags,
+	}); err != nil {
+		return Tags{}, err
+	}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v2/tickets/%d/tags", ticketID),
+		payloadBuf,
+	)
+	if err != nil {
+		return Tags{}, err
+	}
+
+	if err := s.client.ZendeskRequest(
+		request,
+		&target,
+	); err != nil {
+		return Tags{}, err
+	}
+
+	return target.Tags, nil
 }
