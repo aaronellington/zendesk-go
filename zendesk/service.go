@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const DefaultHTTPClientTimeout = time.Second * 15
+
 func NewService(
 	subDomain string,
 	zendeskAuth authentication,
@@ -14,7 +16,7 @@ func NewService(
 ) *Service {
 	config := &internalConfig{
 		userAgent: "aaronellington/zendesk-go",
-		timeout:   time.Second * 15,
+		timeout:   DefaultHTTPClientTimeout,
 	}
 	for _, opt := range opts {
 		opt(config)

@@ -76,7 +76,7 @@ func (c *client) doWithRetry(request *http.Request, target any) error {
 		}
 
 		// Check for a "retry-after" header and then continue
-		retryAfterString := zendeskErr.Response.Header.Get("retry-after")
+		retryAfterString := zendeskErr.Response.Header.Get("Retry-After")
 		if retryAfterString != "" {
 			var err error
 

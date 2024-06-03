@@ -3,6 +3,7 @@ package zendesk_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -13,6 +14,46 @@ import (
 	"github.com/aaronellington/zendesk-go/zendesk"
 	"github.com/aaronellington/zendesk-go/zendesk/internal/study"
 )
+
+func Test_Client_422(t *testing.T) {
+	ctx := context.Background()
+	closedTicketID := zendesk.TicketID(1000)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusUnprocessableEntity,
+				FilePath:   "test_files/responses/errors/422_record_invalid.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodPut,
+				Path:   fmt.Sprintf("/api/v2/tickets/%d", closedTicketID),
+			},
+		),
+	})
+
+	_, err := z.Support().Tickets().Update(ctx, closedTicketID, zendesk.TicketPayload{
+		Ticket: zendesk.TicketComment{
+			Body: "This is a test comment, which is being added to a closed ticket.",
+		},
+	})
+	if err == nil {
+		t.Fatal("expected an error - did not receive one")
+	}
+
+	zendeskGoError := &zendesk.Error{}
+	isZendeskGoError := errors.As(err, &zendeskGoError)
+
+	if !isZendeskGoError {
+		t.Fatalf("expected a custom zendesk-go error, got: %v", err)
+	}
+
+	// Check to confirm that we got a 422 error
+	if !zendeskGoError.ImmutableRecord() {
+		t.Fatal("did not receive an immutable error")
+	}
+}
 
 func Test_Client_429(t *testing.T) {
 	ctx := context.Background()

@@ -10,13 +10,13 @@ full: clean lint test build
 ## Build the project
 build:
 
-## Test the project
+## Test the zendesk package only. Do not include 'internal' or 'example' pacakages
 test: test-go
 
 test-go:
 	@mkdir -p var/coverage/go/
 	@go install github.com/boumenot/gocover-cobertura@latest
-	go test -p 1 -count=1 -cover -coverprofile var/coverage/go/profile.txt ./...
+	go test -p 1 -count=1 -cover -coverprofile var/coverage/go/profile.txt ./zendesk
 	@go tool cover -func var/coverage/go/profile.txt | awk '/^total/{print $$1 " " $$3}'
 	@go tool cover -html var/coverage/go/profile.txt -o var/coverage/go/coverage.html
 	@gocover-cobertura < var/coverage/go/profile.txt > var/coverage/go/cobertura-coverage.xml
