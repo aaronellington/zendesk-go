@@ -171,3 +171,21 @@ func (s OrganizationMembershipService) Create(
 
 	return target, nil
 }
+
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organization_memberships/#delete-membership
+func (s OrganizationMembershipService) Delete(
+	ctx context.Context,
+	organizationMembershipID OrganizationMembershipID,
+) error {
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v2/organization_memberships/%d", organizationMembershipID),
+		http.NoBody,
+	)
+	if err != nil {
+		return err
+	}
+
+	return s.client.ZendeskRequest(request, nil)
+}

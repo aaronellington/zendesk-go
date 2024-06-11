@@ -218,3 +218,25 @@ func Test_SupportOrganizationMembership_Create_422(t *testing.T) {
 		t.Fatal("expected error, got nil")
 	}
 }
+
+func Test_SupportOrganizationMembership_Delete_200(t *testing.T) {
+	ctx := context.Background()
+	organizationMembershipID := zendesk.OrganizationMembershipID(12345)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseNoContent{
+				StatusCode: http.StatusNoContent,
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodDelete,
+				Path:   fmt.Sprintf("/api/v2/organization_memberships/%d", organizationMembershipID),
+			},
+		),
+	})
+
+	if err := z.Support().OrganizationMemberships().Delete(ctx, organizationMembershipID); err != nil {
+		t.Fatal(err)
+	}
+}
