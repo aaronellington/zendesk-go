@@ -1,0 +1,35 @@
+{
+    "organization_memberships": [
+        {
+            "url": "https://subdomain.zendesk.com/api/v2/organization_memberships/11230706017820.json",
+            "id": 11230706017820,
+            "user_id": 11230722173724,
+            "organization_id": 12345,
+            "default": true,
+            "created_at": "2023-11-10T15:48:15Z",
+            "organization_name": "End User Organization 1",
+            "updated_at": "2023-11-10T15:48:15Z",
+            "view_tickets": true
+        },
+        {
+            "url": "https://subdomain.zendesk.com/api/v2/organization_memberships/11190962742684.json",
+            "id": 11190962742684,
+            "user_id": 11190946849052,
+            "organization_id": 12345,
+            "default": true,
+            "created_at": "2023-11-08T11:25:45Z",
+            "organization_name": "End User Organization 1",
+            "updated_at": "2023-11-08T11:25:45Z",
+            "view_tickets": true
+        }
+    ],
+    "meta": {
+        "has_more": true,
+        "after_cursor": "aCursor=",
+        "before_cursor": "bCursor="
+    },
+    "links": {
+        "prev": "https://subdomain.zendesk.com/api/v2/organizations/12345/organization_memberships.json?page%5Bbefore%5D=bCursor%3D&page%5Bsize%5D=2",
+        "next": "https://subdomain.zendesk.com/api/v2/organizations/12345/organization_memberships.json?page%5Bafter%5D=aCursor%3D&page%5Bsize%5D=2"
+    }
+}
