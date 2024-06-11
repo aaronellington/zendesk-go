@@ -83,6 +83,47 @@ func (s OrganizationMembershipService) List(
 	return nil
 }
 
+// https://developer.zendesk.com/api-reference/ticketing/organizations/organization_memberships/#list-memberships
+func (s OrganizationMembershipService) ListByOrganizationID(
+	ctx context.Context,
+	organizationID OrganizationID,
+	pageHandler func(response OrganizationMembershipsResponse) error,
+) error {
+	query := url.Values{}
+	query.Set("page[size]", "100")
+	endpoint := fmt.Sprintf("/api/v2/organizations/%d/organization_memberships?%s", organizationID, query.Encode())
+
+	for {
+		target := OrganizationMembershipsResponse{}
+
+		request, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			endpoint,
+			http.NoBody,
+		)
+		if err != nil {
+			return err
+		}
+
+		if err := s.client.ZendeskRequest(request, &target); err != nil {
+			return err
+		}
+
+		if err := pageHandler(target); err != nil {
+			return err
+		}
+
+		if !target.Meta.HasMore {
+			break
+		}
+
+		endpoint = target.Links.Next
+	}
+
+	return nil
+}
+
 // https://developer.zendesk.com/api-reference/ticketing/organizations/organization_memberships/#show-membership
 func (s OrganizationMembershipService) Show(
 	ctx context.Context,

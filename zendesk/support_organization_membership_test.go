@@ -2,6 +2,7 @@ package zendesk_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -78,6 +79,64 @@ func Test_SupportOrganizationMembership_List_200(t *testing.T) {
 	actualMembershipsLen := 0
 
 	if err := z.Support().OrganizationMemberships().List(ctx,
+		func(response zendesk.OrganizationMembershipsResponse) error {
+			for range response.OrganizationMemberships {
+				actualMembershipsLen++
+			}
+
+			return nil
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := study.Assert(expectedMembershipsLen, actualMembershipsLen); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_SupportOrganizationMembership_ListByOrganizationID_200(t *testing.T) {
+	ctx := context.Background()
+	organizationID := zendesk.OrganizationID(12345)
+
+	z := createTestService(t, []study.RoundTripFunc{
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/organization_membership/list_by_organization_page1_200.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   fmt.Sprintf("/api/v2/organizations/%d/organization_memberships", organizationID),
+				Query: url.Values{
+					"page[size]": []string{"100"},
+				},
+			},
+		),
+		study.ServeAndValidate(
+			t,
+			&study.TestResponseFile{
+				StatusCode: http.StatusOK,
+				FilePath:   "test_files/responses/support/organization_membership/list_by_organization_page2_200.json",
+			},
+			study.ExpectedTestRequest{
+				Method: http.MethodGet,
+				Path:   fmt.Sprintf("/api/v2/organizations/%d/organization_memberships.json", organizationID),
+				Query: url.Values{
+					"page[size]":  []string{"2"},
+					"page[after]": []string{"aCursor="},
+				},
+			},
+		),
+	})
+
+	expectedMembershipsLen := 4
+	actualMembershipsLen := 0
+
+	if err := z.Support().OrganizationMemberships().ListByOrganizationID(
+		ctx,
+		organizationID,
 		func(response zendesk.OrganizationMembershipsResponse) error {
 			for range response.OrganizationMemberships {
 				actualMembershipsLen++
