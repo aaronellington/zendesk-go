@@ -1,7 +1,7 @@
 {
 	"suspended_tickets": [
 		{
-			"url": "https://kaseya.zendesk.com/api/v2/suspended_tickets/12346.json",
+			"url": "https://subdomain.zendesk.com/api/v2/suspended_tickets/12346.json",
 			"id": 12346,
 			"author": {
 				"id": null,

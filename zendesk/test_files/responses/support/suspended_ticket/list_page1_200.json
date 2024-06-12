@@ -1,81 +1,81 @@
 {
-    "suspended_tickets": [
-        {
-            "url": "https://kaseya.zendesk.com/api/v2/suspended_tickets/12345.json",
-            "id": 12345,
-            "author": {
-                "id": null,
-                "name": "Kylo Ren",
-                "email": "KyloRen@stars.com"
-            },
-            "subject": "RE: Support #67894 - product running out of space",
-            "content": "some sort of content",
-            "cause": "User must sign up to submit email; user notified",
-            "cause_id": 12,
-            "error_messages": null,
-            "message_id": "<124ASDJHASF1283AH@TADBA.SOMETHING.prod.outlook.com>",
-            "ticket_id": 67894,
-            "created_at": "2024-05-29T01:09:12Z",
-            "updated_at": "2024-05-29T01:09:12Z",
-            "via": {
-                "channel": "email",
-                "source": {
-                    "from": {
-                        "address": "KyloRen@stars.com",
-                        "name": "Kylo Ren"
-                    },
-                    "to": {
-                        "name": "Subdomain Support",
-                        "address": "support@subdomain.zendesk.com"
-                    },
-                    "rel": null
-                }
-            },
-            "attachments": [
-                {
-                    "url": "https://subdomain.zendesk.com/api/v2/attachments/12345.json",
-                    "id": 12345,
-                    "file_name": "12345.png",
-                    "content_url": "https://subdomain.zendesk.com/attachments/token/GwOoaOOleBcS0UdPnFoXwgrnM/?name=image923295.png",
-                    "mapped_content_url": "https://helpdesk.subdomain.com/attachments/token/GwOoaOOleBcS0UdPnFoXwgrnM/?name=image923295.png",
-                    "content_type": "image/png",
-                    "size": 7631,
-                    "width": null,
-                    "height": null,
-                    "inline": false,
-                    "deleted": false,
-                    "malware_access_override": false,
-                    "malware_scan_result": "malware_not_found",
-                    "thumbnails": [
-                        {
-                            "url": "https://subdomain.zendesk.com/api/v2/attachments/25459067055377.json",
-                            "id": 25459067055377,
-                            "file_name": "image923295_thumb.png",
-                            "content_url": "https://subdomain.zendesk.com/attachments/token/f1rBPprz4lXwf7jX1YiXkzeYv/?name=image923295_thumb.png",
-                            "mapped_content_url": "https://helpdesk.subdomain.com/attachments/token/f1rBPprz4lXwf7jX1YiXkzeYv/?name=image923295_thumb.png",
-                            "content_type": "image/png",
-                            "size": 4004,
-                            "width": 80,
-                            "height": 70,
-                            "inline": false,
-                            "deleted": false,
-                            "malware_access_override": false,
-                            "malware_scan_result": "not_scanned"
-                        }
-                    ]
-                }
-            ],
-            "recipient": "example@subdomain.zendesk.com",
-            "brand_id": 3173256
-        }
-    ],
-    "meta": {
-        "has_more": true,
-        "after_cursor": "aCursor",
-        "before_cursor": "bCursor"
-    },
-    "links": {
-        "prev": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bbefore%5D=bCursor&page%5Bsize%5D=1",
-        "next": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bafter%5D=aCursor&page%5Bsize%5D=1"
-    }
+	"suspended_tickets": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/suspended_tickets/12345.json",
+			"id": 12345,
+			"author": {
+				"id": null,
+				"name": "Kylo Ren",
+				"email": "KyloRen@stars.com"
+			},
+			"subject": "RE: Support #67894 - product running out of space",
+			"content": "some sort of content",
+			"cause": "User must sign up to submit email; user notified",
+			"cause_id": 12,
+			"error_messages": null,
+			"message_id": "<124ASDJHASF1283AH@TADBA.SOMETHING.prod.outlook.com>",
+			"ticket_id": 67894,
+			"created_at": "2024-05-29T01:09:12Z",
+			"updated_at": "2024-05-29T01:09:12Z",
+			"via": {
+				"channel": "email",
+				"source": {
+					"from": {
+						"address": "KyloRen@stars.com",
+						"name": "Kylo Ren"
+					},
+					"to": {
+						"name": "Subdomain Support",
+						"address": "support@subdomain.zendesk.com"
+					},
+					"rel": null
+				}
+			},
+			"attachments": [
+				{
+					"url": "https://subdomain.zendesk.com/api/v2/attachments/12345.json",
+					"id": 12345,
+					"file_name": "12345.png",
+					"content_url": "https://subdomain.zendesk.com/attachments/token/GwOoaOOleBcS0UdPnFoXwgrnM/?name=image923295.png",
+					"mapped_content_url": "https://helpdesk.subdomain.com/attachments/token/GwOoaOOleBcS0UdPnFoXwgrnM/?name=image923295.png",
+					"content_type": "image/png",
+					"size": 7631,
+					"width": null,
+					"height": null,
+					"inline": false,
+					"deleted": false,
+					"malware_access_override": false,
+					"malware_scan_result": "malware_not_found",
+					"thumbnails": [
+						{
+							"url": "https://subdomain.zendesk.com/api/v2/attachments/25459067055377.json",
+							"id": 25459067055377,
+							"file_name": "image923295_thumb.png",
+							"content_url": "https://subdomain.zendesk.com/attachments/token/f1rBPprz4lXwf7jX1YiXkzeYv/?name=image923295_thumb.png",
+							"mapped_content_url": "https://helpdesk.subdomain.com/attachments/token/f1rBPprz4lXwf7jX1YiXkzeYv/?name=image923295_thumb.png",
+							"content_type": "image/png",
+							"size": 4004,
+							"width": 80,
+							"height": 70,
+							"inline": false,
+							"deleted": false,
+							"malware_access_override": false,
+							"malware_scan_result": "not_scanned"
+						}
+					]
+				}
+			],
+			"recipient": "example@subdomain.zendesk.com",
+			"brand_id": 3173256
+		}
+	],
+	"meta": {
+		"has_more": true,
+		"after_cursor": "aCursor",
+		"before_cursor": "bCursor"
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bbefore%5D=bCursor&page%5Bsize%5D=1",
+		"next": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bafter%5D=aCursor&page%5Bsize%5D=1"
+	}
 }
