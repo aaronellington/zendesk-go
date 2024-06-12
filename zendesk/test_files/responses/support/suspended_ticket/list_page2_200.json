@@ -1,0 +1,48 @@
+{
+	"suspended_tickets": [
+		{
+			"url": "https://subdomain.zendesk.com/api/v2/suspended_tickets/12346.json",
+			"id": 12346,
+			"author": {
+				"id": null,
+				"name": "Kylo Ren",
+				"email": "KyloRen@stars.com"
+			},
+			"subject": "RE: Support #67895 - Another product running out of space",
+			"content": "some sort of content",
+			"cause": "User must sign up to submit email; user notified",
+			"cause_id": 12,
+			"error_messages": null,
+			"message_id": "<124ASDJHASF1283AH@TADBA.SOMETHING.prod.outlook.com>",
+			"ticket_id": 67895,
+			"created_at": "2024-05-29T01:09:12Z",
+			"updated_at": "2024-05-29T01:09:12Z",
+			"via": {
+				"channel": "email",
+				"source": {
+					"from": {
+						"address": "KyloRen@stars.com",
+						"name": "Kylo Ren"
+					},
+					"to": {
+						"name": "Subdomain Support",
+						"address": "support@subdomain.zendesk.com"
+					},
+					"rel": null
+				}
+			},
+			"attachments": null,
+			"recipient": "example@subdomain.zendesk.com",
+			"brand_id": 3173256
+		}
+	],
+	"meta": {
+		"has_more": false,
+		"after_cursor": "cCursor",
+		"before_cursor": "dCursor"
+	},
+	"links": {
+		"prev": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bbefore%5D=dCursor&page%5Bsize%5D=1",
+		"next": "https://subdomain.zendesk.com/api/v2/suspended_tickets.json?page%5Bafter%5D=cCursor&page%5Bsize%5D=1"
+	}
+}
