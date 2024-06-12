@@ -20,6 +20,7 @@ type SuspendedTicket struct {
 	Cause     string                `json:"cause"`
 	Author    SuspendedTicketAuthor `json:"author"`
 	CauseID   int                   `json:"cause_id"`
+	Content   string                `json:"content"`
 	TicketID  *TicketID             `json:"ticket_id"`
 	CreatedAt time.Time             `json:"created_at"`
 	UpdatedAt time.Time             `json:"updated_at"`
