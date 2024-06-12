@@ -1,0 +1,31 @@
+{
+    "suspended_ticket": {
+        "url": "https://subdomain.zendesk.com/api/v2/suspended_tickets/12345.json",
+        "id": 12345,
+        "author": {
+            "id": 45678,
+            "name": "A Support Company",
+            "email": "support@supportcomapny.au"
+        },
+        "subject": "Faulty Product",
+        "content": "The product does not power on, it was setup with another product and this one died unexpectedly. ",
+        "cause": "Detected as spam",
+        "cause_id": 0,
+        "error_messages": null,
+        "message_id": null,
+        "ticket_id": null,
+        "created_at": "2024-05-29T07:07:11Z",
+        "updated_at": "2024-05-29T07:07:11Z",
+        "via": {
+            "channel": "web",
+            "source": {
+                "from": {},
+                "to": {},
+                "rel": null
+            }
+        },
+        "attachments": [],
+        "recipient": null,
+        "brand_id": 1234
+    }
+}

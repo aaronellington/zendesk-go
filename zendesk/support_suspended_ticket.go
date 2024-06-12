@@ -14,6 +14,10 @@ type SuspendedTicketsResponse struct {
 	CursorPaginationResponse
 }
 
+type SuspendedTicketResponse struct {
+	SuspendedTicket SuspendedTicket `json:"suspended_ticket"`
+}
+
 type SuspendedTicket struct {
 	ID        SuspendedTicketID     `json:"id"`
 	Subject   string                `json:"subject"`
@@ -36,6 +40,30 @@ type SuspendedTicketAuthor struct {
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/
 type SuspendedTicketService struct {
 	client *client
+}
+
+// https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#show-suspended-ticket
+func (s SuspendedTicketService) Show(
+	ctx context.Context,
+	id SuspendedTicketID,
+) (SuspendedTicket, error) {
+	target := SuspendedTicketResponse{}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("/api/v2/suspended_tickets/%d", id),
+		http.NoBody,
+	)
+	if err != nil {
+		return SuspendedTicket{}, err
+	}
+
+	if err := s.client.ZendeskRequest(request, &target); err != nil {
+		return SuspendedTicket{}, err
+	}
+
+	return target.SuspendedTicket, nil
 }
 
 // https://developer.zendesk.com/api-reference/ticketing/tickets/suspended_tickets/#list-suspended-tickets
